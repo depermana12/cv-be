@@ -17,11 +17,52 @@ import {
   courseDetails,
 } from "../db/schema";
 
+type PersonalType = typeof personalInfo.$inferInsert;
 export class Personal {
-  async getById(id) {}
-  async create(biodata) {}
-  async update(id, newPersonalData) {}
-  async delete(id) {}
+  async getById(id: number) {
+    try {
+      const rows = await db
+        .select()
+        .from(personalInfo)
+        .where(eq(personalInfo.id, id));
+      return rows[0];
+    } catch (e: unknown) {
+      throw new Error(e instanceof Error ? e.message : String(e));
+    }
+  }
+
+  async create(biodata: PersonalType) {
+    try {
+      const personalData = await db
+        .insert(personalInfo)
+        .values(biodata)
+        .$returningId();
+      return personalData[0];
+    } catch (e: unknown) {
+      throw new Error(e instanceof Error ? e.message : String(e));
+    }
+  }
+
+  async update(id: number, newPersonalData: PersonalType) {
+    try {
+      const rows = await db
+        .update(personalInfo)
+        .set(newPersonalData)
+        .where(eq(personalInfo.id, id));
+      return rows[0];
+    } catch (e: unknown) {
+      throw new Error(e instanceof Error ? e.message : String(e));
+    }
+  }
+
+  async delete(id: number) {
+    try {
+      const rows = await db.delete(personalInfo).where(eq(personalInfo.id, id));
+      return rows[0];
+    } catch (e) {
+      throw new Error(e instanceof Error ? e.message : String(e));
+    }
+  }
 }
 
 export class Education {

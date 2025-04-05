@@ -1,8 +1,11 @@
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
 
+import { personalRoute } from "./routes/routes";
+
 const app = new Hono();
 app.get("/", (c) => c.text("Hello cv"));
+app.route("/personal", personalRoute);
 
 app.notFound((c) => {
   return c.json({ error: "you lost bruh" }, 404);
