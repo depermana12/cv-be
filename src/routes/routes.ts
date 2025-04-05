@@ -18,6 +18,19 @@ const personalService = new Personal();
 
 export const personalRoute = new Hono();
 personalRoute
+  .get("/", async (c) => {
+    const personalInfo = await personalService.get();
+    if (!personalInfo) {
+      return c.json({ message: "person not found" }, 404);
+    }
+    return c.json(
+      {
+        message: "success get personal info",
+        data: personalInfo,
+      },
+      200,
+    );
+  })
   .get("/:id", async (c) => {
     const personId = c.req.param("id");
     const personalInfo = await personalService.getById(Number(personId));

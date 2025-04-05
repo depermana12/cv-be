@@ -1,4 +1,4 @@
-import app from "./src/app";
+import app from "./app";
 
 const server = Bun.serve({
   port: 5000,

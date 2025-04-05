@@ -19,6 +19,15 @@ import {
 
 type PersonalType = typeof personalInfo.$inferInsert;
 export class Personal {
+  async get() {
+    try {
+      const rows = await db.select().from(personalInfo);
+      return rows[0];
+    } catch (e: unknown) {
+      throw new Error(e instanceof Error ? e.message : String(e));
+    }
+  }
+
   async getById(id: number) {
     try {
       const rows = await db
