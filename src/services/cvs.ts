@@ -183,7 +183,7 @@ export class WorkExp {
     try {
       return await db
         .insert(workExperienceDetails)
-        .values({ ...newWorkExp, id: workExpId });
+        .values({ ...newWorkExp, workExperienceId: workExpId });
     } catch (e) {
       throw new Error(e instanceof Error ? e.message : String(e));
     }
