@@ -3,7 +3,7 @@ import { HTTPException } from "hono/http-exception";
 
 import { personalRoute } from "./routes/routes";
 
-const app = new Hono();
+const app = new Hono().basePath("/api/v1");
 app.get("/", (c) => c.text("Hello cv"));
 app.route("/personal", personalRoute);
 
