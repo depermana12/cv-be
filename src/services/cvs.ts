@@ -21,6 +21,8 @@ import { HTTPException } from "hono/http-exception";
 
 type PersonalType = typeof personalInfo.$inferInsert;
 type EducationType = typeof education.$inferInsert;
+type WorkExpType = typeof workExperience.$inferInsert;
+type WorkExpDetailType = typeof workExperienceDetails.$inferInsert;
 export class Personal {
   async get() {
     try {
@@ -134,13 +136,77 @@ export class Education {
 }
 
 export class WorkExp {
-  async getAll() {}
-  async getById(id: number) {}
-  async create(experience) {}
-  async update(id: number, newExperience) {}
-  async addDetails(workExpId, newWorkExp) {}
-  async updateDetails(detailId, newDetailExp) {}
-  async delete(id: number) {}
+  async getAll() {
+    try {
+      return await db.select().from(workExperience);
+    } catch (e) {
+      throw new Error(e instanceof Error ? e.message : String(e));
+    }
+  }
+
+  async getById(id: number) {
+    try {
+      const rows = await db
+        .select()
+        .from(workExperience)
+        .where(eq(workExperience.id, id));
+      return rows[0];
+    } catch (e) {
+      throw new Error(e instanceof Error ? e.message : String(e));
+    }
+  }
+
+  async create(experience: WorkExpType) {
+    try {
+      const inserted = await db
+        .insert(workExperience)
+        .values(experience)
+        .$returningId();
+      return inserted[0];
+    } catch (e) {
+      throw new Error(e instanceof Error ? e.message : String(e));
+    }
+  }
+
+  async update(id: number, newExperience: WorkExpType) {
+    try {
+      return await db
+        .update(workExperience)
+        .set(newExperience)
+        .where(eq(workExperience.id, id));
+    } catch (e) {
+      throw new Error(e instanceof Error ? e.message : String(e));
+    }
+  }
+
+  async addDetails(workExpId: number, newWorkExp: WorkExpDetailType) {
+    try {
+      return await db
+        .insert(workExperienceDetails)
+        .values({ ...newWorkExp, id: workExpId });
+    } catch (e) {
+      throw new Error(e instanceof Error ? e.message : String(e));
+    }
+  }
+
+  async updateDetails(detailId: number, newDetailExp: WorkExpDetailType) {
+    try {
+      return await db
+        .update(workExperienceDetails)
+        .set(newDetailExp)
+        .where(eq(workExperienceDetails.id, detailId));
+    } catch (e) {
+      throw new Error(e instanceof Error ? e.message : String(e));
+    }
+  }
+
+  async delete(id: number) {
+    try {
+      return await db.delete(workExperience).where(eq(workExperience.id, id));
+    } catch (e) {
+      throw new Error(e instanceof Error ? e.message : String(e));
+    }
+  }
 }
 
 export class OrgExp {

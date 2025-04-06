@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
-import { Personal, Education } from "../services/cvs";
+import { Personal, Education, WorkExp } from "../services/cvs";
 import { HTTPException } from "hono/http-exception";
 
 const newPersonSchema = z.object({
@@ -25,8 +25,21 @@ const educationSchema = z.object({
   maxGpa: z.union([z.string(), z.null()]).optional(),
 });
 
+const workExpSchema = z.object({
+  personalInfoId: z.number().int(),
+  company: z.string().max(100),
+  position: z.string().max(100),
+  startDate: z.coerce.date(),
+  endDate: z.coerce.date().optional(),
+});
+
+const workExpDetailSchema = z.object({
+  description: z.string().max(1000),
+});
+
 const personalService = new Personal();
 const educationService = new Education();
+const workExpService = new WorkExp();
 
 export const personalRoute = new Hono();
 personalRoute
@@ -177,7 +190,108 @@ educationRoute
   });
 
 export const workExpRoute = new Hono();
-workExpRoute.get().post().patch().delete();
+workExpRoute
+  .get("/", async (c) => {
+    const allWork = await workExpService.getAll();
+    return c.json({
+      message: "success get all work experience",
+      data: allWork,
+    });
+  })
+  .get("/:id", async (c) => {
+    const id = Number(c.req.param("id"));
+    const data = await workExpService.getById(id);
+    if (!data) {
+      return c.json({ message: "work experience not found" }, 404);
+    }
+    return c.json({ message: "success get work experience by id", data });
+  })
+  .post(
+    "/",
+    zValidator("json", workExpSchema, (result, c) => {
+      if (!result.success) {
+        throw new HTTPException(400, {
+          message: result.error.issues[0].message,
+        });
+      }
+    }),
+    async (c) => {
+      const validated = c.req.valid("json");
+      const newWork = await workExpService.create(validated);
+      return c.json(
+        { message: "new work experience created", data: newWork },
+        201,
+      );
+    },
+  )
+  .patch(
+    "/:id",
+    zValidator("json", workExpSchema, (result, c) => {
+      if (!result.success) {
+        throw new HTTPException(400, {
+          message: result.error.issues[0].message,
+        });
+      }
+    }),
+    async (c) => {
+      const id = Number(c.req.param("id"));
+      const validated = c.req.valid("json");
+      const existing = await workExpService.getById(id);
+      if (!existing) {
+        return c.json({ message: "work experience not found" }, 404);
+      }
+      await workExpService.update(id, validated);
+      const updated = await workExpService.getById(id);
+      return c.json({ message: "work experience updated", data: updated });
+    },
+  )
+  .delete("/:id", async (c) => {
+    const id = Number(c.req.param("id"));
+    const data = await workExpService.getById(id);
+    if (!data) {
+      return c.json({ message: "work experience not found" }, 404);
+    }
+    await workExpService.delete(id);
+    return c.json({ message: "work experience deleted", data });
+  });
+
+// for the detail work experience
+workExpRoute
+  .post(
+    "/:id/details",
+    zValidator("json", workExpDetailSchema, (result, c) => {
+      if (!result.success) {
+        throw new HTTPException(400, {
+          message: result.error.issues[0].message,
+        });
+      }
+    }),
+    async (c) => {
+      const workExpId = Number(c.req.param("id"));
+      const validated = c.req.valid("json");
+      const data = await workExpService.addDetails(workExpId, validated);
+      return c.json({ message: "detail added", data });
+    },
+  )
+  .patch(
+    "/details/:detailId",
+    zValidator("json", workExpDetailSchema, (result, c) => {
+      if (!result.success) {
+        throw new HTTPException(400, {
+          message: result.error.issues[0].message,
+        });
+      }
+    }),
+    async (c) => {
+      const detailId = Number(c.req.param("detailId"));
+      const validated = c.req.valid("json");
+      const updated = await workExpService.updateDetails(detailId, validated);
+      return c.json({
+        message: "work experience detail updated",
+        data: updated,
+      });
+    },
+  );
 
 export const orgExpRoute = new Hono();
 orgExpRoute.get().post().patch().delete();
