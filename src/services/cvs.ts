@@ -23,6 +23,8 @@ type PersonalType = typeof personalInfo.$inferInsert;
 type EducationType = typeof education.$inferInsert;
 type WorkExpType = typeof workExperience.$inferInsert;
 type WorkExpDetailType = typeof workExperienceDetails.$inferInsert;
+type OrgExpType = typeof organizationExperience.$inferInsert;
+type OrgExpDetailType = typeof orgExpDetails.$inferInsert;
 export class Personal {
   async get() {
     try {
@@ -210,13 +212,79 @@ export class WorkExp {
 }
 
 export class OrgExp {
-  async getAll() {}
-  async getById(id: number) {}
-  async create(orgExp) {}
-  async update(id: number, newOrgExp) {}
-  async addDetails(orgExpId, newOrgExp) {}
-  async updateDetails(detailId, newDetailExp) {}
-  async delete(id: number) {}
+  async getAll() {
+    try {
+      return await db.select().from(organizationExperience);
+    } catch (e) {
+      throw new Error(e instanceof Error ? e.message : String(e));
+    }
+  }
+
+  async getById(id: number) {
+    try {
+      const rows = await db
+        .select()
+        .from(organizationExperience)
+        .where(eq(organizationExperience.id, id));
+      return rows[0];
+    } catch (e) {
+      throw new Error(e instanceof Error ? e.message : String(e));
+    }
+  }
+
+  async create(orgExp: OrgExpType) {
+    try {
+      const inserted = await db
+        .insert(organizationExperience)
+        .values(orgExp)
+        .$returningId();
+      return inserted[0];
+    } catch (e) {
+      throw new Error(e instanceof Error ? e.message : String(e));
+    }
+  }
+
+  async update(id: number, newOrgExp: OrgExpType) {
+    try {
+      return await db
+        .update(organizationExperience)
+        .set(newOrgExp)
+        .where(eq(organizationExperience.id, id));
+    } catch (e) {
+      throw new Error(e instanceof Error ? e.message : String(e));
+    }
+  }
+
+  async addDetails(orgExpId: number, newOrgExp: OrgExpDetailType) {
+    try {
+      return await db
+        .insert(orgExpDetails)
+        .values({ ...newOrgExp, organizationExperienceId: orgExpId });
+    } catch (e) {
+      throw new Error(e instanceof Error ? e.message : String(e));
+    }
+  }
+
+  async updateDetails(detailId: number, newDetailExp: OrgExpDetailType) {
+    try {
+      return await db
+        .update(orgExpDetails)
+        .set(newDetailExp)
+        .where(eq(orgExpDetails.id, detailId));
+    } catch (e) {
+      throw new Error(e instanceof Error ? e.message : String(e));
+    }
+  }
+
+  async delete(id: number) {
+    try {
+      return await db
+        .delete(organizationExperience)
+        .where(eq(organizationExperience.id, id));
+    } catch (e) {
+      throw new Error(e instanceof Error ? e.message : String(e));
+    }
+  }
 }
 
 export class Project {

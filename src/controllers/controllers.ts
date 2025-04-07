@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
-import { Personal, Education, WorkExp } from "../services/cvs";
+import { Personal, Education, WorkExp, OrgExp } from "../services/cvs";
 import { HTTPException } from "hono/http-exception";
 
 const newPersonSchema = z.object({
@@ -37,9 +37,19 @@ const workExpDetailSchema = z.object({
   description: z.string().max(1000),
 });
 
+const orgExpSchema = z.object({
+  personalInfoId: z.number().int(),
+  organization: z.string().max(100),
+  role: z.string().max(100),
+  startDate: z.coerce.date(),
+  endDate: z.coerce.date().optional(),
+  description: z.string().max(1000).optional(),
+});
+
 const personalService = new Personal();
 const educationService = new Education();
 const workExpService = new WorkExp();
+const orgExpService = new OrgExp();
 
 export const personalRoute = new Hono();
 personalRoute
@@ -294,7 +304,70 @@ workExpRoute
   );
 
 export const orgExpRoute = new Hono();
-orgExpRoute.get().post().patch().delete();
+orgExpRoute
+  .get("/", async (c) => {
+    const data = await orgExpService.getAll();
+    return c.json({ message: "success get all org experiences", data });
+  })
+  .get("/:id", async (c) => {
+    const id = Number(c.req.param("id"));
+    const org = await orgExpService.getById(id);
+    if (!org) {
+      return c.json({ message: "organization experience not found" }, 404);
+    }
+    return c.json({
+      message: "success get organization experience",
+      data: org,
+    });
+  })
+  .post(
+    "/",
+    zValidator("json", orgExpSchema, (result, c) => {
+      if (!result.success) {
+        throw new HTTPException(400, {
+          message: result.error.issues[0].message,
+        });
+      }
+    }),
+    async (c) => {
+      const validated = c.req.valid("json");
+      const newOrg = await orgExpService.create(validated);
+      return c.json(
+        { message: "new org experience created", data: newOrg },
+        201,
+      );
+    },
+  )
+  .patch(
+    "/:id",
+    zValidator("json", orgExpSchema, (result, c) => {
+      if (!result.success) {
+        throw new HTTPException(400, {
+          message: result.error.issues[0].message,
+        });
+      }
+    }),
+    async (c) => {
+      const id = Number(c.req.param("id"));
+      const validated = c.req.valid("json");
+      const org = await orgExpService.getById(id);
+      if (!org) {
+        return c.json({ message: "org experience not found" }, 404);
+      }
+      await orgExpService.update(id, validated);
+      const updated = await orgExpService.getById(id);
+      return c.json({ message: "org experience updated", data: updated });
+    },
+  )
+  .delete("/:id", async (c) => {
+    const id = Number(c.req.param("id"));
+    const org = await orgExpService.getById(id);
+    if (!org) {
+      return c.json({ message: "org experience not found" }, 404);
+    }
+    await orgExpService.delete(id);
+    return c.json({ message: "org experience deleted", data: org });
+  });
 
 export const projectsRoute = new Hono();
 projectsRoute.get().post().patch().delete();
