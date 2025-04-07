@@ -15,7 +15,6 @@ import {
   softSkills,
   courses,
   courseDetails,
-  educationRelations,
 } from "../db/schema";
 import { HTTPException } from "hono/http-exception";
 
@@ -27,6 +26,8 @@ type OrgExpType = typeof organizationExperience.$inferInsert;
 type OrgExpDetailType = typeof orgExpDetails.$inferInsert;
 type ProjectType = typeof projects.$inferInsert;
 type ProjectDetailsType = typeof projectDetails.$inferInsert;
+type CourseType = typeof courses.$inferInsert;
+type CourseDetailsType = typeof courseDetails.$inferInsert;
 export class Personal {
   async get() {
     try {
@@ -356,11 +357,61 @@ export class Project {
 }
 
 export class Course {
-  async getAll() {}
-  async getById(id: number) {}
-  async create(course) {}
-  async update(id: number, newCourseData) {}
-  async addDetails(courseId, newCourseDetail) {}
-  async updateDetails(detailId, newDetail) {}
-  async delete(id: number) {}
+  async getAll() {
+    try {
+      return await db.select().from(courses);
+    } catch (e: unknown) {
+      throw new Error(e instanceof Error ? e.message : String(e));
+    }
+  }
+  async getById(id: number) {
+    try {
+      const course = await db.select().from(courses).where(eq(courses.id, id));
+      return course[0];
+    } catch (e: unknown) {
+      throw new Error(e instanceof Error ? e.message : String(e));
+    }
+  }
+  async create(course: CourseType) {
+    try {
+      const created = await db.insert(courses).values(course).$returningId();
+      return created[0];
+    } catch (e: unknown) {
+      throw new Error(e instanceof Error ? e.message : String(e));
+    }
+  }
+  async update(id: number, newCourseData: Partial<CourseType>) {
+    try {
+      return await db
+        .update(courses)
+        .set(newCourseData)
+        .where(eq(courses.id, id));
+    } catch (e: unknown) {
+      throw new Error(e instanceof Error ? e.message : String(e));
+    }
+  }
+  async addDetails(courseId: number, newCourseDetail: CourseDetailsType) {
+    try {
+      return await db.insert(courseDetails).values({
+        ...newCourseDetail,
+        courseId,
+      });
+    } catch (e: unknown) {
+      throw new Error(e instanceof Error ? e.message : String(e));
+    }
+  }
+  async updateDetails(detailId: number, newDetail: Partial<CourseDetailsType>) {
+    try {
+      await db
+        .update(courseDetails)
+        .set(newDetail)
+        .where(eq(courseDetails.id, detailId));
+    } catch (e: unknown) {
+      throw new Error(e instanceof Error ? e.message : String(e));
+    }
+  }
+  async delete(id: number) {
+    await db.delete(courseDetails).where(eq(courseDetails, id));
+    await db.delete(courses).where(eq(courses.id, id));
+  }
 }

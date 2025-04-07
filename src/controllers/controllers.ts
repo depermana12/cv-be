@@ -1,7 +1,14 @@
 import { Hono } from "hono";
 import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
-import { Personal, Education, WorkExp, OrgExp, Project } from "../services/cvs";
+import {
+  Personal,
+  Education,
+  WorkExp,
+  OrgExp,
+  Project,
+  Course,
+} from "../services/cvs";
 import { HTTPException } from "hono/http-exception";
 
 const newPersonSchema = z.object({
@@ -55,11 +62,20 @@ const projectSchema = z.object({
   endDate: z.coerce.date().optional(),
 });
 
+const courseSchema = z.object({
+  personalInfoId: z.number().int(),
+  courseName: z.string().max(100),
+  provider: z.string().max(100),
+  completionDate: z.coerce.date(),
+  certificateUrl: z.string().url().optional(),
+});
+
 const personalService = new Personal();
 const educationService = new Education();
 const workExpService = new WorkExp();
 const orgExpService = new OrgExp();
 const projectService = new Project();
+const courseService = new Course();
 
 export const personalRoute = new Hono();
 personalRoute
@@ -439,5 +455,62 @@ projectRoute
     return c.json({ message: "project deleted", data: project });
   });
 
-export const coursesRoute = new Hono();
-coursesRoute.get().post().patch().delete();
+export const courseRoute = new Hono();
+courseRoute
+  .get("/", async (c) => {
+    const data = await courseService.getAll();
+    return c.json({ message: "success get all courses", data });
+  })
+  .get("/:id", async (c) => {
+    const id = Number(c.req.param("id"));
+    const course = await courseService.getById(id);
+    if (!course) {
+      return c.json({ message: "course not found" }, 404);
+    }
+    return c.json({ message: "success get course", data: course });
+  })
+  .post(
+    "/",
+    zValidator("json", courseSchema, (result, c) => {
+      if (!result.success) {
+        throw new HTTPException(400, {
+          message: result.error.issues[0].message,
+        });
+      }
+    }),
+    async (c) => {
+      const validated = c.req.valid("json");
+      const newCourse = await courseService.create(validated);
+      return c.json({ message: "new course created", data: newCourse }, 201);
+    },
+  )
+  .patch(
+    "/:id",
+    zValidator("json", courseSchema, (result, c) => {
+      if (!result.success) {
+        throw new HTTPException(400, {
+          message: result.error.issues[0].message,
+        });
+      }
+    }),
+    async (c) => {
+      const id = Number(c.req.param("id"));
+      const validated = c.req.valid("json");
+      const course = await courseService.getById(id);
+      if (!course) {
+        return c.json({ message: "course not found" }, 404);
+      }
+      await courseService.update(id, validated);
+      const updated = await courseService.getById(id);
+      return c.json({ message: "course updated", data: updated });
+    },
+  )
+  .delete("/:id", async (c) => {
+    const id = Number(c.req.param("id"));
+    const course = await courseService.getById(id);
+    if (!course) {
+      return c.json({ message: "course not found" }, 404);
+    }
+    await courseService.delete(id);
+    return c.json({ message: "course deleted", data: course });
+  });
