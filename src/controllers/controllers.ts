@@ -8,6 +8,9 @@ import {
   OrgExp,
   Project,
   Course,
+  Skill,
+  SoftSkill,
+  ProjectTech,
 } from "../services/cvs";
 import { HTTPException } from "hono/http-exception";
 
@@ -70,12 +73,33 @@ const courseSchema = z.object({
   certificateUrl: z.string().url().optional(),
 });
 
+const skillSchema = z.object({
+  personalInfoId: z.number().int(),
+  category: z.string().max(50),
+  name: z.string().max(100),
+});
+
+const softSkillSchema = z.object({
+  personalInfoId: z.number().int(),
+  category: z.string().max(50),
+  description: z.string(),
+});
+
+const projectTechSchema = z.object({
+  technology: z.string().max(100),
+  projectId: z.number().int(),
+  name: z.string().max(100),
+});
+
 const personalService = new Personal();
 const educationService = new Education();
 const workExpService = new WorkExp();
 const orgExpService = new OrgExp();
 const projectService = new Project();
 const courseService = new Course();
+const projectTechService = new ProjectTech();
+const skillService = new Skill();
+const softSkillService = new SoftSkill();
 
 export const personalRoute = new Hono();
 personalRoute
@@ -513,4 +537,72 @@ courseRoute
     }
     await courseService.delete(id);
     return c.json({ message: "course deleted", data: course });
+  });
+export const skillRoute = new Hono();
+skillRoute
+  .get("/", async (c) => {
+    const data = await skillService.getAll();
+    return c.json({ message: "success", data });
+  })
+  .post("/", zValidator("json", skillSchema), async (c) => {
+    const body = c.req.valid("json");
+    const result = await skillService.create(body);
+    return c.json({ message: "created", data: result }, 201);
+  })
+  .patch("/:id", zValidator("json", skillSchema), async (c) => {
+    const id = Number(c.req.param("id"));
+    const validated = c.req.valid("json");
+    await skillService.update(id, validated);
+    const updated = await skillService.getById(id);
+    return c.json({ message: "updated", data: updated });
+  })
+  .delete("/:id", async (c) => {
+    const id = Number(c.req.param("id"));
+    await skillService.delete(id);
+    return c.json({ message: "deleted" });
+  });
+
+export const softSkillRoute = new Hono()
+  .get("/", async (c) => {
+    const data = await softSkillService.getAll();
+    return c.json({ message: "success", data });
+  })
+  .post("/", zValidator("json", softSkillSchema), async (c) => {
+    const body = c.req.valid("json");
+    const result = await softSkillService.create(body);
+    return c.json({ message: "created", data: result }, 201);
+  })
+  .patch("/:id", zValidator("json", softSkillSchema), async (c) => {
+    const id = Number(c.req.param("id"));
+    const body = c.req.valid("json");
+    await softSkillService.update(id, body);
+    return c.json({ message: "updated" });
+  })
+  .delete("/:id", async (c) => {
+    const id = Number(c.req.param("id"));
+    await softSkillService.delete(id);
+    return c.json({ message: "deleted" });
+  });
+
+export const projectTechRoute = new Hono()
+  .get("/", async (c) => {
+    const data = await projectTechService.getAll();
+    return c.json({ message: "success", data });
+  })
+  .post("/", zValidator("json", projectTechSchema), async (c) => {
+    const validated = c.req.valid("json");
+    const result = await projectTechService.addTech(validated);
+    return c.json({ message: "created", data: result }, 201);
+  })
+  .patch("/:id", zValidator("json", projectTechSchema), async (c) => {
+    const id = Number(c.req.param("id"));
+    const validated = c.req.valid("json");
+    await projectTechService.update(id, validated);
+    const updated = await projectTechService.getByProjectId(id);
+    return c.json({ message: "updated", data: updated });
+  })
+  .delete("/:id", async (c) => {
+    const id = Number(c.req.param("id"));
+    await projectTechService.delete(id);
+    return c.json({ message: "deleted" });
   });

@@ -28,6 +28,9 @@ type ProjectType = typeof projects.$inferInsert;
 type ProjectDetailsType = typeof projectDetails.$inferInsert;
 type CourseType = typeof courses.$inferInsert;
 type CourseDetailsType = typeof courseDetails.$inferInsert;
+type SkillType = typeof skills.$inferInsert;
+type SoftSkillType = typeof softSkills.$inferInsert;
+type ProjectTechStack = typeof projectTechnologies.$inferInsert;
 export class Personal {
   async get() {
     try {
@@ -413,5 +416,124 @@ export class Course {
   async delete(id: number) {
     await db.delete(courseDetails).where(eq(courseDetails, id));
     await db.delete(courses).where(eq(courses.id, id));
+  }
+}
+
+export class Skill {
+  async getAll() {
+    return await db.select().from(skills);
+  }
+
+  async getById(id: number) {
+    try {
+      const skill = await db.select().from(skills).where(eq(skills.id, id));
+      return skill[0];
+    } catch (e: unknown) {
+      throw new Error(e instanceof Error ? e.message : String(e));
+    }
+  }
+
+  async create(skill: SkillType) {
+    try {
+      const rows = await db.insert(skills).values(skill).$returningId();
+      return rows[0];
+    } catch (e: unknown) {
+      throw new Error(e instanceof Error ? e.message : String(e));
+    }
+  }
+
+  async update(id: number, newSkillData: Partial<SkillType>) {
+    try {
+      await db.update(skills).set(newSkillData).where(eq(skills.id, id));
+    } catch (e: unknown) {
+      throw new Error(e instanceof Error ? e.message : String(e));
+    }
+  }
+
+  async delete(id: number) {
+    await db.delete(skills).where(eq(skills.id, id));
+  }
+}
+
+export class SoftSkill {
+  async getAll() {
+    return await db.select().from(softSkills);
+  }
+
+  async getById(id: number) {
+    try {
+      const rows = await db
+        .select()
+        .from(softSkills)
+        .where(eq(softSkills.id, id));
+      return rows[0];
+    } catch (e: unknown) {
+      throw new Error(e instanceof Error ? e.message : String(e));
+    }
+  }
+
+  async create(softSkill: SoftSkillType) {
+    try {
+      const rows = await db.insert(softSkills).values(softSkill).$returningId();
+      return rows[0];
+    } catch (e: unknown) {
+      throw new Error(e instanceof Error ? e.message : String(e));
+    }
+  }
+
+  async update(id: number, newData: Partial<SoftSkillType>) {
+    try {
+      await db.update(softSkills).set(newData).where(eq(softSkills.id, id));
+    } catch (e: unknown) {
+      throw new Error(e instanceof Error ? e.message : String(e));
+    }
+  }
+
+  async delete(id: number) {
+    await db.delete(softSkills).where(eq(softSkills.id, id));
+  }
+}
+
+export class ProjectTech {
+  async getAll() {
+    return await db.select().from(projectTechnologies);
+  }
+
+  async getByProjectId(projectId: number) {
+    try {
+      return await db
+        .select()
+        .from(projectTechnologies)
+        .where(eq(projectTechnologies.projectId, projectId));
+    } catch (e: unknown) {
+      throw new Error(e instanceof Error ? e.message : String(e));
+    }
+  }
+
+  async addTech(tech: ProjectTechStack) {
+    try {
+      const rows = await db
+        .insert(projectTechnologies)
+        .values(tech)
+        .$returningId();
+      return rows[0];
+    } catch (e: unknown) {
+      throw new Error(e instanceof Error ? e.message : String(e));
+    }
+  }
+
+  async update(projectId: number, newProjectTech: Partial<ProjectTechStack>) {
+    try {
+      await db
+        .update(projectTechnologies)
+        .set(newProjectTech)
+        .where(eq(projectTechnologies.id, projectId));
+    } catch (e: unknown) {
+      throw new Error(e instanceof Error ? e.message : String(e));
+    }
+  }
+
+  async delete(id: number) {
+    await db.delete(projectTechnologies).where(eq(projectTechnologies.id, id));
   }
 }
