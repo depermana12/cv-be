@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
-import { Personal, Education, WorkExp, OrgExp } from "../services/cvs";
+import { Personal, Education, WorkExp, OrgExp, Project } from "../services/cvs";
 import { HTTPException } from "hono/http-exception";
 
 const newPersonSchema = z.object({
@@ -46,10 +46,20 @@ const orgExpSchema = z.object({
   description: z.string().max(1000).optional(),
 });
 
+const projectSchema = z.object({
+  personalInfoId: z.number().int(),
+  name: z.string().max(100),
+  description: z.string().max(1000),
+  techStack: z.string().optional(),
+  startDate: z.coerce.date(),
+  endDate: z.coerce.date().optional(),
+});
+
 const personalService = new Personal();
 const educationService = new Education();
 const workExpService = new WorkExp();
 const orgExpService = new OrgExp();
+const projectService = new Project();
 
 export const personalRoute = new Hono();
 personalRoute
@@ -369,8 +379,65 @@ orgExpRoute
     return c.json({ message: "org experience deleted", data: org });
   });
 
-export const projectsRoute = new Hono();
-projectsRoute.get().post().patch().delete();
+export const projectRoute = new Hono();
+projectRoute
+  .get("/", async (c) => {
+    const data = await projectService.getAll();
+    return c.json({ message: "success get all projects", data });
+  })
+  .get("/:id", async (c) => {
+    const id = Number(c.req.param("id"));
+    const project = await projectService.getById(id);
+    if (!project) {
+      return c.json({ message: "project not found" }, 404);
+    }
+    return c.json({ message: "success get project", data: project });
+  })
+  .post(
+    "/",
+    zValidator("json", projectSchema, (result, c) => {
+      if (!result.success) {
+        throw new HTTPException(400, {
+          message: result.error.issues[0].message,
+        });
+      }
+    }),
+    async (c) => {
+      const validated = c.req.valid("json");
+      const newProject = await projectService.create(validated);
+      return c.json({ message: "new project created", data: newProject }, 201);
+    },
+  )
+  .patch(
+    "/:id",
+    zValidator("json", projectSchema, (result, c) => {
+      if (!result.success) {
+        throw new HTTPException(400, {
+          message: result.error.issues[0].message,
+        });
+      }
+    }),
+    async (c) => {
+      const id = Number(c.req.param("id"));
+      const validated = c.req.valid("json");
+      const project = await projectService.getById(id);
+      if (!project) {
+        return c.json({ message: "project not found" }, 404);
+      }
+      await projectService.update(id, validated);
+      const updated = await projectService.getById(id);
+      return c.json({ message: "project updated", data: updated });
+    },
+  )
+  .delete("/:id", async (c) => {
+    const id = Number(c.req.param("id"));
+    const project = await projectService.getById(id);
+    if (!project) {
+      return c.json({ message: "project not found" }, 404);
+    }
+    await projectService.delete(id);
+    return c.json({ message: "project deleted", data: project });
+  });
 
 export const coursesRoute = new Hono();
 coursesRoute.get().post().patch().delete();

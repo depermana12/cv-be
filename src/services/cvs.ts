@@ -25,6 +25,8 @@ type WorkExpType = typeof workExperience.$inferInsert;
 type WorkExpDetailType = typeof workExperienceDetails.$inferInsert;
 type OrgExpType = typeof organizationExperience.$inferInsert;
 type OrgExpDetailType = typeof orgExpDetails.$inferInsert;
+type ProjectType = typeof projects.$inferInsert;
+type ProjectDetailsType = typeof projectDetails.$inferInsert;
 export class Personal {
   async get() {
     try {
@@ -288,13 +290,69 @@ export class OrgExp {
 }
 
 export class Project {
-  async getAll() {}
-  async getById(id: number) {}
-  async create(project) {}
-  async update(id: number, newProjectData) {}
-  async addDetails(projectId, newProjectDetail) {}
-  async updateDetails(detailId, newDetail) {}
-  async delete(id: number) {}
+  async getAll() {
+    try {
+      return await db.select().from(projects);
+    } catch (e: unknown) {
+      throw new Error(e instanceof Error ? e.message : String(e));
+    }
+  }
+  async getById(id: number) {
+    try {
+      const project = await db
+        .select()
+        .from(projects)
+        .where(eq(projects.id, id));
+      return project[0];
+    } catch (e: unknown) {
+      throw new Error(e instanceof Error ? e.message : String(e));
+    }
+  }
+  async create(project: ProjectType) {
+    try {
+      const created = await db.insert(projects).values(project).$returningId();
+      return created[0];
+    } catch (e: unknown) {
+      throw new Error(e instanceof Error ? e.message : String(e));
+    }
+  }
+  async update(id: number, newProjectData: Partial<ProjectType>) {
+    try {
+      return await db
+        .update(projects)
+        .set(newProjectData)
+        .where(eq(projects.id, id));
+    } catch (e: unknown) {
+      throw new Error(e instanceof Error ? e.message : String(e));
+    }
+  }
+  async addDetails(projectId: number, newProjectDetail: ProjectDetailsType) {
+    try {
+      return await db.insert(projectDetails).values({
+        ...newProjectDetail,
+        projectId,
+      });
+    } catch (e: unknown) {
+      throw new Error(e instanceof Error ? e.message : String(e));
+    }
+  }
+  async updateDetails(
+    detailId: number,
+    newDetail: Partial<ProjectDetailsType>,
+  ) {
+    try {
+      await db
+        .update(projectDetails)
+        .set(newDetail)
+        .where(eq(projectDetails.id, detailId));
+    } catch (e: unknown) {
+      throw new Error(e instanceof Error ? e.message : String(e));
+    }
+  }
+  async delete(id: number) {
+    await db.delete(projectDetails).where(eq(projectDetails.id, id));
+    await db.delete(projects).where(eq(projects.id, id));
+  }
 }
 
 export class Course {
