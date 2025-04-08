@@ -187,11 +187,25 @@ export class WorkExp {
     }
   }
 
-  async addDetails(workExpId: number, newWorkExp: WorkExpDetailType) {
+  async getDetailById(detailId: number) {
+    const rows = await db
+      .select()
+      .from(workExperienceDetails)
+      .where(eq(workExperienceDetails.id, detailId));
+    return rows[0];
+  }
+
+  async addDetail(workExpId: number, newWorkExp: WorkExpDetailType) {
     try {
-      return await db
+      const insertedDetail = await db
         .insert(workExperienceDetails)
-        .values({ ...newWorkExp, workExperienceId: workExpId });
+        .values({ ...newWorkExp, workExperienceId: workExpId })
+        .$returningId();
+      const returningDetail = await db
+        .select()
+        .from(workExperienceDetails)
+        .where(eq(workExperienceDetails.id, insertedDetail[0].id));
+      return returningDetail[0];
     } catch (e) {
       throw new Error(e instanceof Error ? e.message : String(e));
     }
@@ -199,10 +213,16 @@ export class WorkExp {
 
   async updateDetails(detailId: number, newDetailExp: WorkExpDetailType) {
     try {
-      return await db
+      await db
         .update(workExperienceDetails)
         .set(newDetailExp)
         .where(eq(workExperienceDetails.id, detailId));
+
+      const result = await db
+        .select()
+        .from(workExperienceDetails)
+        .where(eq(workExperienceDetails.id, detailId));
+      return result[0];
     } catch (e) {
       throw new Error(e instanceof Error ? e.message : String(e));
     }

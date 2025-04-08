@@ -177,7 +177,7 @@ educationRoute
   .get("/", async (c) => {
     const education = await educationService.getAll();
     if (!education) {
-      return c.json({ message: "person not found" }, 404);
+      return c.json({ message: "education not found" }, 404);
     }
     return c.json(
       {
@@ -186,6 +186,14 @@ educationRoute
       },
       200,
     );
+  })
+  .get("/:id", async (c) => {
+    const eduId = c.req.param("id");
+    const edu = educationService.getById(Number(eduId));
+    if (!edu) {
+      return c.json({ message: "education not found" }, 404);
+    }
+    return c.json({ message: "success get education id", data: edu }, 200);
   })
   .post(
     "/",
@@ -329,12 +337,18 @@ workExpRoute
     async (c) => {
       const workExpId = Number(c.req.param("id"));
       const validated = c.req.valid("json");
-      const data = await workExpService.addDetails(workExpId, validated);
+
+      const parent = await workExpService.getById(workExpId);
+      if (!parent) {
+        return c.json({ message: "work experience not found" }, 404);
+      }
+
+      const data = await workExpService.addDetail(workExpId, validated);
       return c.json({ message: "detail added", data });
     },
   )
   .patch(
-    "/details/:detailId",
+    "/:id/details/:detailId",
     zValidator("json", workExpDetailSchema, (result, c) => {
       if (!result.success) {
         throw new HTTPException(400, {
@@ -343,12 +357,29 @@ workExpRoute
       }
     }),
     async (c) => {
+      const workExpId = Number(c.req.param("id"));
       const detailId = Number(c.req.param("detailId"));
-      const validated = c.req.valid("json");
-      const updated = await workExpService.updateDetails(detailId, validated);
+      const validatedBody = c.req.valid("json");
+
+      const existingDetail = await workExpService.getDetailById(detailId);
+      if (!existingDetail) {
+        return c.json({ message: "work experience detail not found" }, 404);
+      }
+
+      if (existingDetail.workExperienceId !== workExpId) {
+        return c.json(
+          { message: "detail does not belong to the given work experience" },
+          404,
+        );
+      }
+
+      const updatedDetail = await workExpService.updateDetails(
+        detailId,
+        validatedBody,
+      );
       return c.json({
         message: "work experience detail updated",
-        data: updated,
+        data: updatedDetail,
       });
     },
   );
