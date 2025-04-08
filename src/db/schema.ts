@@ -176,6 +176,13 @@ export const skills = mysqlTable("skills", {
   name: varchar("name", { length: 100 }).notNull(),
 });
 
+export const skillsRelations = relations(skills, ({ one }) => ({
+  personalInfo: one(personalInfo, {
+    fields: [skills.personalInfoId],
+    references: [personalInfo.id],
+  }),
+}));
+
 // Soft Skills Table
 export const softSkills = mysqlTable("soft_skills", {
   id: int("id").primaryKey().autoincrement(),
@@ -184,9 +191,9 @@ export const softSkills = mysqlTable("soft_skills", {
   description: text("description"),
 });
 
-export const skillsRelations = relations(skills, ({ one }) => ({
+export const softSkillsRelations = relations(softSkills, ({ one }) => ({
   personalInfo: one(personalInfo, {
-    fields: [skills.personalInfoId],
+    fields: [softSkills.personalInfoId],
     references: [personalInfo.id],
   }),
 }));
