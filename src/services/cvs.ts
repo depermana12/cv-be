@@ -166,11 +166,15 @@ export class WorkExp {
 
   async create(experience: WorkExpType) {
     try {
-      const inserted = await db
+      const insertedWorkExp = await db
         .insert(workExperience)
         .values(experience)
         .$returningId();
-      return inserted[0];
+      const returningWorkExp = await db
+        .select()
+        .from(workExperience)
+        .where(eq(workExperience.id, insertedWorkExp[0].id));
+      return returningWorkExp[0];
     } catch (e) {
       throw new Error(e instanceof Error ? e.message : String(e));
     }
@@ -178,10 +182,15 @@ export class WorkExp {
 
   async update(id: number, newExperience: WorkExpType) {
     try {
-      return await db
+      await db
         .update(workExperience)
         .set(newExperience)
         .where(eq(workExperience.id, id));
+      const rows = await db
+        .select()
+        .from(workExperience)
+        .where(eq(workExperience.id, id));
+      return rows[0];
     } catch (e) {
       throw new Error(e instanceof Error ? e.message : String(e));
     }
@@ -230,7 +239,10 @@ export class WorkExp {
 
   async delete(id: number) {
     try {
-      return await db.delete(workExperience).where(eq(workExperience.id, id));
+      await db
+        .delete(workExperienceDetails)
+        .where(eq(workExperienceDetails.id, id));
+      await db.delete(workExperience).where(eq(workExperience.id, id));
     } catch (e) {
       throw new Error(e instanceof Error ? e.message : String(e));
     }
@@ -260,11 +272,15 @@ export class OrgExp {
 
   async create(orgExp: OrgExpType) {
     try {
-      const inserted = await db
+      const insertedOrgExp = await db
         .insert(organizationExperience)
         .values(orgExp)
         .$returningId();
-      return inserted[0];
+      const returningOrgExp = await db
+        .select()
+        .from(organizationExperience)
+        .where(eq(organizationExperience.id, insertedOrgExp[0].id));
+      return returningOrgExp[0];
     } catch (e) {
       throw new Error(e instanceof Error ? e.message : String(e));
     }
@@ -272,20 +288,43 @@ export class OrgExp {
 
   async update(id: number, newOrgExp: OrgExpType) {
     try {
-      return await db
+      await db
         .update(organizationExperience)
         .set(newOrgExp)
         .where(eq(organizationExperience.id, id));
+      const rows = await db
+        .select()
+        .from(organizationExperience)
+        .where(eq(organizationExperience.id, id));
+      return rows[0];
     } catch (e) {
       throw new Error(e instanceof Error ? e.message : String(e));
     }
   }
 
-  async addDetails(orgExpId: number, newOrgExp: OrgExpDetailType) {
+  async getDetailById(detailId: number) {
     try {
-      return await db
+      const rows = await db
+        .select()
+        .from(orgExpDetails)
+        .where(eq(orgExpDetails.id, detailId));
+      return rows[0];
+    } catch (e: unknown) {
+      throw new Error(e instanceof Error ? e.message : String(e));
+    }
+  }
+
+  async addDetail(orgExpId: number, newOrgExp: OrgExpDetailType) {
+    try {
+      const insertedDetail = await db
         .insert(orgExpDetails)
-        .values({ ...newOrgExp, organizationExperienceId: orgExpId });
+        .values({ ...newOrgExp, organizationExperienceId: orgExpId })
+        .$returningId();
+      const returningDetail = await db
+        .select()
+        .from(orgExpDetails)
+        .where(eq(orgExpDetails.id, insertedDetail[0].id));
+      return returningDetail[0];
     } catch (e) {
       throw new Error(e instanceof Error ? e.message : String(e));
     }
@@ -293,10 +332,15 @@ export class OrgExp {
 
   async updateDetails(detailId: number, newDetailExp: OrgExpDetailType) {
     try {
-      return await db
+      await db
         .update(orgExpDetails)
         .set(newDetailExp)
         .where(eq(orgExpDetails.id, detailId));
+      const result = await db
+        .select()
+        .from(orgExpDetails)
+        .where(eq(orgExpDetails.id, detailId));
+      return result[0];
     } catch (e) {
       throw new Error(e instanceof Error ? e.message : String(e));
     }
@@ -304,7 +348,8 @@ export class OrgExp {
 
   async delete(id: number) {
     try {
-      return await db
+      await db.delete(orgExpDetails).where(eq(orgExpDetails.id, id));
+      await db
         .delete(organizationExperience)
         .where(eq(organizationExperience.id, id));
     } catch (e) {
@@ -350,12 +395,28 @@ export class Project {
       throw new Error(e instanceof Error ? e.message : String(e));
     }
   }
+  async getDetailById(projectId: number) {
+    try {
+      const rows = await db
+        .select()
+        .from(projectDetails)
+        .where(eq(projectDetails.id, projectId));
+      return rows[0];
+    } catch (e: unknown) {
+      throw new Error(e instanceof Error ? e.message : String(e));
+    }
+  }
   async addDetails(projectId: number, newProjectDetail: ProjectDetailsType) {
     try {
-      return await db.insert(projectDetails).values({
-        ...newProjectDetail,
-        projectId,
-      });
+      const insertedDetail = await db
+        .insert(projectDetails)
+        .values({ ...newProjectDetail, projectId })
+        .$returningId();
+      const returningDetail = await db
+        .select()
+        .from(projectDetails)
+        .where(eq(projectDetails.id, insertedDetail[0].id));
+      return returningDetail[0];
     } catch (e: unknown) {
       throw new Error(e instanceof Error ? e.message : String(e));
     }
@@ -369,6 +430,11 @@ export class Project {
         .update(projectDetails)
         .set(newDetail)
         .where(eq(projectDetails.id, detailId));
+      const result = await db
+        .select()
+        .from(projectDetails)
+        .where(eq(projectDetails.id, detailId));
+      return result[0];
     } catch (e: unknown) {
       throw new Error(e instanceof Error ? e.message : String(e));
     }
@@ -409,6 +475,17 @@ export class Course {
         .update(courses)
         .set(newCourseData)
         .where(eq(courses.id, id));
+    } catch (e: unknown) {
+      throw new Error(e instanceof Error ? e.message : String(e));
+    }
+  }
+  async getDetailById(detailId: number) {
+    try {
+      const rows = await db
+        .select()
+        .from(courseDetails)
+        .where(eq(courseDetails.id, detailId));
+      return rows[0];
     } catch (e: unknown) {
       throw new Error(e instanceof Error ? e.message : String(e));
     }
@@ -521,22 +598,27 @@ export class ProjectTech {
 
   async getByProjectId(projectId: number) {
     try {
-      return await db
+      const rows = await db
         .select()
         .from(projectTechnologies)
         .where(eq(projectTechnologies.projectId, projectId));
+      return rows[0];
     } catch (e: unknown) {
       throw new Error(e instanceof Error ? e.message : String(e));
     }
   }
 
-  async addTech(tech: ProjectTechStack) {
+  async addTech(projectId: number, tech: Omit<ProjectTechStack, "projectId">) {
     try {
-      const rows = await db
+      const insertedTech = await db
         .insert(projectTechnologies)
-        .values(tech)
+        .values({ ...tech, projectId })
         .$returningId();
-      return rows[0];
+      const returningTech = await db
+        .select()
+        .from(projectTechnologies)
+        .where(eq(projectTechnologies.id, insertedTech[0].id));
+      return returningTech[0];
     } catch (e: unknown) {
       throw new Error(e instanceof Error ? e.message : String(e));
     }
@@ -554,6 +636,12 @@ export class ProjectTech {
   }
 
   async delete(id: number) {
-    await db.delete(projectTechnologies).where(eq(projectTechnologies.id, id));
+    try {
+      await db
+        .delete(projectTechnologies)
+        .where(eq(projectTechnologies.id, id));
+    } catch (e: unknown) {
+      throw new Error(e instanceof Error ? e.message : String(e));
+    }
   }
 }

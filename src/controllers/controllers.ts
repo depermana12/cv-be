@@ -13,6 +13,7 @@ import {
   ProjectTech,
 } from "../services/cvs";
 import { HTTPException } from "hono/http-exception";
+import { orgExpDetails } from "../db/schema";
 
 const newPersonSchema = z.object({
   fullName: z.string().min(1),
@@ -44,6 +45,14 @@ const workExpSchema = z.object({
 });
 
 const workExpDetailSchema = z.object({
+  description: z.string().max(1000),
+});
+
+const projectDetailSchema = z.object({
+  description: z.string().max(1000),
+});
+
+const orgExpDetailSchema = z.object({
   description: z.string().max(1000),
 });
 
@@ -260,19 +269,19 @@ educationRoute
 export const workExpRoute = new Hono();
 workExpRoute
   .get("/", async (c) => {
-    const allWork = await workExpService.getAll();
+    const works = await workExpService.getAll();
     return c.json({
       message: "success get all work experience",
-      data: allWork,
+      data: works,
     });
   })
   .get("/:id", async (c) => {
     const id = Number(c.req.param("id"));
-    const data = await workExpService.getById(id);
-    if (!data) {
+    const work = await workExpService.getById(id);
+    if (!work) {
       return c.json({ message: "work experience not found" }, 404);
     }
-    return c.json({ message: "success get work experience by id", data });
+    return c.json({ message: "success get work experience by id", data: work });
   })
   .post(
     "/",
@@ -284,8 +293,8 @@ workExpRoute
       }
     }),
     async (c) => {
-      const validated = c.req.valid("json");
-      const newWork = await workExpService.create(validated);
+      const validatedBody = c.req.valid("json");
+      const newWork = await workExpService.create(validatedBody);
       return c.json(
         { message: "new work experience created", data: newWork },
         201,
@@ -302,25 +311,31 @@ workExpRoute
       }
     }),
     async (c) => {
-      const id = Number(c.req.param("id"));
-      const validated = c.req.valid("json");
-      const existing = await workExpService.getById(id);
+      const workExpId = Number(c.req.param("id"));
+      const validatedBody = c.req.valid("json");
+      const existing = await workExpService.getById(workExpId);
       if (!existing) {
         return c.json({ message: "work experience not found" }, 404);
       }
-      await workExpService.update(id, validated);
-      const updated = await workExpService.getById(id);
-      return c.json({ message: "work experience updated", data: updated });
+
+      const updatedWorkExp = await workExpService.update(
+        workExpId,
+        validatedBody,
+      );
+      return c.json({
+        message: "work experience updated",
+        data: updatedWorkExp,
+      });
     },
   )
   .delete("/:id", async (c) => {
-    const id = Number(c.req.param("id"));
-    const data = await workExpService.getById(id);
-    if (!data) {
+    const WorkExpId = Number(c.req.param("id"));
+    const work = await workExpService.getById(WorkExpId);
+    if (!work) {
       return c.json({ message: "work experience not found" }, 404);
     }
-    await workExpService.delete(id);
-    return c.json({ message: "work experience deleted", data });
+    await workExpService.delete(WorkExpId);
+    return c.json({ message: "work experience deleted", data: work });
   });
 
 // for the detail work experience
@@ -336,14 +351,14 @@ workExpRoute
     }),
     async (c) => {
       const workExpId = Number(c.req.param("id"));
-      const validated = c.req.valid("json");
+      const validatedBody = c.req.valid("json");
 
       const parent = await workExpService.getById(workExpId);
       if (!parent) {
         return c.json({ message: "work experience not found" }, 404);
       }
 
-      const data = await workExpService.addDetail(workExpId, validated);
+      const data = await workExpService.addDetail(workExpId, validatedBody);
       return c.json({ message: "detail added", data });
     },
   )
@@ -387,8 +402,8 @@ workExpRoute
 export const orgExpRoute = new Hono();
 orgExpRoute
   .get("/", async (c) => {
-    const data = await orgExpService.getAll();
-    return c.json({ message: "success get all org experiences", data });
+    const orgs = await orgExpService.getAll();
+    return c.json({ message: "success get all org experiences", orgs });
   })
   .get("/:id", async (c) => {
     const id = Number(c.req.param("id"));
@@ -411,8 +426,8 @@ orgExpRoute
       }
     }),
     async (c) => {
-      const validated = c.req.valid("json");
-      const newOrg = await orgExpService.create(validated);
+      const validatedBody = c.req.valid("json");
+      const newOrg = await orgExpService.create(validatedBody);
       return c.json(
         { message: "new org experience created", data: newOrg },
         201,
@@ -429,26 +444,97 @@ orgExpRoute
       }
     }),
     async (c) => {
-      const id = Number(c.req.param("id"));
-      const validated = c.req.valid("json");
-      const org = await orgExpService.getById(id);
+      const orgExpId = Number(c.req.param("id"));
+      const validatedBody = c.req.valid("json");
+
+      const org = await orgExpService.getById(orgExpId);
       if (!org) {
         return c.json({ message: "org experience not found" }, 404);
       }
-      await orgExpService.update(id, validated);
-      const updated = await orgExpService.getById(id);
-      return c.json({ message: "org experience updated", data: updated });
+
+      const updatedOrgExp = await orgExpService.update(orgExpId, validatedBody);
+      return c.json({ message: "org experience updated", data: updatedOrgExp });
     },
   )
   .delete("/:id", async (c) => {
-    const id = Number(c.req.param("id"));
-    const org = await orgExpService.getById(id);
+    const OrgExpId = Number(c.req.param("id"));
+    const org = await orgExpService.getById(OrgExpId);
     if (!org) {
       return c.json({ message: "org experience not found" }, 404);
     }
-    await orgExpService.delete(id);
+    await orgExpService.delete(OrgExpId);
     return c.json({ message: "org experience deleted", data: org });
   });
+
+// detail org experience
+orgExpRoute
+  .post(
+    "/:id/details",
+    zValidator("json", orgExpDetailSchema, (result, c) => {
+      if (!result.success) {
+        throw new HTTPException(400, {
+          message: result.error.issues[0].message,
+        });
+      }
+    }),
+    async (c) => {
+      const orgExpId = Number(c.req.param("id"));
+      const validatedBody = c.req.valid("json");
+
+      const parent = await orgExpService.getById(orgExpId);
+      if (!parent) {
+        return c.json({ message: "organization experience not found" }, 404);
+      }
+
+      const addedDetail = await orgExpService.addDetail(
+        orgExpId,
+        validatedBody,
+      );
+      return c.json({ message: "detail added", data: addedDetail });
+    },
+  )
+  .patch(
+    "/:id/details/:detailId",
+    zValidator("json", orgExpDetailSchema, (result, c) => {
+      if (!result.success) {
+        throw new HTTPException(400, {
+          message: result.error.issues[0].message,
+        });
+      }
+    }),
+    async (c) => {
+      const orgExpId = Number(c.req.param("id"));
+      const detailId = Number(c.req.param("detailId"));
+      const validatedBody = c.req.valid("json");
+
+      const existingDetail = await orgExpService.getDetailById(detailId);
+      if (!existingDetail) {
+        return c.json(
+          { message: "organization experience detail not found" },
+          404,
+        );
+      }
+
+      if (existingDetail.organizationExperienceId !== orgExpId) {
+        return c.json(
+          {
+            message:
+              "detail does not belong to the given organization experience",
+          },
+          404,
+        );
+      }
+
+      const updatedDetail = await orgExpService.updateDetails(
+        detailId,
+        validatedBody,
+      );
+      return c.json({
+        message: "organization experience detail updated",
+        data: updatedDetail,
+      });
+    },
+  );
 
 export const projectRoute = new Hono();
 projectRoute
@@ -508,6 +594,147 @@ projectRoute
     }
     await projectService.delete(id);
     return c.json({ message: "project deleted", data: project });
+  });
+projectRoute
+  .post(
+    "/:id/details",
+    zValidator("json", projectDetailSchema, (result, c) => {
+      if (!result.success) {
+        throw new HTTPException(400, {
+          message: result.error.issues[0].message,
+        });
+      }
+    }),
+    async (c) => {
+      const projectId = Number(c.req.param("id"));
+      const validatedBody = c.req.valid("json");
+
+      const project = await projectService.getById(projectId);
+      if (!project) {
+        return c.json({ message: "project not found" }, 404);
+      }
+
+      const addedDetail = await projectService.addDetails(
+        projectId,
+        validatedBody,
+      );
+      return c.json({
+        message: "project detail added",
+        data: addedDetail,
+      });
+    },
+  )
+  .patch(
+    "/:id/details/:detailId",
+    zValidator("json", projectDetailSchema, (result, c) => {
+      if (!result.success) {
+        throw new HTTPException(400, {
+          message: result.error.issues[0].message,
+        });
+      }
+    }),
+    async (c) => {
+      const projectId = Number(c.req.param("id"));
+      const detailId = Number(c.req.param("detailId"));
+      const validatedBody = c.req.valid("json");
+
+      const existingDetail = await projectService.getDetailById(projectId);
+
+      if (!existingDetail) {
+        return c.json({ message: "project detail not found" }, 404);
+      }
+
+      if (existingDetail.projectId !== projectId) {
+        return c.json(
+          { message: "detail does not belong to the specified project" },
+          400,
+        );
+      }
+
+      const updatedDetail = await projectService.updateDetails(
+        detailId,
+        validatedBody,
+      );
+
+      return c.json({
+        message: "project detail updated",
+        data: updatedDetail,
+      });
+    },
+  );
+projectRoute
+  .get("/:id/technologies", async (c) => {
+    const id = Number(c.req.param("id"));
+
+    const project = await projectService.getById(id);
+    if (!project) {
+      return c.json({ message: "project not found" }, 404);
+    }
+
+    const techs = await projectTechService.getByProjectId(id);
+    return c.json({ message: "success get project technologies", data: techs });
+  })
+  .post(
+    "/:id/technologies",
+    zValidator(
+      "json",
+      projectTechSchema.omit({ projectId: true }),
+      (result, c) => {
+        if (!result.success) {
+          throw new HTTPException(400, {
+            message: result.error.issues[0].message,
+          });
+        }
+      },
+    ),
+    async (c) => {
+      const projectId = Number(c.req.param("id"));
+      const validatedBody = c.req.valid("json");
+
+      const project = await projectService.getById(projectId);
+      if (!project) {
+        return c.json({ message: "project not found" }, 404);
+      }
+
+      const insertedId = await projectTechService.addTech(
+        projectId,
+        validatedBody,
+      );
+      return c.json({
+        message: "tech stack added",
+        data: { id: insertedId },
+      });
+    },
+  )
+  .patch(
+    "/:id/technologies/:techId",
+    zValidator("json", projectTechSchema.omit({ projectId: true })),
+    async (c) => {
+      const techId = Number(c.req.param("techId"));
+      const validated = c.req.valid("json");
+
+      const projectId = Number(c.req.param("id"));
+      const project = await projectService.getById(projectId);
+      if (!project) {
+        return c.json({ message: "project not found" }, 404);
+      }
+
+      await projectTechService.update(techId, validated);
+      const updated = await projectTechService.getByProjectId(projectId);
+      return c.json({ message: "tech stack updated", data: updated });
+    },
+  )
+  .delete("/:id/technologies/:techId", async (c) => {
+    const techId = Number(c.req.param("techId"));
+    const projectId = Number(c.req.param("id"));
+
+    const project = await projectService.getById(projectId);
+    if (!project) {
+      return c.json({ message: "project not found" }, 404);
+    }
+
+    await projectTechService.delete(techId);
+    return c.json({ message: "tech deleted" });
   });
 
 export const courseRoute = new Hono();
@@ -569,6 +796,7 @@ courseRoute
     await courseService.delete(id);
     return c.json({ message: "course deleted", data: course });
   });
+
 export const skillRoute = new Hono();
 skillRoute
   .get("/", async (c) => {
@@ -612,28 +840,5 @@ export const softSkillRoute = new Hono()
   .delete("/:id", async (c) => {
     const id = Number(c.req.param("id"));
     await softSkillService.delete(id);
-    return c.json({ message: "deleted" });
-  });
-
-export const projectTechRoute = new Hono()
-  .get("/", async (c) => {
-    const data = await projectTechService.getAll();
-    return c.json({ message: "success", data });
-  })
-  .post("/", zValidator("json", projectTechSchema), async (c) => {
-    const validated = c.req.valid("json");
-    const result = await projectTechService.addTech(validated);
-    return c.json({ message: "created", data: result }, 201);
-  })
-  .patch("/:id", zValidator("json", projectTechSchema), async (c) => {
-    const id = Number(c.req.param("id"));
-    const validated = c.req.valid("json");
-    await projectTechService.update(id, validated);
-    const updated = await projectTechService.getByProjectId(id);
-    return c.json({ message: "updated", data: updated });
-  })
-  .delete("/:id", async (c) => {
-    const id = Number(c.req.param("id"));
-    await projectTechService.delete(id);
     return c.json({ message: "deleted" });
   });
