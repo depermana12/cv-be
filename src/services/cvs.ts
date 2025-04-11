@@ -2,7 +2,7 @@ import { eq } from "drizzle-orm";
 import { db } from "../db/index";
 
 import {
-  personalInfo,
+  personalBasic,
   education,
   workExperience,
   workExperienceDetails,
@@ -15,10 +15,19 @@ import {
   softSkills,
   courses,
   courseDetails,
+  personalLocation,
+  personalSocial,
 } from "../db/schema";
 import { HTTPException } from "hono/http-exception";
 
-type PersonalType = typeof personalInfo.$inferInsert;
+type PersonalBasicType = typeof personalBasic.$inferInsert;
+type PersonalLocationType = typeof personalLocation.$inferInsert;
+type PersonalSocialType = typeof personalSocial.$inferInsert;
+type PersonalType = {
+  basic: PersonalBasicType;
+  location: PersonalLocationType;
+  socials: PersonalSocialType[];
+};
 type EducationType = typeof education.$inferInsert;
 type WorkExpType = typeof workExperience.$inferInsert;
 type WorkExpDetailType = typeof workExperienceDetails.$inferInsert;
@@ -34,7 +43,7 @@ type ProjectTechStack = typeof projectTechnologies.$inferInsert;
 export class Personal {
   async getAll() {
     try {
-      return await db.select().from(personalInfo);
+      return await db.select().from(personalBasic);
     } catch (e: unknown) {
       throw new Error(e instanceof Error ? e.message : String(e));
     }
@@ -42,34 +51,85 @@ export class Personal {
 
   async getById(id: number) {
     try {
-      const rows = await db
+      const [basic] = await db
         .select()
-        .from(personalInfo)
-        .where(eq(personalInfo.id, id));
-      return rows[0];
+        .from(personalBasic)
+        .where(eq(personalBasic.id, id));
+
+      if (!basic) {
+        throw new HTTPException(404, {
+          message: "invalid education id not found",
+        });
+      }
+
+      const [location] = await db
+        .select()
+        .from(personalLocation)
+        .where(eq(personalLocation.personalId, id));
+
+      const [socials] = await db
+        .select()
+        .from(personalSocial)
+        .where(eq(personalSocial.personalId, id));
+      return {
+        ...basic,
+        location,
+        socials,
+      };
     } catch (e: unknown) {
       throw new Error(e instanceof Error ? e.message : String(e));
     }
   }
 
-  async create(biodata: PersonalType) {
+  async create(data: PersonalType) {
     try {
-      const insertedData = await db
-        .insert(personalInfo)
-        .values(biodata)
+      const insertedBasicData = await db
+        .insert(personalBasic)
+        .values(data.basic)
         .$returningId();
-      return this.getById(insertedData[0].id);
+      const personalId = insertedBasicData[0].id;
+
+      await db
+        .insert(personalLocation)
+        .values({ ...data.location, personalId });
+
+      if (data.socials.length > 0) {
+        await db.insert(personalSocial).values(
+          data.socials.map((social) => ({
+            ...social,
+            personalId,
+          })),
+        );
+      }
+
+      return this.getById(personalId);
     } catch (e: unknown) {
       throw new Error(e instanceof Error ? e.message : String(e));
     }
   }
 
-  async update(personalId: number, newPersonalData: PersonalType) {
+  async update(personalId: number, data: PersonalType) {
     try {
       await db
-        .update(personalInfo)
-        .set(newPersonalData)
-        .where(eq(personalInfo.id, personalId));
+        .update(personalBasic)
+        .set(data.basic)
+        .where(eq(personalBasic.id, personalId));
+
+      await db
+        .update(personalLocation)
+        .set(data.location)
+        .where(eq(personalLocation.personalId, personalId));
+
+      await db
+        .delete(personalSocial)
+        .where(eq(personalSocial.personalId, personalId));
+
+      if (data.socials.length > 0) {
+        await db
+          .insert(personalSocial)
+          .values(data.socials.map((social) => ({ ...social, personalId })));
+      }
+
       return this.getById(personalId);
     } catch (e: unknown) {
       throw new Error(e instanceof Error ? e.message : String(e));
@@ -78,7 +138,13 @@ export class Personal {
 
   async delete(personalId: number) {
     try {
-      await db.delete(personalInfo).where(eq(personalInfo.id, personalId));
+      await db
+        .delete(personalSocial)
+        .where(eq(personalSocial.personalId, personalId));
+      await db
+        .delete(personalLocation)
+        .where(eq(personalLocation.personalId, personalId));
+      await db.delete(personalBasic).where(eq(personalBasic.id, personalId));
     } catch (e) {
       throw new Error(e instanceof Error ? e.message : String(e));
     }
@@ -140,7 +206,7 @@ export class Education {
   }
 }
 
-export class WorkExp {
+export class Work {
   async getAll() {
     try {
       return await db.select().from(workExperience);
@@ -229,7 +295,7 @@ export class WorkExp {
   }
 }
 
-export class OrgExp {
+export class Organization {
   async getAll() {
     try {
       return await db.select().from(organizationExperience);

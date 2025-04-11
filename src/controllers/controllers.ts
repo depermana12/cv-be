@@ -4,8 +4,8 @@ import { zValidator } from "@hono/zod-validator";
 import {
   Personal,
   Education,
-  WorkExp,
-  OrgExp,
+  Work,
+  Organization,
   Project,
   Course,
   Skill,
@@ -15,18 +15,40 @@ import {
 
 import { HTTPException } from "hono/http-exception";
 
-const newPersonSchema = z.object({
-  fullName: z.string().min(1),
-  email: z.string().email(),
-  location: z.string().optional(),
-  phone: z.string().optional(),
-  linkedin: z.string().url().optional(),
-  github: z.string().url().optional(),
+const personalBasicSchema = z.object({
+  fullName: z.string().min(3).max(100),
   bio: z.string().optional(),
+  image: z.string().optional(),
+  summary: z.string().optional(),
+  phone: z.string().optional(),
+  email: z.string().email(),
+  url: z.string().url().optional(),
+});
+
+export const personalSocialSchema = z.object({
+  personalId: z.number().int(),
+  social: z.string().max(50).optional(),
+  username: z.string().max(100).optional(),
+  url: z.string().url().max(255).optional(),
+});
+
+const personalLocationSchema = z.object({
+  personalId: z.number().int(),
+  address: z.string().max(255).optional(),
+  postalCode: z.string().max(5).optional(),
+  city: z.string().max(100).optional(),
+  countryCode: z.string().max(10).optional(),
+  state: z.string().max(100).optional(),
+});
+
+export const personalTypeSchema = z.object({
+  basic: personalBasicSchema,
+  location: personalLocationSchema,
+  socials: z.array(personalSocialSchema),
 });
 
 const educationSchema = z.object({
-  personalInfoId: z.number().int().optional(),
+  personalId: z.number().int().optional(),
   institution: z.string().max(100),
   degree: z.string().max(100),
   fieldOfStudy: z.string().max(100).optional(),
@@ -37,7 +59,7 @@ const educationSchema = z.object({
 });
 
 const workExpSchema = z.object({
-  personalInfoId: z.number().int(),
+  personalId: z.number().int(),
   company: z.string().max(100),
   position: z.string().max(100),
   startDate: z.coerce.date(),
@@ -57,7 +79,7 @@ const orgExpDetailSchema = z.object({
 });
 
 const orgExpSchema = z.object({
-  personalInfoId: z.number().int(),
+  personalId: z.number().int(),
   organization: z.string().max(100),
   role: z.string().max(100),
   startDate: z.coerce.date(),
@@ -66,7 +88,7 @@ const orgExpSchema = z.object({
 });
 
 const projectSchema = z.object({
-  personalInfoId: z.number().int(),
+  personalId: z.number().int(),
   name: z.string().max(100),
   description: z.string().max(1000),
   techStack: z.string().optional(),
@@ -75,7 +97,7 @@ const projectSchema = z.object({
 });
 
 const courseSchema = z.object({
-  personalInfoId: z.number().int(),
+  personalId: z.number().int(),
   courseName: z.string().max(100),
   provider: z.string().max(100),
   completionDate: z.coerce.date(),
@@ -83,13 +105,13 @@ const courseSchema = z.object({
 });
 
 const skillSchema = z.object({
-  personalInfoId: z.number().int(),
+  personalId: z.number().int(),
   category: z.string().max(50),
   name: z.string().max(100),
 });
 
 const softSkillSchema = z.object({
-  personalInfoId: z.number().int(),
+  personalId: z.number().int(),
   category: z.string().max(50),
   description: z.string(),
 });
@@ -102,8 +124,8 @@ const projectTechSchema = z.object({
 
 const personalService = new Personal();
 const educationService = new Education();
-const workExpService = new WorkExp();
-const orgExpService = new OrgExp();
+const workExpService = new Work();
+const orgExpService = new Organization();
 const projectService = new Project();
 const courseService = new Course();
 const projectTechService = new ProjectTech();
@@ -136,7 +158,7 @@ personalRoutes
   })
   .post(
     "/",
-    zValidator("json", newPersonSchema, (result, c) => {
+    zValidator("json", personalTypeSchema, (result, c) => {
       if (!result.success) {
         throw new HTTPException(400, {
           message: result.error.issues[0].message,
@@ -144,14 +166,14 @@ personalRoutes
       }
     }),
     async (c) => {
-      const validated = c.req.valid("json");
-      const newPersonData = await personalService.create(validated);
+      const validatedBody = c.req.valid("json");
+      const newPersonData = await personalService.create(validatedBody);
       return c.json({ message: "person created", data: newPersonData }, 201);
     },
   )
   .patch(
     "/:id",
-    zValidator("json", newPersonSchema, (result, c) => {
+    zValidator("json", personalTypeSchema, (result, c) => {
       if (!result.success) {
         throw new HTTPException(400, {
           message: result.error.issues[0].message,
@@ -160,9 +182,12 @@ personalRoutes
     }),
     async (c) => {
       const personId = c.req.param("id");
-      const validated = c.req.valid("json");
-      await personalService.update(Number(personId), validated);
-      const personUpdated = await personalService.getById(Number(personId));
+      const validatedBody = c.req.valid("json");
+
+      const personUpdated = await personalService.update(
+        Number(personId),
+        validatedBody,
+      );
       return c.json({ message: "person updated", data: personUpdated }, 200);
     },
   )
