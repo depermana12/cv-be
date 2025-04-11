@@ -518,13 +518,28 @@ export class Course {
 
 export class Skill {
   async getAll() {
-    return await db.select().from(skills);
+    try {
+      return await db.select().from(skills);
+    } catch (e: unknown) {
+      throw new Error(e instanceof Error ? e.message : String(e));
+    }
   }
 
-  async getById(id: number) {
+  async getById(skillId: number) {
     try {
-      const skill = await db.select().from(skills).where(eq(skills.id, id));
-      return skill[0];
+      const rows = await db.select().from(skills).where(eq(skills.id, skillId));
+      return rows[0];
+    } catch (e: unknown) {
+      throw new Error(e instanceof Error ? e.message : String(e));
+    }
+  }
+
+  async getCategories() {
+    try {
+      const rows = await db.select({ category: skills.category }).from(skills);
+      const unique = new Set(rows.map((row) => row.category));
+      const categories = Array.from(unique);
+      return categories;
     } catch (e: unknown) {
       throw new Error(e instanceof Error ? e.message : String(e));
     }
@@ -532,37 +547,49 @@ export class Skill {
 
   async create(skill: SkillType) {
     try {
-      const rows = await db.insert(skills).values(skill).$returningId();
-      return rows[0];
+      const insertedSkill = await db
+        .insert(skills)
+        .values(skill)
+        .$returningId();
+      return await this.getById(insertedSkill[0].id);
     } catch (e: unknown) {
       throw new Error(e instanceof Error ? e.message : String(e));
     }
   }
 
-  async update(id: number, newSkillData: Partial<SkillType>) {
+  async update(skillId: number, newSkillData: Partial<SkillType>) {
     try {
-      await db.update(skills).set(newSkillData).where(eq(skills.id, id));
+      await db.update(skills).set(newSkillData).where(eq(skills.id, skillId));
+      return this.getById(skillId);
     } catch (e: unknown) {
       throw new Error(e instanceof Error ? e.message : String(e));
     }
   }
 
-  async delete(id: number) {
-    await db.delete(skills).where(eq(skills.id, id));
+  async delete(skillId: number) {
+    try {
+      await db.delete(skills).where(eq(skills.id, skillId));
+    } catch (e: unknown) {
+      throw new Error(e instanceof Error ? e.message : String(e));
+    }
   }
 }
 
 export class SoftSkill {
   async getAll() {
-    return await db.select().from(softSkills);
+    try {
+      return await db.select().from(softSkills);
+    } catch (e: unknown) {
+      throw new Error(e instanceof Error ? e.message : String(e));
+    }
   }
 
-  async getById(id: number) {
+  async getById(softSkillId: number) {
     try {
       const rows = await db
         .select()
         .from(softSkills)
-        .where(eq(softSkills.id, id));
+        .where(eq(softSkills.id, softSkillId));
       return rows[0];
     } catch (e: unknown) {
       throw new Error(e instanceof Error ? e.message : String(e));
@@ -571,23 +598,34 @@ export class SoftSkill {
 
   async create(softSkill: SoftSkillType) {
     try {
-      const rows = await db.insert(softSkills).values(softSkill).$returningId();
-      return rows[0];
+      const insertedSoftSkill = await db
+        .insert(softSkills)
+        .values(softSkill)
+        .$returningId();
+      return await this.getById(insertedSoftSkill[0].id);
     } catch (e: unknown) {
       throw new Error(e instanceof Error ? e.message : String(e));
     }
   }
 
-  async update(id: number, newData: Partial<SoftSkillType>) {
+  async update(softSkillId: number, newData: Partial<SoftSkillType>) {
     try {
-      await db.update(softSkills).set(newData).where(eq(softSkills.id, id));
+      await db
+        .update(softSkills)
+        .set(newData)
+        .where(eq(softSkills.id, softSkillId));
+      return await this.getById(softSkillId);
     } catch (e: unknown) {
       throw new Error(e instanceof Error ? e.message : String(e));
     }
   }
 
-  async delete(id: number) {
-    await db.delete(softSkills).where(eq(softSkills.id, id));
+  async delete(softSkillId: number) {
+    try {
+      await db.delete(softSkills).where(eq(softSkills.id, softSkillId));
+    } catch (e: unknown) {
+      throw new Error(e instanceof Error ? e.message : String(e));
+    }
   }
 }
 

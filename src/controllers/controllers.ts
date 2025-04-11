@@ -803,42 +803,64 @@ skillRoutes
     const data = await skillService.getAll();
     return c.json({ message: "success", data });
   })
+  .get("/:id", async (c) => {
+    const skillId = Number(c.req.param("id"));
+    const skill = await skillService.getById(skillId);
+    if (!skill) {
+      return c.json({ message: "skill not found" }, 404);
+    }
+    return c.json({ message: "success get skill", data: skill });
+  })
+  .get("/categories", async (c) => {
+    const categories = await skillService.getCategories();
+    return c.json({ message: "success get categories", data: categories });
+  })
   .post("/", zValidator("json", skillSchema), async (c) => {
-    const body = c.req.valid("json");
-    const result = await skillService.create(body);
-    return c.json({ message: "created", data: result }, 201);
+    const validatedBody = c.req.valid("json");
+    const newSkill = await skillService.create(validatedBody);
+    return c.json({ message: "created", data: newSkill }, 201);
   })
   .patch("/:id", zValidator("json", skillSchema), async (c) => {
-    const id = Number(c.req.param("id"));
-    const validated = c.req.valid("json");
-    await skillService.update(id, validated);
-    const updated = await skillService.getById(id);
+    const skillId = Number(c.req.param("id"));
+    const validatedBody = c.req.valid("json");
+
+    const updated = await skillService.update(skillId, validatedBody);
     return c.json({ message: "updated", data: updated });
   })
   .delete("/:id", async (c) => {
-    const id = Number(c.req.param("id"));
-    await skillService.delete(id);
+    const skillId = Number(c.req.param("id"));
+    await skillService.delete(skillId);
     return c.json({ message: "deleted" });
   });
 
-export const softSkillRoutes = new Hono()
+export const softSkillRoutes = new Hono();
+softSkillRoutes
   .get("/", async (c) => {
     const data = await softSkillService.getAll();
     return c.json({ message: "success", data });
   })
+  .get("/:id", async (c) => {
+    const softSkillId = Number(c.req.param("id"));
+    const softSkill = await softSkillService.getById(softSkillId);
+    if (!softSkill) {
+      return c.json({ message: "soft skill not found" }, 404);
+    }
+    return c.json({ message: "success get soft skill", data: softSkill });
+  })
   .post("/", zValidator("json", softSkillSchema), async (c) => {
-    const body = c.req.valid("json");
-    const result = await softSkillService.create(body);
-    return c.json({ message: "created", data: result }, 201);
+    const validatedBody = c.req.valid("json");
+    const newSoftSkill = await softSkillService.create(validatedBody);
+    return c.json({ message: "created", data: newSoftSkill }, 201);
   })
   .patch("/:id", zValidator("json", softSkillSchema), async (c) => {
-    const id = Number(c.req.param("id"));
-    const body = c.req.valid("json");
-    await softSkillService.update(id, body);
-    return c.json({ message: "updated" });
+    const softSkillId = Number(c.req.param("id"));
+    const validatedBody = c.req.valid("json");
+
+    const updated = await softSkillService.update(softSkillId, validatedBody);
+    return c.json({ message: "updated", data: updated });
   })
   .delete("/:id", async (c) => {
-    const id = Number(c.req.param("id"));
-    await softSkillService.delete(id);
+    const softSkillId = Number(c.req.param("id"));
+    await softSkillService.delete(softSkillId);
     return c.json({ message: "deleted" });
   });
