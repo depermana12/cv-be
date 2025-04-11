@@ -113,10 +113,8 @@ const softSkillService = new SoftSkill();
 export const personalRoutes = new Hono();
 personalRoutes
   .get("/", async (c) => {
-    const personalInfo = await personalService.get();
-    if (!personalInfo) {
-      return c.json({ message: "person not found" }, 404);
-    }
+    const personalInfo = await personalService.getAll();
+
     return c.json(
       {
         message: "success get personal info",
@@ -720,7 +718,7 @@ projectRoutes
       }
 
       await projectTechService.update(techId, validated);
-      const updated = await projectTechService.getByProjectId(projectId);
+      const updated = await projectTechService.getById(projectId);
       return c.json({ message: "tech stack updated", data: updated });
     },
   )
