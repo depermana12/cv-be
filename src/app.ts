@@ -1,11 +1,11 @@
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
-
-import { personalRoute } from "./controllers/controllers";
+import router from "./routes";
 
 const app = new Hono().basePath("/api/v1");
 app.get("/", (c) => c.text("Hello cv"));
-app.route("/personal", personalRoute);
+
+app.route("/", router);
 
 app.notFound((c) => {
   return c.json({ error: "you lost bruh" }, 404);

@@ -602,10 +602,23 @@ export class ProjectTech {
         .select()
         .from(projectTechnologies)
         .where(eq(projectTechnologies.projectId, projectId));
-      return rows[0];
+      return rows;
     } catch (e: unknown) {
       throw new Error(e instanceof Error ? e.message : String(e));
     }
+  }
+
+  async getByProjectIdGrouped(projectId: number) {
+    const techs = await this.getByProjectId(projectId);
+
+    const grouped = techs.reduce((acc: Record<string, string[]>, tech) => {
+      const key = tech.category;
+      if (!acc[key]) acc[key] = [];
+      acc[key].push(tech.technology);
+      return acc;
+    }, {});
+
+    return grouped;
   }
 
   async addTech(projectId: number, tech: Omit<ProjectTechStack, "projectId">) {

@@ -137,6 +137,7 @@ export const projectTechnologies = mysqlTable("project_technologies", {
   id: int("id").primaryKey().autoincrement(),
   projectId: int("project_id").references(() => projects.id),
   technology: varchar("technology", { length: 100 }).notNull(),
+  category: varchar("type", { length: 100 }).notNull(),
 });
 
 export const projectsRelations = relations(projects, ({ one, many }) => ({

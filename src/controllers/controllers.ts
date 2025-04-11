@@ -12,8 +12,8 @@ import {
   SoftSkill,
   ProjectTech,
 } from "../services/cvs";
+
 import { HTTPException } from "hono/http-exception";
-import { orgExpDetails } from "../db/schema";
 
 const newPersonSchema = z.object({
   fullName: z.string().min(1),
@@ -97,7 +97,7 @@ const softSkillSchema = z.object({
 const projectTechSchema = z.object({
   technology: z.string().max(100),
   projectId: z.number().int(),
-  name: z.string().max(100),
+  category: z.string().max(100),
 });
 
 const personalService = new Personal();
@@ -110,8 +110,8 @@ const projectTechService = new ProjectTech();
 const skillService = new Skill();
 const softSkillService = new SoftSkill();
 
-export const personalRoute = new Hono();
-personalRoute
+export const personalRoutes = new Hono();
+personalRoutes
   .get("/", async (c) => {
     const personalInfo = await personalService.get();
     if (!personalInfo) {
@@ -181,8 +181,8 @@ personalRoute
     });
   });
 
-export const educationRoute = new Hono();
-educationRoute
+export const educationRoutes = new Hono();
+educationRoutes
   .get("/", async (c) => {
     const education = await educationService.getAll();
     if (!education) {
@@ -266,8 +266,8 @@ educationRoute
     });
   });
 
-export const workExpRoute = new Hono();
-workExpRoute
+export const workExpRoutes = new Hono();
+workExpRoutes
   .get("/", async (c) => {
     const works = await workExpService.getAll();
     return c.json({
@@ -339,7 +339,7 @@ workExpRoute
   });
 
 // for the detail work experience
-workExpRoute
+workExpRoutes
   .post(
     "/:id/details",
     zValidator("json", workExpDetailSchema, (result, c) => {
@@ -399,8 +399,8 @@ workExpRoute
     },
   );
 
-export const orgExpRoute = new Hono();
-orgExpRoute
+export const orgExpRoutes = new Hono();
+orgExpRoutes
   .get("/", async (c) => {
     const orgs = await orgExpService.getAll();
     return c.json({ message: "success get all org experiences", orgs });
@@ -467,7 +467,7 @@ orgExpRoute
   });
 
 // detail org experience
-orgExpRoute
+orgExpRoutes
   .post(
     "/:id/details",
     zValidator("json", orgExpDetailSchema, (result, c) => {
@@ -536,8 +536,8 @@ orgExpRoute
     },
   );
 
-export const projectRoute = new Hono();
-projectRoute
+export const projectRoutes = new Hono();
+projectRoutes
   .get("/", async (c) => {
     const data = await projectService.getAll();
     return c.json({ message: "success get all projects", data });
@@ -595,7 +595,7 @@ projectRoute
     await projectService.delete(id);
     return c.json({ message: "project deleted", data: project });
   });
-projectRoute
+projectRoutes
   .post(
     "/:id/details",
     zValidator("json", projectDetailSchema, (result, c) => {
@@ -662,7 +662,7 @@ projectRoute
       });
     },
   );
-projectRoute
+projectRoutes
   .get("/:id/technologies", async (c) => {
     const id = Number(c.req.param("id"));
 
@@ -671,7 +671,7 @@ projectRoute
       return c.json({ message: "project not found" }, 404);
     }
 
-    const techs = await projectTechService.getByProjectId(id);
+    const techs = await projectTechService.getAll();
     return c.json({ message: "success get project technologies", data: techs });
   })
   .post(
@@ -737,8 +737,8 @@ projectRoute
     return c.json({ message: "tech deleted" });
   });
 
-export const courseRoute = new Hono();
-courseRoute
+export const courseRoutes = new Hono();
+courseRoutes
   .get("/", async (c) => {
     const data = await courseService.getAll();
     return c.json({ message: "success get all courses", data });
@@ -797,8 +797,8 @@ courseRoute
     return c.json({ message: "course deleted", data: course });
   });
 
-export const skillRoute = new Hono();
-skillRoute
+export const skillRoutes = new Hono();
+skillRoutes
   .get("/", async (c) => {
     const data = await skillService.getAll();
     return c.json({ message: "success", data });
@@ -821,7 +821,7 @@ skillRoute
     return c.json({ message: "deleted" });
   });
 
-export const softSkillRoute = new Hono()
+export const softSkillRoutes = new Hono()
   .get("/", async (c) => {
     const data = await softSkillService.getAll();
     return c.json({ message: "success", data });
