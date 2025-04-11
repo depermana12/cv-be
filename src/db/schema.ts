@@ -18,7 +18,7 @@ export const personalBasic = mysqlTable("personal_basic", {
   summary: text("summary"),
   phone: varchar("phone", { length: 15 }),
   email: varchar("email", { length: 100 }),
-  url: varchar("url", { length: 200 }),
+  url: varchar("url", { length: 255 }),
 });
 
 export const personalLocation = mysqlTable("personal_location", {
@@ -55,17 +55,29 @@ export const personalRelations = relations(personalBasic, ({ many, one }) => ({
   location: one(personalLocation),
 }));
 
+// Languange Table
+export const language = mysqlTable("language", {
+  id: int("id").primaryKey().autoincrement(),
+  personalId: int("personal_id")
+    .notNull()
+    .references(() => personalBasic.id),
+  language: varchar("language", { length: 100 }).notNull(),
+  fluency: varchar("fluency", { length: 255 }).notNull(),
+});
+
 // Education Table
 export const education = mysqlTable("education", {
   id: int("id").primaryKey().autoincrement(),
-  personalId: int("personal_id").references(() => personalBasic.id),
+  personalId: int("personal_id")
+    .notNull()
+    .references(() => personalBasic.id),
   institution: varchar("institution", { length: 100 }).notNull(),
   degree: varchar("degree", { length: 100 }).notNull(),
   fieldOfStudy: varchar("field_of_study", { length: 100 }),
   startDate: date("start_date"),
   endDate: date("end_date"),
   gpa: decimal("gpa", { precision: 3, scale: 2 }),
-  maxGpa: decimal("max_gpa", { precision: 3, scale: 2 }),
+  url: varchar("url", { length: 255 }),
 });
 
 export const educationRelations = relations(education, ({ one }) => ({
@@ -78,18 +90,23 @@ export const educationRelations = relations(education, ({ one }) => ({
 // Work Experience Table
 export const workExperience = mysqlTable("work_exp", {
   id: int("id").primaryKey().autoincrement(),
-  personalId: int("personal_id").references(() => personalBasic.id),
+  personalId: int("personal_id")
+    .notNull()
+    .references(() => personalBasic.id),
   company: varchar("company", { length: 100 }).notNull(),
   position: varchar("position", { length: 100 }).notNull(),
   startDate: date("start_date"),
   endDate: date("end_date"),
+  url: varchar("url", { length: 255 }),
   isCurrent: boolean("is_current").default(false),
 });
 
 // Work Experience Details Table
 export const workExperienceDetails = mysqlTable("work_exp_details", {
   id: int("id").primaryKey().autoincrement(),
-  workExperienceId: int("work_exp_id").references(() => workExperience.id),
+  workExperienceId: int("work_exp_id")
+    .notNull()
+    .references(() => workExperience.id),
   description: text("description"),
 });
 
@@ -107,7 +124,9 @@ export const workExperienceRelations = relations(workExperience, ({ one }) => ({
 // Organization Experience Table
 export const organizationExperience = mysqlTable("org_exp", {
   id: int("id").primaryKey().autoincrement(),
-  personalId: int("personal_id").references(() => personalBasic.id),
+  personalId: int("personal_id")
+    .notNull()
+    .references(() => personalBasic.id),
   organization: varchar("organization", { length: 100 }).notNull(),
   role: varchar("role", { length: 100 }).notNull(),
   startDate: date("start_date"),
@@ -117,9 +136,9 @@ export const organizationExperience = mysqlTable("org_exp", {
 // Organization Experience Details Table
 export const orgExpDetails = mysqlTable("org_exp_details", {
   id: int("id").primaryKey().autoincrement(),
-  organizationExperienceId: int("org_exp_id").references(
-    () => organizationExperience.id,
-  ),
+  organizationExperienceId: int("org_exp_id")
+    .notNull()
+    .references(() => organizationExperience.id),
   description: text("description"),
 });
 
@@ -144,22 +163,30 @@ export const orgExpDetailsRelations = relations(orgExpDetails, ({ one }) => ({
 // Projects Table
 export const projects = mysqlTable("projects", {
   id: int("id").primaryKey().autoincrement(),
-  personalId: int("personal_id").references(() => personalBasic.id),
+  personalId: int("personal_id")
+    .notNull()
+    .references(() => personalBasic.id),
   name: varchar("name", { length: 100 }).notNull(),
-  githubUrl: varchar("github_url", { length: 200 }),
+  startDate: date("start_date"),
+  endDate: date("end_date"),
+  url: varchar("url", { length: 255 }),
 });
 
 // Project Details Table
 export const projectDetails = mysqlTable("project_details", {
   id: int("id").primaryKey().autoincrement(),
-  projectId: int("project_id").references(() => projects.id),
+  projectId: int("project_id")
+    .notNull()
+    .references(() => projects.id),
   description: text("description"),
 });
 
 // Project Technologies Table
 export const projectTechnologies = mysqlTable("project_technologies", {
   id: int("id").primaryKey().autoincrement(),
-  projectId: int("project_id").references(() => projects.id),
+  projectId: int("project_id")
+    .notNull()
+    .references(() => projects.id),
   technology: varchar("technology", { length: 100 }).notNull(),
   category: varchar("type", { length: 100 }).notNull(),
 });
@@ -211,7 +238,9 @@ export const skillsRelations = relations(skills, ({ one }) => ({
 // Soft Skills Table
 export const softSkills = mysqlTable("soft_skills", {
   id: int("id").primaryKey().autoincrement(),
-  personalId: int("personal_id").references(() => personalBasic.id),
+  personalId: int("personal_id")
+    .notNull()
+    .references(() => personalBasic.id),
   category: varchar("category", { length: 50 }).notNull(),
   description: text("description"),
 });
@@ -226,7 +255,9 @@ export const softSkillsRelations = relations(softSkills, ({ one }) => ({
 // Courses Table
 export const courses = mysqlTable("courses", {
   id: int("id").autoincrement().primaryKey(),
-  personalId: int("personal_id").references(() => personalBasic.id),
+  personalId: int("personal_id")
+    .notNull()
+    .references(() => personalBasic.id),
   provider: varchar("provider", { length: 100 }).notNull(),
   courseName: varchar("course_name", { length: 200 }),
   startDate: date("start_date"),
@@ -236,7 +267,9 @@ export const courses = mysqlTable("courses", {
 // Course Details Table
 export const courseDetails = mysqlTable("course_details", {
   id: int("id").primaryKey().autoincrement(),
-  courseId: int("course_id").references(() => courses.id),
+  courseId: int("course_id")
+    .notNull()
+    .references(() => courses.id),
   description: text("description"),
 });
 

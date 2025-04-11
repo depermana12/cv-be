@@ -3,6 +3,7 @@ import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
 import {
   Personal,
+  Language,
   Education,
   Work,
   Organization,
@@ -47,15 +48,21 @@ export const personalTypeSchema = z.object({
   socials: z.array(personalSocialSchema),
 });
 
+export const languageSchema = z.object({
+  personalId: z.number().int(),
+  language: z.string().max(100),
+  fluency: z.string().max(255),
+});
+
 const educationSchema = z.object({
-  personalId: z.number().int().optional(),
+  personalId: z.number().int(),
   institution: z.string().max(100),
   degree: z.string().max(100),
   fieldOfStudy: z.string().max(100).optional(),
   startDate: z.coerce.date().optional(),
   endDate: z.coerce.date().optional(),
   gpa: z.union([z.string(), z.null()]).optional(),
-  maxGpa: z.union([z.string(), z.null()]).optional(),
+  url: z.string().url().optional(),
 });
 
 const workExpSchema = z.object({
@@ -64,17 +71,21 @@ const workExpSchema = z.object({
   position: z.string().max(100),
   startDate: z.coerce.date(),
   endDate: z.coerce.date().optional(),
+  url: z.string().url().optional(),
 });
 
 const workExpDetailSchema = z.object({
+  workExperienceId: z.number().int(),
   description: z.string().max(1000),
 });
 
 const projectDetailSchema = z.object({
+  projectId: z.number().int(),
   description: z.string().max(1000),
 });
 
 const orgExpDetailSchema = z.object({
+  organizationExperienceId: z.number().int(),
   description: z.string().max(1000),
 });
 
@@ -84,24 +95,22 @@ const orgExpSchema = z.object({
   role: z.string().max(100),
   startDate: z.coerce.date(),
   endDate: z.coerce.date().optional(),
-  description: z.string().max(1000).optional(),
 });
 
 const projectSchema = z.object({
   personalId: z.number().int(),
   name: z.string().max(100),
-  description: z.string().max(1000),
-  techStack: z.string().optional(),
   startDate: z.coerce.date(),
   endDate: z.coerce.date().optional(),
+  url: z.string().url().max(255).optional(),
 });
 
 const courseSchema = z.object({
   personalId: z.number().int(),
   courseName: z.string().max(100),
   provider: z.string().max(100),
-  completionDate: z.coerce.date(),
-  certificateUrl: z.string().url().optional(),
+  startDate: z.coerce.date(),
+  endDate: z.coerce.date().optional(),
 });
 
 const skillSchema = z.object({
@@ -123,6 +132,7 @@ const projectTechSchema = z.object({
 });
 
 const personalService = new Personal();
+const languageService = new Language();
 const educationService = new Education();
 const workExpService = new Work();
 const orgExpService = new Organization();
@@ -202,6 +212,67 @@ personalRoutes
       message: "this person has been deleted",
       data: personToBeDeleted,
     });
+  });
+
+export const languageRoutes = new Hono();
+languageRoutes
+  .get("person/:personalId", async (c) => {
+    const personalId = Number(c.req.param("personalId"));
+
+    const lang = await languageService.getAllByPersonalId(personalId);
+
+    if (!lang) {
+      return c.json({ message: "language not found" }, 404);
+    }
+    return c.json({ message: "language found", data: lang });
+  })
+  .get("/:id", async (c) => {
+    const id = Number(c.req.param("id"));
+    const lang = await languageService.getById(id);
+
+    if (!lang) {
+      return c.json({ message: "language not found" }, 404);
+    }
+    return c.json({ message: "language found", data: lang });
+  })
+  .post(
+    "/:personalId",
+    zValidator("json", languageSchema, (result, c) => {
+      if (!result.success) {
+        throw new HTTPException(400, {
+          message: result.error.issues[0].message,
+        });
+      }
+    }),
+    async (c) => {
+      const personalId = Number(c.req.param("personalId"));
+      const validateBody = c.req.valid("json");
+
+      const created = await languageService.create(personalId, validateBody);
+      return c.json({ message: "language created", data: created }, 201);
+    },
+  )
+  .patch(
+    "/:id",
+    zValidator("json", languageSchema, (result, c) => {
+      if (!result.success) {
+        throw new HTTPException(400, {
+          message: result.error.issues[0].message,
+        });
+      }
+    }),
+    async (c) => {
+      const id = Number(c.req.param("id"));
+      const validatedBody = c.req.valid("json");
+
+      const updated = await languageService.update(id, validatedBody);
+      return c.json({ message: "language updated", data: updated });
+    },
+  )
+  .delete("/:id", async (c) => {
+    const id = Number(c.req.param("id"));
+    await languageService.delete(id);
+    return c.json({ message: "language deleted" });
   });
 
 export const educationRoutes = new Hono();

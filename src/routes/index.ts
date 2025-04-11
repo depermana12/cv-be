@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import {
   personalRoutes,
+  languageRoutes,
   educationRoutes,
   workExpRoutes,
   orgExpRoutes,
@@ -11,6 +12,7 @@ import {
 const router = new Hono();
 
 router.route("/personal", personalRoutes);
+router.route("/languages", languageRoutes);
 router.route("/education", educationRoutes);
 router.route("/work-experiences", workExpRoutes);
 router.route("/organization-experiences", orgExpRoutes);
