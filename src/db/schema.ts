@@ -62,7 +62,7 @@ export const language = mysqlTable("language", {
     .notNull()
     .references(() => personalBasic.id),
   language: varchar("language", { length: 100 }).notNull(),
-  fluency: varchar("fluency", { length: 255 }).notNull(),
+  fluency: varchar("fluency", { length: 25 }).notNull(),
 });
 
 // Education Table
