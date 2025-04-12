@@ -690,6 +690,20 @@ projectRoutes
     return c.json({ message: "project deleted", data: project });
   });
 projectRoutes
+  .get("/:id/details", async (c) => {
+    const projectId = Number(c.req.param("id"));
+    const project = await projectService.getById(projectId);
+
+    if (!project) {
+      return c.json({ message: "project not found" }, 404);
+    }
+
+    const details = await projectService.getDetailById(projectId);
+    return c.json({
+      message: "success get project details",
+      data: details,
+    });
+  })
   .post(
     "/:id/details",
     zValidator("json", projectDetailSchema, (result, c) => {
