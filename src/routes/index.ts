@@ -9,6 +9,7 @@ import {
   courseRoutes,
   skillRoutes,
   softSkillRoutes,
+  cvRoutes,
 } from "../controllers/controllers";
 
 const router = new Hono();
@@ -22,5 +23,6 @@ router.route("/projects", projectRoutes);
 router.route("/courses", courseRoutes);
 router.route("/skills", skillRoutes);
 router.route("/soft-skills", softSkillRoutes);
+router.route("/cv", cvRoutes);
 
 export default router;

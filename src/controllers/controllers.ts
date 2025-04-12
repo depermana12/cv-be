@@ -1,18 +1,20 @@
 import { Hono } from "hono";
 import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
+
 import {
-  Personal,
-  Language,
-  Education,
-  Work,
-  Organization,
-  Project,
-  Course,
-  Skill,
-  SoftSkill,
-  ProjectTech,
-} from "../services/cvs";
+  personalService,
+  languageService,
+  educationService,
+  workExpService,
+  orgExpService,
+  projectService,
+  courseService,
+  projectTechService,
+  skillService,
+  softSkillService,
+  cvService,
+} from "../services/index";
 
 import { HTTPException } from "hono/http-exception";
 
@@ -130,17 +132,6 @@ const projectTechSchema = z.object({
   projectId: z.number().int(),
   category: z.string().max(100),
 });
-
-const personalService = new Personal();
-const languageService = new Language();
-const educationService = new Education();
-const workExpService = new Work();
-const orgExpService = new Organization();
-const projectService = new Project();
-const courseService = new Course();
-const projectTechService = new ProjectTech();
-const skillService = new Skill();
-const softSkillService = new SoftSkill();
 
 export const personalRoutes = new Hono();
 personalRoutes
@@ -997,4 +988,15 @@ softSkillRoutes
     const softSkillId = Number(c.req.param("id"));
     await softSkillService.delete(softSkillId);
     return c.json({ message: "deleted" });
+  });
+// TODO: add validation check
+export const cvRoutes = new Hono();
+cvRoutes
+  .get("/", async (c) => {
+    const cv = await cvService.getCV();
+    return c.json({ message: "success", data: cv }, 200);
+  })
+  .get("/summary", async (c) => {
+    const summary = await cvService.getSummary();
+    return c.json({ message: "success", data: summary }, 200);
   });
