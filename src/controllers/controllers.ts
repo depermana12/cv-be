@@ -291,12 +291,16 @@ educationRoutes
     );
   })
   .get("/:id", async (c) => {
-    const eduId = c.req.param("id");
-    const edu = educationService.getById(Number(eduId));
-    if (!edu) {
+    const educationId = Number(c.req.param("id"));
+
+    const education = await educationService.getById(educationId);
+    if (!education) {
       return c.json({ message: "education not found" }, 404);
     }
-    return c.json({ message: "success get education id", data: edu }, 200);
+    return c.json(
+      { message: "success get education id", data: education },
+      200,
+    );
   })
   .post(
     "/",
@@ -497,7 +501,7 @@ export const orgExpRoutes = new Hono();
 orgExpRoutes
   .get("/", async (c) => {
     const orgs = await orgExpService.getAll();
-    return c.json({ message: "success get all org experiences", orgs });
+    return c.json({ message: "success get all org experiences", data: orgs });
   })
   .get("/:id", async (c) => {
     const id = Number(c.req.param("id"));
@@ -637,8 +641,8 @@ projectRoutes
     return c.json({ message: "success get all projects", data });
   })
   .get("/:id", async (c) => {
-    const id = Number(c.req.param("id"));
-    const project = await projectService.getById(id);
+    const projectId = Number(c.req.param("id"));
+    const project = await projectService.getById(projectId);
     if (!project) {
       return c.json({ message: "project not found" }, 404);
     }
@@ -702,6 +706,28 @@ projectRoutes
     return c.json({
       message: "success get project details",
       data: details,
+    });
+  })
+  .get("/:id/details/:detailId", async (c) => {
+    const projectId = Number(c.req.param("id"));
+    const detailId = Number(c.req.param("detailId"));
+
+    const detail = await projectService.getDetailById(detailId);
+
+    if (!detail) {
+      return c.json({ message: "project id detail not found" }, 404);
+    }
+
+    if (detail.projectId !== projectId) {
+      return c.json(
+        { message: "detail does not belong to the specified project" },
+        400,
+      );
+    }
+
+    return c.json({
+      message: "success get project detail by id",
+      data: detail,
     });
   })
   .post(
@@ -907,6 +933,10 @@ courseRoutes
 
 export const skillRoutes = new Hono();
 skillRoutes
+  .get("/categories", async (c) => {
+    const categories = await skillService.getCategories();
+    return c.json({ message: "success get categories", data: categories });
+  })
   .get("/", async (c) => {
     const data = await skillService.getAll();
     return c.json({ message: "success", data });
@@ -918,10 +948,6 @@ skillRoutes
       return c.json({ message: "skill not found" }, 404);
     }
     return c.json({ message: "success get skill", data: skill });
-  })
-  .get("/categories", async (c) => {
-    const categories = await skillService.getCategories();
-    return c.json({ message: "success get categories", data: categories });
   })
   .post("/", zValidator("json", skillSchema), async (c) => {
     const validatedBody = c.req.valid("json");

@@ -219,11 +219,6 @@ export class Education {
         .select()
         .from(education)
         .where(eq(education.id, educationId));
-      if (!education) {
-        throw new HTTPException(404, {
-          message: "invalid education id not found",
-        });
-      }
       return rows[0];
     } catch (e: unknown) {
       throw new Error(e instanceof Error ? e.message : String(e));
@@ -632,9 +627,15 @@ export class Skill {
 
   async getCategories() {
     try {
-      const rows = await db.select({ category: skills.category }).from(skills);
-      const unique = new Set(rows.map((row) => row.category));
-      const categories = Array.from(unique);
+      // const rows = await db.select().from(skills);
+      // const unique = new Set(rows.map((row) => row.category));
+      // const categories = Array.from(unique);
+      // return categories;
+
+      const rows = await db
+        .selectDistinct({ category: skills.category })
+        .from(skills);
+      const categories = rows.map((row) => row.category);
       return categories;
     } catch (e: unknown) {
       throw new Error(e instanceof Error ? e.message : String(e));
