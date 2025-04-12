@@ -13,11 +13,11 @@ import {
 export const personalBasic = mysqlTable("personal_basic", {
   id: int("id").primaryKey().autoincrement(),
   fullName: varchar("full_name", { length: 100 }).notNull(),
-  bio: varchar("bio", { length: 100 }),
+  bio: varchar("bio", { length: 255 }),
   image: varchar("image", { length: 255 }),
   summary: text("summary"),
   phone: varchar("phone", { length: 15 }),
-  email: varchar("email", { length: 100 }),
+  email: varchar("email", { length: 255 }),
   url: varchar("url", { length: 255 }),
 });
 
@@ -29,7 +29,7 @@ export const personalLocation = mysqlTable("personal_location", {
   address: varchar("address", { length: 255 }),
   postalCode: varchar("postal_code", { length: 5 }),
   city: varchar("city", { length: 100 }),
-  countryCode: varchar("country_code", { length: 10 }),
+  countryCode: varchar("country_code", { length: 3 }),
   state: varchar("state", { length: 100 }),
 });
 
@@ -38,7 +38,7 @@ export const personalSocial = mysqlTable("personal_social", {
   personalId: int("personal_id")
     .notNull()
     .references(() => personalBasic.id),
-  social: varchar("network", { length: 50 }),
+  social: varchar("social", { length: 50 }),
   username: varchar("username", { length: 100 }),
   url: varchar("url", { length: 255 }),
 });
