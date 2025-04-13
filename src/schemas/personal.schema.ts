@@ -11,7 +11,7 @@ export const personalBasicBaseSchema = z.object({
   bio: z.string().max(255, { message: "Must be 255 characters or fewer" }),
   image: z.string().max(255, { message: "Must be 255 characters or fewer" }),
   summary: z.string(),
-  phone: z.string().max(15, { message: "Must be 15 characters or fewer" }),
+  phone: z.string().regex(/^\+?[1-9]\d{1,14}$/),
   email: z.string().email({ message: "Invalid email address" }),
   url: z.string().url({ message: "Invalid url" }),
 });
