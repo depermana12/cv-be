@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
 
 import { db } from "../db/index";
-import { softSkills } from "../db/schema/soft-skill";
+import { softSkills } from "../db/schema/soft-skill.db";
 import type { SoftSkillInsert } from "../db/index.types";
 
 export class SoftSkill {

@@ -4,7 +4,7 @@ import { db } from "../db/index";
 import {
   organizationExperience,
   orgExpDetails,
-} from "../db/schema/organization";
+} from "../db/schema/organization.db";
 import type {
   OrganizationInsert,
   OrganizationDetailInsert,

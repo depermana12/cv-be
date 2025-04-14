@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
 
 import { db } from "../db/index";
-import { courses, courseDetails } from "../db/schema/course";
+import { courses, courseDetails } from "../db/schema/course.db";
 import type { CourseInsert, CourseDetailsInsert } from "../db/index.types";
 
 export class Course {

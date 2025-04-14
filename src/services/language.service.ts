@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
 
 import { db } from "../db/index";
-import { language } from "../db/schema/language";
+import { language } from "../db/schema/language.db";
 import type { LanguageInsert } from "../db/index.types";
 
 export class Language {

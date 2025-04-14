@@ -35,6 +35,7 @@ export const personalSocialCreateSchema = personalSocialBaseSchema.omit({
   id: true,
 });
 export const personalSocialUpdateSchema = personalSocialCreateSchema
+  .omit({ personalId: true })
   .partial()
   .extend({ id: idSchema });
 
@@ -54,8 +55,13 @@ export const personalLocationCreateSchema = personalLocationBaseSchema.omit({
   id: true,
 });
 export const personalLocationUpdateSchema = personalLocationCreateSchema
+  .omit({ personalId: true })
   .partial()
   .extend({ id: idSchema });
+
+export type PersonalBasicBase = z.infer<typeof personalBasicBaseSchema>;
+export type PersonalBasicCreate = z.infer<typeof personalBasicCreateSchema>;
+export type PersonalBasicUpdate = z.infer<typeof personalBasicUpdateSchema>;
 
 export const fullPersonalCreateSchema = z.object({
   basic: personalBasicBaseSchema,
@@ -64,13 +70,10 @@ export const fullPersonalCreateSchema = z.object({
 });
 
 export const fullPersonalUpdateSchema = z.object({
-  basic: personalBasicUpdateSchema,
-  location: personalLocationUpdateSchema,
-  socials: z.array(personalSocialUpdateSchema),
+  basic: personalBasicUpdateSchema.optional(),
+  location: personalLocationUpdateSchema.optional(),
+  socials: z.array(personalSocialUpdateSchema).optional(),
 });
 
-export type PersonalBasicBase = z.infer<typeof personalBasicBaseSchema>;
-export type PersonalBasicCreate = z.infer<typeof personalBasicCreateSchema>;
-export type PersonalBasicUpdate = z.infer<typeof personalBasicUpdateSchema>;
 export type FullPersonalCreate = z.infer<typeof fullPersonalCreateSchema>;
 export type FullPersonalUpdate = z.infer<typeof fullPersonalUpdateSchema>;

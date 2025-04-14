@@ -1,7 +1,7 @@
 import { relations } from "drizzle-orm";
 import { mysqlTable, int, varchar } from "drizzle-orm/mysql-core";
 
-import { personalBasic } from "./personal";
+import { personalBasic } from "./personal.db";
 
 export const skills = mysqlTable("skills", {
   id: int("id").primaryKey().autoincrement(),

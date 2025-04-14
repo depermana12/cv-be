@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
 
 import { db } from "../db/index";
-import { workExperience, workExperienceDetails } from "../db/schema/work";
+import { workExperience, workExperienceDetails } from "../db/schema/work.db";
 import type { WorkInsert, WorkDetailInsert } from "../db/index.types";
 
 export class Work {

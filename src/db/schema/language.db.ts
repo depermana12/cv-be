@@ -9,7 +9,7 @@ import {
   boolean,
 } from "drizzle-orm/mysql-core";
 
-import { personalBasic } from "./personal";
+import { personalBasic } from "./personal.db";
 
 export const language = mysqlTable("language", {
   id: int("id").primaryKey().autoincrement(),

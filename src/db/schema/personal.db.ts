@@ -1,18 +1,18 @@
 import { relations } from "drizzle-orm";
 import { mysqlTable, int, varchar, text } from "drizzle-orm/mysql-core";
 
-import { language } from "./language";
-import { education } from "./education";
-import { workExperience } from "./work";
-import { organizationExperience } from "./organization";
-import { projects } from "./project";
-import { skills } from "./skill";
-import { softSkills } from "./soft-skill";
-import { courses } from "./course";
+import { language } from "./language.db";
+import { education } from "./education.db";
+import { workExperience } from "./work.db";
+import { organizationExperience } from "./organization.db";
+import { projects } from "./project.db";
+import { skills } from "./skill.db";
+import { softSkills } from "./soft-skill.db";
+import { courses } from "./course.db";
 
 export const personalBasic = mysqlTable("personal_basic", {
   id: int("id").primaryKey().autoincrement(),
-  fullName: varchar("full_name", { length: 100 }).notNull(),
+  fullName: varchar("full_name", { length: 100 }),
   bio: varchar("bio", { length: 255 }),
   image: varchar("image", { length: 255 }),
   summary: text("summary"),
@@ -63,4 +63,9 @@ export type PersonalInsert = {
   basic: PersonalBasicInsert;
   location: PersonalLocationInsert;
   socials: PersonalSocialInsert[];
+};
+export type PersonalUpdate = {
+  basic?: Partial<PersonalBasicInsert>;
+  location?: Partial<Omit<PersonalLocationInsert, "personalId">>;
+  socials?: Partial<Omit<PersonalSocialInsert, "personalId">[]>;
 };

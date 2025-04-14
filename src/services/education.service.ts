@@ -1,8 +1,8 @@
 import { eq } from "drizzle-orm";
 
 import { db } from "../db/index";
-import { education } from "../db/schema/education";
-import type { EducationInsert } from "../db/index.types";
+import { education } from "../db/schema/education.db";
+import type { EducationInsert, EducationUpdate } from "../db/index.types";
 
 export class Education {
   async getAll() {
@@ -34,7 +34,7 @@ export class Education {
       throw new Error(e instanceof Error ? e.message : String(e));
     }
   }
-  async update(educationId: number, newEduData: Partial<EducationInsert>) {
+  async update(educationId: number, newEduData: Partial<EducationUpdate>) {
     try {
       await db
         .update(education)

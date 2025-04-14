@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
 
 import { db } from "../db/index";
-import { projectTechnologies } from "../db/schema/project";
+import { projectTechnologies } from "../db/schema/project.db";
 import type { ProjectTechStackInsert } from "../db/index.types";
 
 export class ProjectTech {

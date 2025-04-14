@@ -7,27 +7,28 @@ export type {
   PersonalLocationInsert,
   PersonalSocialInsert,
   PersonalInsert,
-} from "./schema/personal";
+  PersonalUpdate,
+} from "./schema/personal.db";
 
-export type { LanguageInsert } from "./schema/language";
+export type { LanguageInsert } from "./schema/language.db";
 
-export type { EducationInsert } from "./schema/education";
+export type { EducationInsert, EducationUpdate } from "./schema/education.db";
 
-export type { WorkInsert, WorkDetailInsert } from "./schema/work";
+export type { WorkInsert, WorkDetailInsert } from "./schema/work.db";
 
 export type {
   OrganizationInsert,
   OrganizationDetailInsert,
-} from "./schema/organization";
+} from "./schema/organization.db";
 
 export type {
   ProjectInsert,
   ProjectDetailsInsert,
   ProjectTechStackInsert,
-} from "./schema/project";
+} from "./schema/project.db";
 
-export type { SkillInsert } from "./schema/skill";
+export type { SkillInsert } from "./schema/skill.db";
 
-export type { SoftSkillInsert } from "./schema/soft-skill";
+export type { SoftSkillInsert } from "./schema/soft-skill.db";
 
-export type { CourseInsert, CourseDetailsInsert } from "./schema/course";
+export type { CourseInsert, CourseDetailsInsert } from "./schema/course.db";

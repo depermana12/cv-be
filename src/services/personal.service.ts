@@ -6,8 +6,8 @@ import {
   personalBasic,
   personalLocation,
   personalSocial,
-} from "../db/schema/personal";
-import type { PersonalInsert } from "../db/index.types";
+} from "../db/schema/personal.db";
+import type { PersonalInsert, PersonalUpdate } from "../db/index.types";
 
 export class Personal {
   async getAll() {
@@ -77,26 +77,30 @@ export class Personal {
     }
   }
 
-  async update(personalId: number, data: PersonalInsert) {
+  async update(personalId: number, data: PersonalUpdate) {
     try {
-      await db
-        .update(personalBasic)
-        .set(data.basic)
-        .where(eq(personalBasic.id, personalId));
-
-      await db
-        .update(personalLocation)
-        .set(data.location)
-        .where(eq(personalLocation.personalId, personalId));
-
-      await db
-        .delete(personalSocial)
-        .where(eq(personalSocial.personalId, personalId));
-
-      if (data.socials.length > 0) {
+      if (data.basic) {
         await db
-          .insert(personalSocial)
-          .values(data.socials.map((social) => ({ ...social, personalId })));
+          .update(personalBasic)
+          .set(data.basic)
+          .where(eq(personalBasic.id, personalId));
+      }
+      if (data.location) {
+        await db
+          .update(personalLocation)
+          .set(data.location)
+          .where(eq(personalLocation.personalId, personalId));
+      }
+      if (data.socials) {
+        await db
+          .delete(personalSocial)
+          .where(eq(personalSocial.personalId, personalId));
+
+        if (data.socials.length > 0) {
+          await db
+            .insert(personalSocial)
+            .values(data.socials.map((social) => ({ ...social, personalId })));
+        }
       }
 
       return this.getById(personalId);

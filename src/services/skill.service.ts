@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
 
 import { db } from "../db/index";
-import { skills } from "../db/schema/skill";
+import { skills } from "../db/schema/skill.db";
 import type { SkillInsert } from "../db/index.types";
 
 export class Skill {

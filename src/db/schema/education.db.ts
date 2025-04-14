@@ -7,7 +7,7 @@ import {
   decimal,
 } from "drizzle-orm/mysql-core";
 
-import { personalBasic } from "./personal";
+import { personalBasic } from "./personal.db";
 
 export const education = mysqlTable("education", {
   id: int("id").primaryKey().autoincrement(),
@@ -31,3 +31,4 @@ export const educationRelations = relations(education, ({ one }) => ({
 }));
 
 export type EducationInsert = typeof education.$inferInsert;
+export type EducationUpdate = Omit<EducationInsert, "personalId">;

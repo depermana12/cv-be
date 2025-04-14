@@ -134,6 +134,7 @@ const projectTechSchema = z.object({
 });
 
 export const personalRoutes = new Hono();
+
 personalRoutes
   .get("/", async (c) => {
     const personalInfo = await personalService.getAll();
