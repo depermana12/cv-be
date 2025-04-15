@@ -21,3 +21,4 @@ export const language = mysqlTable("language", {
 });
 
 export type LanguageInsert = typeof language.$inferInsert;
+export type LanguageSelect = typeof language.$inferSelect;

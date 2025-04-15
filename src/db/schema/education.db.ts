@@ -31,4 +31,5 @@ export const educationRelations = relations(education, ({ one }) => ({
 }));
 
 export type EducationInsert = typeof education.$inferInsert;
+export type EducationSelect = typeof education.$inferSelect;
 export type EducationUpdate = Omit<EducationInsert, "personalId">;

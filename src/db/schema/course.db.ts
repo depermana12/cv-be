@@ -41,4 +41,5 @@ export const courseDetailsRelations = relations(courseDetails, ({ one }) => ({
 }));
 
 export type CourseInsert = typeof courses.$inferInsert;
+export type CourseSelect = typeof courses.$inferSelect;
 export type CourseDetailsInsert = typeof courseDetails.$inferInsert;

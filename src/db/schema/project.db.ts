@@ -61,5 +61,7 @@ export const projectTechnologiesRelations = relations(
 );
 
 export type ProjectInsert = typeof projects.$inferInsert;
+export type ProjectSelect = typeof projects.$inferSelect;
 export type ProjectDetailsInsert = typeof projectDetails.$inferInsert;
+export type ProjectDetailsSelect = typeof projectDetails.$inferSelect;
 export type ProjectTechStackInsert = typeof projectTechnologies.$inferInsert;
