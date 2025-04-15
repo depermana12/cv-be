@@ -1,0 +1,23 @@
+import { PersonalRepository } from "../repositories/personal.repo";
+import { LanguageRepository } from "../repositories/language.repo";
+import { EducationRepository } from "../repositories/education.repo";
+import { WorkRepository } from "../repositories/work.repo";
+import { OrganizationRepository } from "../repositories/organization.repo";
+import { ProjectRepository } from "../repositories/project.repo";
+import { SkillRepository } from "../repositories/skill.repo";
+import { SoftSkillRepository } from "../repositories/soft-skill.repo";
+import { CourseRepository } from "../repositories/course.repo";
+// import { ProjectTech } from "./project-tech.repo";
+// import { CurriculumVitae } from "./cv.repo";
+
+export const personalRepository = new PersonalRepository();
+export const languageRepository = new LanguageRepository();
+export const educationRepository = new EducationRepository();
+export const workExpRepository = new WorkRepository();
+export const orgExpRepository = new OrganizationRepository();
+export const projectRepository = new ProjectRepository();
+// export const projectTechRepository = new ProjectTech();
+export const skillRepository = new SkillRepository();
+export const softSkillRepository = new SoftSkillRepository();
+export const courseRepository = new CourseRepository();
+// export const cvRepository = new CurriculumVitae();
