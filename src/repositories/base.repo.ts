@@ -10,17 +10,17 @@ export class BaseRepository<
 > {
   constructor(
     protected readonly table: TTable,
-    protected readonly primaryKey: keyof TSelect,
+    protected readonly primaryKey: keyof TSelect & string,
   ) {}
   async getAll(): Promise<TSelect[]> {
     return (await db.select().from(this.table)) as TSelect[];
   }
-  async getById(id: number | string): Promise<TSelect | undefined> {
-    const result = await db
+  async getById(id: number | string): Promise<TSelect | null> {
+    const rows = await db
       .select()
       .from(this.table)
       .where(eq((this.table as any)[this.primaryKey], id));
-    return result[0] as TSelect;
+    return (rows[0] as TSelect) ?? null;
   }
   // the mysql insert returning is problematic
   async create(data: TInsert) {
@@ -32,7 +32,7 @@ export class BaseRepository<
     return this.getById(id);
   }
 
-  async update(id: number, data: TUpdate): Promise<TSelect | undefined> {
+  async update(id: number, data: TUpdate): Promise<TSelect | null> {
     await db
       .update(this.table)
       .set(data as any)
