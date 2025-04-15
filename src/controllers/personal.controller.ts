@@ -1,13 +1,13 @@
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
 import { zValidator } from "@hono/zod-validator";
-
-import { personalService } from "../services/index.service";
+import { Personal } from "../services/personal.service";
 import {
   fullPersonalCreateSchema,
   fullPersonalUpdateSchema,
 } from "../schemas/personal.schema";
 
+const personalService = new Personal();
 export const personalRoutes = new Hono();
 
 personalRoutes

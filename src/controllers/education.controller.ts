@@ -2,12 +2,13 @@ import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
 import { zValidator } from "@hono/zod-validator";
 
-import { educationService } from "../services/index.service";
+import { Education } from "../services/education.service";
 import {
   educationCreateSchema,
   educationUpdateSchema,
 } from "../schemas/education.schema";
 
+const educationService = new Education();
 export const educationRoutes = new Hono();
 educationRoutes
   .get("/", async (c) => {

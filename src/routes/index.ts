@@ -1,6 +1,5 @@
 import { Hono } from "hono";
 import {
-  personalRoutes,
   languageRoutes,
   educationRoutes,
   workExpRoutes,
@@ -11,6 +10,7 @@ import {
   softSkillRoutes,
   cvRoutes,
 } from "../controllers/controllers";
+import { personalRoutes } from "../controllers/personal.controller";
 
 const router = new Hono();
 
