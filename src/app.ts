@@ -1,9 +1,9 @@
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
+import { NotFoundError } from "./errors/not-found.error";
 import router from "./routes";
 
 const app = new Hono().basePath("/api/v1");
-app.get("/", (c) => c.text("Hello cv"));
 
 app.route("/", router);
 
@@ -12,10 +12,16 @@ app.notFound((c) => {
 });
 
 app.onError((err, c) => {
+  console.log("Error type:", err.constructor.name);
   if (err instanceof HTTPException) {
-    return c.json({ error: err.message }, err.status);
+    return c.json({ error: err.name, message: err.message }, err.status);
+  } else if (err instanceof NotFoundError) {
+    return c.json({ error: err.name, message: err.message }, 404);
   } else {
-    return c.json({ error: "Ooops that's on us" }, 500);
+    return c.json(
+      { error: "Internal Server Error", message: "Oops that's on us" },
+      500,
+    );
   }
 });
 
