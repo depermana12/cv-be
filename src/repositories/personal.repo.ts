@@ -11,115 +11,90 @@ import type { PersonalInsert, PersonalUpdate } from "../db/schema/personal.db";
 
 export class PersonalRepository {
   async getAll() {
-    try {
-      return await db.select().from(personalBasic);
-    } catch (e: unknown) {
-      throw new Error(e instanceof Error ? e.message : String(e));
-    }
+    return await db.select().from(personalBasic);
   }
 
   async getById(id: number) {
-    try {
-      const [basic] = await db
-        .select()
-        .from(personalBasic)
-        .where(eq(personalBasic.id, id));
+    const [basic] = await db
+      .select()
+      .from(personalBasic)
+      .where(eq(personalBasic.id, id));
 
-      if (!basic) {
-        throw new HTTPException(404, {
-          message: "invalid education id not found",
-        });
-      }
+    if (!basic) return null;
 
-      const [location] = await db
-        .select()
-        .from(personalLocation)
-        .where(eq(personalLocation.personalId, id));
+    const [location] = await db
+      .select()
+      .from(personalLocation)
+      .where(eq(personalLocation.personalId, id));
 
-      const [socials] = await db
-        .select()
-        .from(personalSocial)
-        .where(eq(personalSocial.personalId, id));
-      return {
-        ...basic,
-        location,
-        socials,
-      };
-    } catch (e: unknown) {
-      throw new Error(e instanceof Error ? e.message : String(e));
-    }
+    const [socials] = await db
+      .select()
+      .from(personalSocial)
+      .where(eq(personalSocial.personalId, id));
+
+    return {
+      ...basic,
+      location,
+      socials,
+    };
   }
 
   async create(data: PersonalInsert) {
-    try {
-      const insertedBasicData = await db
-        .insert(personalBasic)
-        .values(data.basic)
-        .$returningId();
-      const personalId = insertedBasicData[0].id;
+    const insertedBasicData = await db
+      .insert(personalBasic)
+      .values(data.basic)
+      .$returningId();
+    const personalId = insertedBasicData[0].id;
 
-      await db
-        .insert(personalLocation)
-        .values({ ...data.location, personalId });
+    await db.insert(personalLocation).values({ ...data.location, personalId });
 
-      if (data.socials.length > 0) {
-        await db.insert(personalSocial).values(
-          data.socials.map((social) => ({
-            ...social,
-            personalId,
-          })),
-        );
-      }
-
-      return this.getById(personalId);
-    } catch (e: unknown) {
-      throw new Error(e instanceof Error ? e.message : String(e));
+    if (data.socials.length > 0) {
+      await db.insert(personalSocial).values(
+        data.socials.map((social) => ({
+          ...social,
+          personalId,
+        })),
+      );
     }
+
+    return this.getById(personalId);
   }
 
   async update(personalId: number, data: PersonalUpdate) {
-    try {
-      if (data.basic) {
-        await db
-          .update(personalBasic)
-          .set(data.basic)
-          .where(eq(personalBasic.id, personalId));
-      }
-      if (data.location) {
-        await db
-          .update(personalLocation)
-          .set(data.location)
-          .where(eq(personalLocation.personalId, personalId));
-      }
-      if (data.socials) {
-        await db
-          .delete(personalSocial)
-          .where(eq(personalSocial.personalId, personalId));
-
-        if (data.socials.length > 0) {
-          await db
-            .insert(personalSocial)
-            .values(data.socials.map((social) => ({ ...social, personalId })));
-        }
-      }
-
-      return this.getById(personalId);
-    } catch (e: unknown) {
-      throw new Error(e instanceof Error ? e.message : String(e));
+    if (data.basic) {
+      await db
+        .update(personalBasic)
+        .set(data.basic)
+        .where(eq(personalBasic.id, personalId));
     }
-  }
-
-  async delete(personalId: number) {
-    try {
+    if (data.location) {
+      await db
+        .update(personalLocation)
+        .set(data.location)
+        .where(eq(personalLocation.personalId, personalId));
+    }
+    if (data.socials) {
       await db
         .delete(personalSocial)
         .where(eq(personalSocial.personalId, personalId));
-      await db
-        .delete(personalLocation)
-        .where(eq(personalLocation.personalId, personalId));
-      await db.delete(personalBasic).where(eq(personalBasic.id, personalId));
-    } catch (e) {
-      throw new Error(e instanceof Error ? e.message : String(e));
+
+      if (data.socials.length > 0) {
+        await db
+          .insert(personalSocial)
+          .values(data.socials.map((social) => ({ ...social, personalId })));
+      }
     }
+
+    return this.getById(personalId);
+  }
+
+  async delete(personalId: number) {
+    await db
+      .delete(personalSocial)
+      .where(eq(personalSocial.personalId, personalId));
+    await db
+      .delete(personalLocation)
+      .where(eq(personalLocation.personalId, personalId));
+    await db.delete(personalBasic).where(eq(personalBasic.id, personalId));
   }
 }
