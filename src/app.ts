@@ -14,9 +14,15 @@ app.notFound((c) => {
 app.onError((err, c) => {
   console.log("Error type:", err.constructor.name);
   if (err instanceof HTTPException) {
-    return c.json({ error: err.name, message: err.message }, err.status);
+    return c.json(
+      { success: false, error: err.name, message: err.message },
+      err.status,
+    );
   } else if (err instanceof NotFoundError) {
-    return c.json({ error: err.name, message: err.message }, 404);
+    return c.json(
+      { success: false, error: err.name, message: err.message },
+      404,
+    );
   } else {
     return c.json(
       { error: "Internal Server Error", message: "Oops that's on us" },

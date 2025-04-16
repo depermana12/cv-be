@@ -2,6 +2,7 @@ import { BaseCrudService } from "./base.service";
 import { projectTechStackRepository } from "./instance.repo";
 import { projectTechnologies } from "../db/schema/project.db";
 import type { ProjectTechStackInsert } from "../db/schema/project.db";
+import { NotFoundError } from "../errors/not-found.error";
 
 export class ProjectTechStack extends BaseCrudService<
   typeof projectTechnologies
@@ -11,7 +12,13 @@ export class ProjectTechStack extends BaseCrudService<
   }
 
   async getByProjectId(projectId: number) {
-    return projectTechStackRepository.getByProjectId(projectId);
+    const record = await projectTechStackRepository.getByProjectId(projectId);
+    if (!record) {
+      throw new NotFoundError(
+        `cannot get: detail ${this.primaryKey} ${projectId} not found`,
+      );
+    }
+    return record;
   }
 
   async getByProjectIdGrouped() {
