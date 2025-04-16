@@ -1,44 +1,38 @@
-import type { PersonalInsert, PersonalUpdate } from "../db/schema/personal.db";
 import { personalRepository } from "./instance.repo";
+import { NotFoundError } from "../errors/not-found.error";
+import type { PersonalInsert, PersonalUpdate } from "../db/schema/personal.db";
 
 export class Personal {
   async getAll() {
-    try {
-      return await personalRepository.getAll();
-    } catch (e) {
-      throw new Error(e instanceof Error ? e.message : String(e));
-    }
+    return await personalRepository.getAll();
   }
 
   async getById(id: number) {
-    try {
-      return await personalRepository.getById(id);
-    } catch (e) {
-      throw new Error(e instanceof Error ? e.message : String(e));
+    const personal = await personalRepository.getById(id);
+
+    if (!personal) {
+      throw new NotFoundError(`cannot get: personal ID ${id} not found`);
     }
+    return personal;
   }
 
   async create(data: PersonalInsert) {
-    try {
-      return await personalRepository.create(data);
-    } catch (e) {
-      throw new Error(e instanceof Error ? e.message : String(e));
-    }
+    return await personalRepository.create(data);
   }
 
-  async update(personalId: number, data: PersonalUpdate) {
-    try {
-      return await personalRepository.update(personalId, data);
-    } catch (e) {
-      throw new Error(e instanceof Error ? e.message : String(e));
+  async update(id: number, data: PersonalUpdate) {
+    const existingPersonal = await personalRepository.getById(id);
+    if (!existingPersonal) {
+      throw new NotFoundError(`cannot update: personal ID ${id} not found`);
     }
+    return await personalRepository.update(id, data);
   }
 
-  async delete(personalId: number) {
-    try {
-      return await personalRepository.delete(personalId);
-    } catch (e) {
-      throw new Error(e instanceof Error ? e.message : String(e));
+  async delete(id: number) {
+    const existingPersonal = await personalRepository.getById(id);
+    if (!existingPersonal) {
+      throw new NotFoundError(`cannot delete: personal ID ${id} not found`);
     }
+    return await personalRepository.delete(id);
   }
 }
