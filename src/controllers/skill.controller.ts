@@ -2,34 +2,39 @@ import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
 import { zValidator } from "@hono/zod-validator";
 
-import { languageService } from "../services/index.service";
-import {
-  languageCreateSchema,
-  languageUpdateSchema,
-} from "../schemas/language.schema";
+import { Skill } from "../services/skill.service";
+import { skillCreateSchema, skillUpdateSchema } from "../schemas/skill.schema";
 
-export const languageRoutes = new Hono()
-  .get("person/:personalId", async (c) => {
-    const personalId = Number(c.req.param("personalId"));
-    const lang = await languageService.getAllByPersonalId(personalId);
+const skillService = new Skill();
+export const skillRoutes = new Hono()
+  .get("/categories", async (c) => {
+    const categories = await skillService.getCategories();
     return c.json({
       success: true,
-      message: `retrieved ${lang.length} records successfully`,
-      data: lang,
+      message: `retrieved categories records successfully`,
+      data: categories,
+    });
+  })
+  .get("/", async (c) => {
+    const data = await skillService.getAll();
+    return c.json({
+      success: true,
+      message: `retrieved ${data.length} records successfully`,
+      data,
     });
   })
   .get("/:id", async (c) => {
     const id = Number(c.req.param("id"));
-    const lang = await languageService.getById(id);
+    const skill = await skillService.getById(id);
     return c.json({
       success: true,
       message: `record ID: ${id} retrieved successfully`,
-      data: lang,
+      data: skill,
     });
   })
   .post(
-    "/:personalId",
-    zValidator("json", languageCreateSchema, (result, c) => {
+    "/",
+    zValidator("json", skillCreateSchema, (result, c) => {
       if (!result.success) {
         throw new HTTPException(400, {
           message: result.error.issues[0].message,
@@ -37,15 +42,13 @@ export const languageRoutes = new Hono()
       }
     }),
     async (c) => {
-      const personalId = Number(c.req.param("personalId"));
-      const validateBody = c.req.valid("json");
-
-      const created = await languageService.create(validateBody);
+      const validatedBody = c.req.valid("json");
+      const newSkill = await skillService.create(validatedBody);
       return c.json(
         {
           success: true,
-          message: `new record created with ID: ${created.id}`,
-          data: created,
+          message: `new record created with ID: ${newSkill.id}`,
+          data: newSkill,
         },
         201,
       );
@@ -53,7 +56,7 @@ export const languageRoutes = new Hono()
   )
   .patch(
     "/:id",
-    zValidator("json", languageUpdateSchema, (result, c) => {
+    zValidator("json", skillUpdateSchema, (result, c) => {
       if (!result.success) {
         throw new HTTPException(400, {
           message: result.error.issues[0].message,
@@ -63,7 +66,8 @@ export const languageRoutes = new Hono()
     async (c) => {
       const id = Number(c.req.param("id"));
       const validatedBody = c.req.valid("json");
-      const updated = await languageService.update(id, validatedBody);
+
+      const updated = await skillService.update(id, validatedBody);
       return c.json({
         success: true,
         message: `record ID: ${id} updated successfully`,
@@ -73,7 +77,7 @@ export const languageRoutes = new Hono()
   )
   .delete("/:id", async (c) => {
     const id = Number(c.req.param("id"));
-    await languageService.delete(id);
+    await skillService.delete(id);
     return c.json({
       success: true,
       message: `record id: ${id} deleted successfully`,

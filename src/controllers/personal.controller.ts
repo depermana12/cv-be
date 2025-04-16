@@ -8,26 +8,26 @@ import {
 } from "../schemas/personal.schema";
 
 const personalService = new Personal();
-export const personalRoutes = new Hono();
-
-personalRoutes
+export const personalRoutes = new Hono()
   .get("/", async (c) => {
     const personalInfo = await personalService.getAll();
 
     return c.json(
       {
-        message: "success get personal info",
+        success: true,
+        message: `retrieved ${personalInfo.length} records successfully`,
         data: personalInfo,
       },
       200,
     );
   })
   .get("/:id", async (c) => {
-    const personId = c.req.param("id");
-    const personalInfo = await personalService.getById(Number(personId));
+    const id = c.req.param("id");
+    const personalInfo = await personalService.getById(Number(id));
     return c.json(
       {
-        message: "success get personal info",
+        success: true,
+        message: `record ID: ${id} retrieved successfully`,
         data: personalInfo,
       },
       200,
@@ -45,7 +45,14 @@ personalRoutes
     async (c) => {
       const validatedBody = c.req.valid("json");
       const newPersonData = await personalService.create(validatedBody);
-      return c.json({ message: "person created", data: newPersonData }, 201);
+      return c.json(
+        {
+          success: true,
+          message: `new record created`,
+          data: newPersonData,
+        },
+        201,
+      );
     },
   )
   .patch(
@@ -58,25 +65,28 @@ personalRoutes
       }
     }),
     async (c) => {
-      const personId = c.req.param("id");
+      const id = c.req.param("id");
       const validatedBody = c.req.valid("json");
 
       const personUpdated = await personalService.update(
-        Number(personId),
+        Number(id),
         validatedBody,
       );
-      return c.json({ message: "person updated", data: personUpdated }, 200);
+      return c.json(
+        {
+          success: true,
+          message: `record ID: ${id} updated successfully`,
+          data: personUpdated,
+        },
+        200,
+      );
     },
   )
   .delete("/:id", async (c) => {
-    const personId = c.req.param("id");
-    const personToBeDeleted = await personalService.getById(Number(personId));
-    if (!personToBeDeleted) {
-      return c.json({ message: "person not found" }, 404);
-    }
-    await personalService.delete(Number(personId));
+    const id = c.req.param("id");
+    await personalService.delete(Number(id));
     return c.json({
-      message: "this person has been deleted",
-      data: personToBeDeleted,
+      success: true,
+      message: `record id: ${id} deleted successfully`,
     });
   });

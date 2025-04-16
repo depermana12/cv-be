@@ -2,34 +2,34 @@ import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
 import { zValidator } from "@hono/zod-validator";
 
-import { languageService } from "../services/index.service";
+import { Course } from "../services/course.service";
 import {
-  languageCreateSchema,
-  languageUpdateSchema,
-} from "../schemas/language.schema";
+  courseCreateSchema,
+  courseUpdateSchema,
+} from "../schemas/course.schema";
 
-export const languageRoutes = new Hono()
-  .get("person/:personalId", async (c) => {
-    const personalId = Number(c.req.param("personalId"));
-    const lang = await languageService.getAllByPersonalId(personalId);
+const courseService = new Course();
+export const courseRoutes = new Hono()
+  .get("/", async (c) => {
+    const data = await courseService.getAll();
     return c.json({
       success: true,
-      message: `retrieved ${lang.length} records successfully`,
-      data: lang,
+      message: `retrieved ${data.length} records successfully`,
+      data,
     });
   })
   .get("/:id", async (c) => {
     const id = Number(c.req.param("id"));
-    const lang = await languageService.getById(id);
+    const course = await courseService.getById(id);
     return c.json({
       success: true,
       message: `record ID: ${id} retrieved successfully`,
-      data: lang,
+      data: course,
     });
   })
   .post(
-    "/:personalId",
-    zValidator("json", languageCreateSchema, (result, c) => {
+    "/",
+    zValidator("json", courseCreateSchema, (result, c) => {
       if (!result.success) {
         throw new HTTPException(400, {
           message: result.error.issues[0].message,
@@ -37,15 +37,14 @@ export const languageRoutes = new Hono()
       }
     }),
     async (c) => {
-      const personalId = Number(c.req.param("personalId"));
-      const validateBody = c.req.valid("json");
+      const validated = c.req.valid("json");
+      const newCourse = await courseService.create(validated);
 
-      const created = await languageService.create(validateBody);
       return c.json(
         {
           success: true,
-          message: `new record created with ID: ${created.id}`,
-          data: created,
+          message: `new record created with ID: ${newCourse.id}`,
+          data: newCourse,
         },
         201,
       );
@@ -53,7 +52,7 @@ export const languageRoutes = new Hono()
   )
   .patch(
     "/:id",
-    zValidator("json", languageUpdateSchema, (result, c) => {
+    zValidator("json", courseUpdateSchema, (result, c) => {
       if (!result.success) {
         throw new HTTPException(400, {
           message: result.error.issues[0].message,
@@ -62,8 +61,9 @@ export const languageRoutes = new Hono()
     }),
     async (c) => {
       const id = Number(c.req.param("id"));
-      const validatedBody = c.req.valid("json");
-      const updated = await languageService.update(id, validatedBody);
+      const validated = c.req.valid("json");
+
+      const updated = await courseService.update(id, validated);
       return c.json({
         success: true,
         message: `record ID: ${id} updated successfully`,
@@ -73,7 +73,7 @@ export const languageRoutes = new Hono()
   )
   .delete("/:id", async (c) => {
     const id = Number(c.req.param("id"));
-    await languageService.delete(id);
+    await courseService.delete(id);
     return c.json({
       success: true,
       message: `record id: ${id} deleted successfully`,

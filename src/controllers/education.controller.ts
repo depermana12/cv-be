@@ -9,30 +9,27 @@ import {
 } from "../schemas/education.schema";
 
 const educationService = new Education();
-export const educationRoutes = new Hono();
-educationRoutes
+export const educationRoutes = new Hono()
   .get("/", async (c) => {
     const education = await educationService.getAll();
-    if (!education) {
-      return c.json({ message: "education not found" }, 404);
-    }
     return c.json(
       {
-        message: "success get all education",
+        success: true,
+        message: `retrieved ${education.length} records successfully`,
         data: education,
       },
       200,
     );
   })
   .get("/:id", async (c) => {
-    const educationId = Number(c.req.param("id"));
-
-    const education = await educationService.getById(educationId);
-    if (!education) {
-      return c.json({ message: "education not found" }, 404);
-    }
+    const id = Number(c.req.param("id"));
+    const education = await educationService.getById(id);
     return c.json(
-      { message: "success get education id", data: education },
+      {
+        success: true,
+        message: `record ID: ${id} retrieved successfully`,
+        data: education,
+      },
       200,
     );
   })
@@ -50,7 +47,8 @@ educationRoutes
       const newEducation = await educationService.create(validated);
       return c.json(
         {
-          message: "new education created",
+          success: true,
+          message: `new record created with ID: ${newEducation.id}`,
           data: newEducation,
         },
         201,
@@ -67,18 +65,13 @@ educationRoutes
       }
     }),
     async (c) => {
-      const eduId = c.req.param("id");
+      const id = c.req.param("id");
       const validated = c.req.valid("json");
-
-      const getEdu = await educationService.getById(Number(eduId));
-      if (!getEdu) {
-        return c.json({ message: "education id not found" }, 404);
-      }
-      await educationService.update(Number(eduId), validated);
-      const updatedEdu = await educationService.getById(Number(eduId));
+      const updatedEdu = await educationService.update(Number(id), validated);
       return c.json(
         {
-          message: "education has been updated",
+          success: true,
+          message: `record ID: ${id} updated successfully`,
           data: updatedEdu,
         },
         200,
@@ -86,14 +79,10 @@ educationRoutes
     },
   )
   .delete("/:id", async (c) => {
-    const eduId = c.req.param("id");
-    const eduToBeDeleted = await educationService.getById(Number(eduId));
-    if (!eduToBeDeleted) {
-      return c.json({ message: "edu not found" }, 404);
-    }
-    await educationService.delete(Number(eduId));
+    const id = c.req.param("id");
+    await educationService.delete(Number(id));
     return c.json({
-      message: "this education has been deleted",
-      data: eduToBeDeleted,
+      success: true,
+      message: `record id: ${id} deleted successfully`,
     });
   });
