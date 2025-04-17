@@ -1,10 +1,12 @@
 import { Hono } from "hono";
+import { secureHeaders } from "hono/secure-headers";
 import { HTTPException } from "hono/http-exception";
 import { NotFoundError } from "./errors/not-found.error";
 import router from "./routes";
 
 const app = new Hono().basePath("/api/v1");
 
+app.use(secureHeaders());
 app.route("/", router);
 
 app.notFound((c) => {
@@ -12,7 +14,6 @@ app.notFound((c) => {
 });
 
 app.onError((err, c) => {
-  console.log("Error type:", err.constructor.name);
   if (err instanceof HTTPException) {
     return c.json(
       { success: false, error: err.name, message: err.message },

@@ -1,4 +1,3 @@
-import { HTTPException } from "hono/http-exception";
 import { eq } from "drizzle-orm";
 
 import { db } from "../db/index";
