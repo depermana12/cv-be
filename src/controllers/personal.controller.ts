@@ -37,8 +37,9 @@ export const personalRoutes = new Hono()
     "/",
     zValidator("json", fullPersonalCreateSchema, (result, c) => {
       if (!result.success) {
+        console.error(result.error.format());
         throw new HTTPException(400, {
-          message: result.error.issues[0].message,
+          message: JSON.stringify(result.error.issues),
         });
       }
     }),

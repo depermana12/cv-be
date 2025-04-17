@@ -33,9 +33,9 @@ export const personalSocialBaseSchema = z.object({
 
 export const personalSocialCreateSchema = personalSocialBaseSchema.omit({
   id: true,
+  personalId: true,
 });
 export const personalSocialUpdateSchema = personalSocialCreateSchema
-  .omit({ personalId: true })
   .partial()
   .extend({ id: idSchema });
 
@@ -51,11 +51,13 @@ export const personalLocationBaseSchema = z.object({
   state: z.string().max(100, { message: "Must be 100 characters or fewer" }),
 });
 
+//spotted
 export const personalLocationCreateSchema = personalLocationBaseSchema.omit({
   id: true,
+  personalId: true,
 });
+
 export const personalLocationUpdateSchema = personalLocationCreateSchema
-  .omit({ personalId: true })
   .partial()
   .extend({ id: idSchema });
 
@@ -63,10 +65,11 @@ export type PersonalBasicBase = z.infer<typeof personalBasicBaseSchema>;
 export type PersonalBasicCreate = z.infer<typeof personalBasicCreateSchema>;
 export type PersonalBasicUpdate = z.infer<typeof personalBasicUpdateSchema>;
 
+// spotted
 export const fullPersonalCreateSchema = z.object({
-  basic: personalBasicBaseSchema,
-  location: personalLocationBaseSchema,
-  socials: z.array(personalSocialBaseSchema),
+  basic: personalBasicCreateSchema,
+  location: personalLocationCreateSchema,
+  socials: z.array(personalSocialCreateSchema),
 });
 
 export const fullPersonalUpdateSchema = z.object({
