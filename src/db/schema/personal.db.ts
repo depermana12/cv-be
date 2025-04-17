@@ -59,6 +59,7 @@ export const personalRelations = relations(personalBasic, ({ many, one }) => ({
 export type PersonalBasicInsert = typeof personalBasic.$inferInsert;
 export type PersonalLocationInsert = typeof personalLocation.$inferInsert;
 export type PersonalSocialInsert = typeof personalSocial.$inferInsert;
+
 export type PersonalInsert = {
   basic: PersonalBasicInsert;
   location: PersonalLocationInsert;
@@ -67,5 +68,5 @@ export type PersonalInsert = {
 export type PersonalUpdate = {
   basic?: Partial<PersonalBasicInsert>;
   location?: Partial<Omit<PersonalLocationInsert, "personalId">>;
-  socials?: Partial<Omit<PersonalSocialInsert, "personalId">[]>;
+  socials?: Partial<Omit<PersonalSocialInsert, "personalId">>[];
 };

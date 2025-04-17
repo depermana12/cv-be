@@ -17,7 +17,7 @@ export class Personal {
   }
 
   async create(data: PersonalInsert) {
-    return await personalRepository.create(data);
+    return personalRepository.create(data);
   }
 
   async update(id: number, data: PersonalUpdate) {
