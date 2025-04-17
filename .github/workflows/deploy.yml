@@ -23,9 +23,6 @@ jobs:
       - name: Run tests
         run: bun test
 
-      - name: Generate Drizzle migrations
-        run: bunx drizzle-kit generate
-
       - name: Deploy to VPS
         uses: appleboy/ssh-action@master
         with:
