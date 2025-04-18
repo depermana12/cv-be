@@ -9,7 +9,10 @@ export const languageBaseSchema = z.object({
   fluency: z.string().max(25, { message: "Must be 25 characters or fewer" }),
 });
 
-export const languageCreateSchema = languageBaseSchema.omit({ id: true });
+export const languageCreateSchema = languageBaseSchema.omit({
+  personalId: true,
+  id: true,
+});
 export const languageUpdateSchema = languageCreateSchema
   .partial()
   .extend({ id: idSchema });

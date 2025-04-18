@@ -11,11 +11,16 @@ export const projectBaseSchema = z.object({
   url: z.string().url({ message: "Invalid URL format" }),
 });
 
-export const projectCreateSchema = projectBaseSchema.omit({ id: true });
-
-export const projectUpdateSchema = projectCreateSchema.partial().extend({
-  id: idSchema,
+export const projectCreateSchema = projectBaseSchema.omit({
+  id: true,
+  personalId: true,
 });
+
+export const projectUpdateSchema = projectCreateSchema
+  .extend({
+    id: idSchema,
+  })
+  .partial();
 
 export type Project = z.infer<typeof projectBaseSchema>;
 export type ProjectCreate = z.infer<typeof projectCreateSchema>;
@@ -29,13 +34,14 @@ export const projectDetailBaseSchema = z.object({
 
 export const projectDetailCreateSchema = projectDetailBaseSchema.omit({
   id: true,
+  projectId: true,
 });
 
 export const projectDetailUpdateSchema = projectDetailCreateSchema
-  .partial()
   .extend({
     id: idSchema,
-  });
+  })
+  .partial();
 
 export type ProjectDetail = z.infer<typeof projectDetailBaseSchema>;
 export type ProjectDetailCreate = z.infer<typeof projectDetailCreateSchema>;
@@ -52,13 +58,14 @@ export const projectTechnologyBaseSchema = z.object({
 
 export const projectTechnologyCreateSchema = projectTechnologyBaseSchema.omit({
   id: true,
+  projectId: true,
 });
 
 export const projectTechnologyUpdateSchema = projectTechnologyCreateSchema
-  .partial()
   .extend({
     id: idSchema,
-  });
+  })
+  .partial();
 
 export type ProjectTechnology = z.infer<typeof projectTechnologyBaseSchema>;
 export type ProjectTechnologyCreate = z.infer<

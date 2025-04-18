@@ -13,11 +13,16 @@ export const courseBaseSchema = z.object({
   endDate: z.coerce.date(),
 });
 
-export const courseCreateSchema = courseBaseSchema.omit({ id: true });
-
-export const courseUpdateSchema = courseCreateSchema.partial().extend({
-  id: idSchema,
+export const courseCreateSchema = courseBaseSchema.omit({
+  id: true,
+  personalId: true,
 });
+
+export const courseUpdateSchema = courseCreateSchema
+  .extend({
+    id: idSchema,
+  })
+  .partial();
 
 export type Course = z.infer<typeof courseBaseSchema>;
 export type CourseCreate = z.infer<typeof courseCreateSchema>;
@@ -31,6 +36,7 @@ export const courseDetailBaseSchema = z.object({
 
 export const courseDetailCreateSchema = courseDetailBaseSchema.omit({
   id: true,
+  courseId: true,
 });
 
 export const courseDetailUpdateSchema = courseDetailCreateSchema

@@ -15,6 +15,7 @@ export const organizationBaseSchema = z.object({
 
 export const organizationCreateSchema = organizationBaseSchema.omit({
   id: true,
+  personalId: true,
 });
 
 export const organizationUpdateSchema = organizationCreateSchema
@@ -23,9 +24,9 @@ export const organizationUpdateSchema = organizationCreateSchema
     id: idSchema,
   });
 
-export type Organization = z.infer<typeof organizationBaseSchema>;
-export type OrganizationCreate = z.infer<typeof organizationCreateSchema>;
-export type OrganizationUpdate = z.infer<typeof organizationUpdateSchema>;
+export type OrganizationType = z.infer<typeof organizationBaseSchema>;
+export type OrganizationCreateType = z.infer<typeof organizationCreateSchema>;
+export type OrganizationUpdateType = z.infer<typeof organizationUpdateSchema>;
 
 export const organizationDetailBaseSchema = z.object({
   id: idSchema,
@@ -34,7 +35,7 @@ export const organizationDetailBaseSchema = z.object({
 });
 
 export const organizationDetailCreateSchema = organizationDetailBaseSchema.omit(
-  { id: true },
+  { id: true, organizationExperienceId: true },
 );
 
 export const organizationDetailUpdateSchema = organizationDetailCreateSchema

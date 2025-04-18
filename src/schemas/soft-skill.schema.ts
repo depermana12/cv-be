@@ -9,11 +9,16 @@ export const softSkillBaseSchema = z.object({
   description: z.string(),
 });
 
-export const softSkillCreateSchema = softSkillBaseSchema.omit({ id: true });
-
-export const softSkillUpdateSchema = softSkillCreateSchema.partial().extend({
-  id: idSchema,
+export const softSkillCreateSchema = softSkillBaseSchema.omit({
+  id: true,
+  personalId: true,
 });
+
+export const softSkillUpdateSchema = softSkillCreateSchema
+  .extend({
+    id: idSchema,
+  })
+  .partial();
 
 export type SoftSkill = z.infer<typeof softSkillBaseSchema>;
 export type SoftSkillCreate = z.infer<typeof softSkillCreateSchema>;

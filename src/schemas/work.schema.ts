@@ -15,11 +15,14 @@ export const workBaseSchema = z.object({
 
 export const workCreateSchema = workBaseSchema.omit({
   id: true,
+  personalId: true,
 });
 
-export const workUpdateSchema = workCreateSchema.partial().extend({
-  id: idSchema,
-});
+export const workUpdateSchema = workCreateSchema
+  .extend({
+    id: idSchema,
+  })
+  .partial();
 
 export type WorkBase = z.infer<typeof workBaseSchema>;
 export type WorkCreate = z.infer<typeof workCreateSchema>;
@@ -31,13 +34,16 @@ export const workDetailsBaseSchema = z.object({
   description: z.string(),
 });
 
-export const workDetailsCreateSchema = workDetailsBaseSchema.omit({ id: true });
+export const workDetailsCreateSchema = workDetailsBaseSchema.omit({
+  id: true,
+  workExperienceId: true,
+});
 
 export const workDetailsUpdateSchema = workDetailsCreateSchema
-  .partial()
   .extend({
     id: idSchema,
-  });
+  })
+  .partial();
 
 export type WorkDetailsBase = z.infer<typeof workDetailsBaseSchema>;
 export type WorkDetailsCreate = z.infer<typeof workDetailsCreateSchema>;

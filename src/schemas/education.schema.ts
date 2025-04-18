@@ -22,7 +22,10 @@ export const educationBaseSchema = z.object({
   url: z.string().url({ message: "Invalid URL format" }),
 });
 
-export const educationCreateSchema = educationBaseSchema.omit({ id: true });
+export const educationCreateSchema = educationBaseSchema.omit({
+  personalId: true,
+  id: true,
+});
 export const educationUpdateSchema = educationCreateSchema.partial().extend({
   id: idSchema,
 });
