@@ -5,12 +5,12 @@ import type { CourseDetailsInsert } from "../db/schema/course.db";
 import { NotFoundError } from "../errors/not-found.error";
 
 export class Course extends BaseCrudService<typeof courses> {
-  constructor() {
-    super(courseRepository, "id");
+  constructor(private readonly repo = courseRepository) {
+    super(repo, "id");
   }
 
   async getDetailById(detailId: number) {
-    const record = await courseRepository.getDetailById(detailId);
+    const record = await this.repo.getDetailById(detailId);
     if (!record) {
       throw new NotFoundError(
         `cannot get: detail ${this.primaryKey} ${detailId} not found`,
@@ -20,7 +20,7 @@ export class Course extends BaseCrudService<typeof courses> {
   }
 
   async addDetails(courseId: number, newCourseDetail: CourseDetailsInsert) {
-    const record = await courseRepository.addDetails(courseId, newCourseDetail);
+    const record = await this.repo.addDetails(courseId, newCourseDetail);
     if (!record) {
       throw new Error("failed to create the record.");
     }
@@ -31,13 +31,13 @@ export class Course extends BaseCrudService<typeof courses> {
     detailId: number,
     newDetail: Partial<CourseDetailsInsert>,
   ) {
-    const exists = await this.getDetailById(detailId);
+    const exists = await this.repo.getDetailById(detailId);
     if (!exists) {
       throw new NotFoundError(
         `cannot update: detail ${this.primaryKey} ${detailId} not found`,
       );
     }
-    return courseRepository.updateDetails(detailId, newDetail);
+    return this.repo.updateDetails(detailId, newDetail);
   }
 
   override async delete(id: number) {
@@ -47,6 +47,6 @@ export class Course extends BaseCrudService<typeof courses> {
         `cannot delete: detail ${this.primaryKey} ${id} not found`,
       );
     }
-    return courseRepository.deleteCourseWithDetails(id);
+    return this.repo.deleteCourseWithDetails(id);
   }
 }

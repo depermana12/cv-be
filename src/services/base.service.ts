@@ -31,8 +31,10 @@ export class BaseCrudService<
     return record;
   }
 
-  async create(data: TInsert): Promise<TSelect> {
-    const record = await this.repository.create(data);
+  async create(
+    data: Omit<TInsert, "personalId"> & { personalId?: number },
+  ): Promise<TSelect> {
+    const record = await this.repository.create(data as TInsert);
     if (!record) {
       throw new Error("failed to create the record.");
     }

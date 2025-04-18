@@ -9,6 +9,7 @@ import { SoftSkill } from "./soft-skill.service";
 import { Course } from "./course.service";
 import { ProjectTechStack } from "./project-tech.service";
 
+// use in cv aggregator
 export const personalService = new Personal();
 export const languageService = new Language();
 export const educationService = new Education();

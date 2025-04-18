@@ -7,12 +7,12 @@ import { NotFoundError } from "../errors/not-found.error";
 export class ProjectTechStack extends BaseCrudService<
   typeof projectTechnologies
 > {
-  constructor() {
-    super(projectTechStackRepository, "id");
+  constructor(private readonly repo = projectTechStackRepository) {
+    super(repo, "id");
   }
 
   async getByProjectId(projectId: number) {
-    const record = await projectTechStackRepository.getByProjectId(projectId);
+    const record = await this.repo.getByProjectId(projectId);
     if (!record) {
       throw new NotFoundError(
         `cannot get: detail ${this.primaryKey} ${projectId} not found`,
@@ -22,13 +22,13 @@ export class ProjectTechStack extends BaseCrudService<
   }
 
   async getByProjectIdGrouped() {
-    return projectTechStackRepository.getByProjectIdGrouped();
+    return this.repo.getByProjectIdGrouped();
   }
 
   async addTech(
     projectId: number,
     tech: Omit<ProjectTechStackInsert, "projectId">,
   ) {
-    return projectTechStackRepository.addTech(projectId, tech);
+    return this.repo.addTech(projectId, tech);
   }
 }

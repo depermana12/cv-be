@@ -1,16 +1,16 @@
 import { BaseCrudService } from "./base.service";
 import { workRepository } from "./instance.repo";
-import { workExperience } from "../db/schema/work.db";
+import { work } from "../db/schema/work.db";
 import type { WorkDetailInsert } from "../db/schema/work.db";
 import { NotFoundError } from "../errors/not-found.error";
 
-export class Work extends BaseCrudService<typeof workExperience> {
-  constructor() {
-    super(workRepository, "id");
+export class Work extends BaseCrudService<typeof work> {
+  constructor(private readonly repo = workRepository) {
+    super(repo, "id");
   }
 
   async getDetailById(detailId: number) {
-    const record = await workRepository.getDetailById(detailId);
+    const record = await this.repo.getDetailById(detailId);
     if (!record) {
       throw new NotFoundError(
         `cannot get: detail ${this.primaryKey} ${detailId} not found`,
@@ -20,7 +20,7 @@ export class Work extends BaseCrudService<typeof workExperience> {
   }
 
   async addDetail(workExpId: number, newWorkExp: WorkDetailInsert) {
-    const record = await workRepository.addDetails(workExpId, newWorkExp);
+    const record = await this.repo.addDetails(workExpId, newWorkExp);
     if (!record) {
       throw new Error("failed to create the record.");
     }
@@ -31,13 +31,13 @@ export class Work extends BaseCrudService<typeof workExperience> {
     detailId: number,
     newDetailExp: Partial<WorkDetailInsert>,
   ) {
-    const exists = await this.getDetailById(detailId);
+    const exists = await this.repo.getDetailById(detailId);
     if (!exists) {
       throw new NotFoundError(
         `cannot update: detail ${this.primaryKey} ${detailId} not found`,
       );
     }
-    return workRepository.updateDetails(detailId, newDetailExp);
+    return this.repo.updateDetails(detailId, newDetailExp);
   }
 
   override async delete(id: number) {
@@ -47,6 +47,6 @@ export class Work extends BaseCrudService<typeof workExperience> {
         `cannot delete: detail ${this.primaryKey} ${id} not found`,
       );
     }
-    return workRepository.deleteProjectWithDetails(id);
+    return this.repo.deleteProjectWithDetails(id);
   }
 }
