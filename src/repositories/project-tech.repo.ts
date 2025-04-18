@@ -9,11 +9,11 @@ export class ProjectTechStack extends BaseRepository<
   typeof projectTechnologies
 > {
   constructor() {
-    super(projectTechnologies, "id");
+    super(db, projectTechnologies, "id");
   }
 
   async getByProjectId(projectId: number) {
-    const rows = await db
+    const rows = await this.db
       .select()
       .from(this.table)
       .where(eq(this.table.projectId, projectId));
@@ -37,7 +37,7 @@ export class ProjectTechStack extends BaseRepository<
     projectId: number,
     tech: Omit<ProjectTechStackInsert, "projectId">,
   ) {
-    const inserted = await db
+    const inserted = await this.db
       .insert(this.table)
       .values({ ...tech, projectId })
       .$returningId();
@@ -49,10 +49,14 @@ export class ProjectTechStack extends BaseRepository<
     projectTechId: number,
     newProjectTech: Partial<ProjectTechStackInsert>,
   ) {
-    await db
+    await this.db
       .update(this.table)
       .set(newProjectTech)
       .where(eq(this.table.id, projectTechId));
-    return this.getById(projectTechId);
+    const updatedTech = await this.getById(projectTechId);
+    if (!updatedTech) {
+      throw new Error(`ProjectTech with ID ${projectTechId} not found`);
+    }
+    return updatedTech;
   }
 }

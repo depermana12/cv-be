@@ -8,24 +8,26 @@ export class Location extends BaseRepository<
   LocationInsert
 > {
   constructor() {
-    super(locationTable, "id");
+    super(db, locationTable, "id");
   }
   async getByPersonalId(personalId: number) {
-    return db
+    return this.db
       .select()
       .from(this.table)
       .where(eq(this.table.personalId, personalId));
   }
 
   async updateByPersonalId(personalId: number, data: Partial<LocationInsert>) {
-    await db
-      .update(locationTable)
+    await this.db
+      .update(this.table)
       .set(data)
-      .where(eq(locationTable.personalId, personalId));
+      .where(eq(this.table.personalId, personalId));
 
     return this.getByPersonalId(personalId);
   }
   async deleteByPersonalId(personalId: number) {
-    await db.delete(this.table).where(eq(this.table.personalId, personalId));
+    await this.db
+      .delete(this.table)
+      .where(eq(this.table.personalId, personalId));
   }
 }

@@ -5,19 +5,21 @@ import { socialTable, type SocialInsert } from "../db/schema/personal.db";
 
 export class Social extends BaseRepository<typeof socialTable, SocialInsert> {
   constructor() {
-    super(socialTable, "id");
+    super(db, socialTable, "id");
   }
   async getByPersonalId(personalId: number) {
-    return db
+    return this.db
       .select()
       .from(this.table)
       .where(eq(this.table.personalId, personalId));
   }
   async replaceAllForPersonalId(personalId: number, socials: SocialInsert[]) {
-    await db.delete(this.table).where(eq(socialTable.personalId, personalId));
+    await this.db
+      .delete(this.table)
+      .where(eq(this.table.personalId, personalId));
 
     if (socials.length > 0) {
-      await db.insert(socialTable).values(
+      await this.db.insert(socialTable).values(
         socials.map((social) => ({
           ...social,
           personalId,
@@ -29,6 +31,8 @@ export class Social extends BaseRepository<typeof socialTable, SocialInsert> {
   }
 
   async deleteByPersonalId(personalId: number) {
-    await db.delete(this.table).where(eq(this.table.personalId, personalId));
+    await this.db
+      .delete(this.table)
+      .where(eq(this.table.personalId, personalId));
   }
 }

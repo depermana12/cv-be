@@ -13,10 +13,10 @@ export class EducationRepository extends BaseRepository<
   EducationInsert
 > {
   constructor() {
-    super(education, "id");
+    super(db, education, "id");
   }
   async getAllByPersonalId(personalId: number): Promise<EducationSelect[]> {
-    return db
+    return this.db
       .select()
       .from(this.table)
       .where(eq(this.table.personalId, personalId));

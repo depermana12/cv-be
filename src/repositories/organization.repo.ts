@@ -16,10 +16,10 @@ export class OrganizationRepository extends BaseRepository<
   OrganizationInsert
 > {
   constructor() {
-    super(organization, "id");
+    super(db, organization, "id");
   }
   async getDetailById(organizationExperienceId: number) {
-    const rows = await db
+    const rows = await this.db
       .select()
       .from(organizationDetails)
       .where(eq(organizationDetails.id, organizationExperienceId));
@@ -29,7 +29,7 @@ export class OrganizationRepository extends BaseRepository<
     organizationId: number,
     newOrganizationDetail: OrganizationDetailInsert,
   ) {
-    const insertedDetail = await db
+    const insertedDetail = await this.db
       .insert(organizationDetails)
       .values({ ...newOrganizationDetail, organizationId })
       .$returningId();
@@ -40,16 +40,16 @@ export class OrganizationRepository extends BaseRepository<
     detailId: number,
     newDetail: Partial<OrganizationDetailInsert>,
   ) {
-    await db
+    await this.db
       .update(organizationDetails)
       .set(newDetail)
       .where(eq(organizationDetails.id, detailId));
     return this.getDetailById(detailId);
   }
   async deleteProjectWithDetails(id: number) {
-    await db
+    await this.db
       .delete(organizationDetails)
       .where(eq(organizationDetails.organizationId, id));
-    await db.delete(organization).where(eq(organization.id, id));
+    await this.db.delete(organization).where(eq(organization.id, id));
   }
 }

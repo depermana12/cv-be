@@ -10,15 +10,15 @@ export class LanguageRepository extends BaseRepository<
   LanguageInsert
 > {
   constructor() {
-    super(language, "id");
+    super(db, language, "id");
   }
 
   async createWithPersonalId(personalId: number, data: LanguageInsert) {
-    return await db.insert(this.table).values({ ...data, personalId });
+    return await this.db.insert(this.table).values({ ...data, personalId });
   }
 
   async getAllByPersonalId(personalId: number): Promise<LanguageSelect[]> {
-    const rows = await db
+    const rows = await this.db
       .select()
       .from(this.table)
       .where(eq(this.table.personalId, personalId));

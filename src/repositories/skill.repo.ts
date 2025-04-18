@@ -8,17 +8,13 @@ export class SkillRepository extends BaseRepository<
   SkillInsert
 > {
   constructor() {
-    super(skills, "id");
+    super(db, skills, "id");
   }
   async getCategories() {
-    try {
-      const rows = await db
-        .selectDistinct({ category: skills.category })
-        .from(skills);
-      const categories = rows.map((row) => row.category);
-      return categories;
-    } catch (e: unknown) {
-      throw new Error(e instanceof Error ? e.message : String(e));
-    }
+    const rows = await this.db
+      .selectDistinct({ category: skills.category })
+      .from(this.table);
+    const categories = rows.map((row: { category: any }) => row.category);
+    return categories;
   }
 }

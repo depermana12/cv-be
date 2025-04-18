@@ -13,35 +13,37 @@ export class ProjectRepository extends BaseRepository<
   ProjectInsert
 > {
   constructor() {
-    super(projects, "id");
+    super(db, projects, "id");
   }
-  async getDetailById(projectId: number) {
-    const rows = await db
+  async getDetail(projectId: number) {
+    const rows = await this.db
       .select()
       .from(projectDetails)
       .where(eq(projectDetails.id, projectId));
     return rows[0];
   }
-  async addDetails(projectId: number, newProjectDetail: ProjectDetailsInsert) {
-    const insertedDetail = await db
+  async addDetail(projectId: number, newProjectDetail: ProjectDetailsInsert) {
+    const [insertedDetail] = await this.db
       .insert(projectDetails)
       .values({ ...newProjectDetail, projectId })
       .$returningId();
-    return this.getById(insertedDetail[0].id);
+    return this.getById(insertedDetail.id);
   }
 
   async updateDetails(
     detailId: number,
     newDetail: Partial<ProjectDetailsInsert>,
   ) {
-    await db
+    await this.db
       .update(projectDetails)
       .set(newDetail)
       .where(eq(projectDetails.id, detailId));
-    return this.getDetailById(detailId);
+    return this.getDetail(detailId);
   }
   async deleteProjectWithDetails(id: number) {
-    await db.delete(projectDetails).where(eq(projectDetails.projectId, id));
-    await db.delete(projects).where(eq(projects.id, id));
+    await this.db
+      .delete(projectDetails)
+      .where(eq(projectDetails.projectId, id));
+    await this.db.delete(projects).where(eq(projects.id, id));
   }
 }

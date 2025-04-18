@@ -7,17 +7,17 @@ import type { WorkInsert, WorkDetailInsert } from "../db/schema/work.db";
 
 export class WorkRepository extends BaseRepository<typeof work, WorkInsert> {
   constructor() {
-    super(work, "id");
+    super(db, work, "id");
   }
   async getDetailById(workExperienceId: number) {
-    const rows = await db
+    const rows = await this.db
       .select()
       .from(workDetails)
       .where(eq(workDetails.id, workExperienceId));
     return rows[0];
   }
   async addDetails(workId: number, newProjectDetail: WorkDetailInsert) {
-    const insertedDetail = await db
+    const insertedDetail = await this.db
       .insert(workDetails)
       .values({ ...newProjectDetail, workId })
       .$returningId();
@@ -25,14 +25,14 @@ export class WorkRepository extends BaseRepository<typeof work, WorkInsert> {
   }
 
   async updateDetails(detailId: number, newDetail: Partial<WorkDetailInsert>) {
-    await db
+    await this.db
       .update(workDetails)
       .set(newDetail)
       .where(eq(workDetails.id, detailId));
     return this.getDetailById(detailId);
   }
   async deleteProjectWithDetails(id: number) {
-    await db.delete(workDetails).where(eq(workDetails.workId, id));
-    await db.delete(work).where(eq(work.id, id));
+    await this.db.delete(workDetails).where(eq(workDetails.workId, id));
+    await this.db.delete(work).where(eq(work.id, id));
   }
 }
