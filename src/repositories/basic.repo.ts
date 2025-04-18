@@ -1,8 +1,8 @@
 import { BaseRepository } from "./base.repo";
-import { personalBasic } from "../db/schema/personal.db";
+import { basicTable } from "../db/schema/personal.db";
 
-export class Basic extends BaseRepository<typeof personalBasic> {
+export class Basic extends BaseRepository<typeof basicTable> {
   constructor() {
-    super(personalBasic, "id");
+    super(basicTable, "id");
   }
 }

@@ -1,14 +1,14 @@
 import { eq } from "drizzle-orm";
 import { db } from "../db/index";
 import { BaseRepository } from "./base.repo";
-import {
-  personalLocation,
-  type PersonalLocationInsert,
-} from "../db/schema/personal.db";
+import { locationTable, type LocationInsert } from "../db/schema/personal.db";
 
-export class Location extends BaseRepository<typeof personalLocation> {
+export class Location extends BaseRepository<
+  typeof locationTable,
+  LocationInsert
+> {
   constructor() {
-    super(personalLocation, "id");
+    super(locationTable, "id");
   }
   async getByPersonalId(personalId: number) {
     return db
@@ -17,15 +17,15 @@ export class Location extends BaseRepository<typeof personalLocation> {
       .where(eq(this.table.personalId, personalId));
   }
 
-  async updateByPersonalId(
-    personalId: number,
-    data: Partial<PersonalLocationInsert>,
-  ) {
+  async updateByPersonalId(personalId: number, data: Partial<LocationInsert>) {
     await db
-      .update(personalLocation)
+      .update(locationTable)
       .set(data)
-      .where(eq(personalLocation.personalId, personalId));
+      .where(eq(locationTable.personalId, personalId));
 
     return this.getByPersonalId(personalId);
+  }
+  async deleteByPersonalId(personalId: number) {
+    await db.delete(this.table).where(eq(this.table.personalId, personalId));
   }
 }

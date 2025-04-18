@@ -8,20 +8,16 @@ import {
 
 import { db } from "../db/index";
 import {
-  personalBasic,
-  personalLocation,
-  personalSocial,
+  basicTable,
+  locationTable,
+  socialTable,
 } from "../db/schema/personal.db";
 
-import type {
-  PersonalBasicInsert,
-  PersonalInsert,
-  PersonalUpdate,
-} from "../db/schema/personal.db";
+import type { PersonalInsert, PersonalUpdate } from "../db/schema/personal.db";
 
 export class PersonalRepository {
   async getAll() {
-    const basics = await db.select().from(personalBasic);
+    const basics = await db.select().from(basicTable);
     return Promise.all(
       basics.map(async (basic) => {
         const location = await locationRepository.getByPersonalId(basic.id);
@@ -46,9 +42,7 @@ export class PersonalRepository {
   }
 
   async create(data: PersonalInsert) {
-    console.log("prepare for creating");
     const insertedBasic = await basicRepository.create(data.basic);
-    console.log(insertedBasic);
     if (!insertedBasic) {
       throw new Error("failed to insert basic personal data");
     }
@@ -84,8 +78,8 @@ export class PersonalRepository {
   }
 
   async delete(id: number) {
+    await socialRepository.deleteByPersonalId(id);
+    await locationRepository.deleteByPersonalId(id);
     await basicRepository.delete(id);
-    await locationRepository.delete(id);
-    await socialRepository.delete(id);
   }
 }

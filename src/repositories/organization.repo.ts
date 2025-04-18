@@ -3,31 +3,35 @@ import { eq } from "drizzle-orm";
 import { BaseRepository } from "./base.repo";
 import { db } from "../db/index";
 import {
-  organizationExperience,
-  orgExpDetails,
+  organization,
+  organizationDetails,
 } from "../db/schema/organization.db";
-import type { OrganizationDetailInsert } from "../db/schema/organization.db";
+import type {
+  OrganizationInsert,
+  OrganizationDetailInsert,
+} from "../db/schema/organization.db";
 
 export class OrganizationRepository extends BaseRepository<
-  typeof organizationExperience
+  typeof organization,
+  OrganizationInsert
 > {
   constructor() {
-    super(organizationExperience, "id");
+    super(organization, "id");
   }
   async getDetailById(organizationExperienceId: number) {
     const rows = await db
       .select()
-      .from(orgExpDetails)
-      .where(eq(orgExpDetails.id, organizationExperienceId));
+      .from(organizationDetails)
+      .where(eq(organizationDetails.id, organizationExperienceId));
     return rows[0];
   }
   async addDetails(
-    organizationExperienceId: number,
+    organizationId: number,
     newOrganizationDetail: OrganizationDetailInsert,
   ) {
     const insertedDetail = await db
-      .insert(orgExpDetails)
-      .values({ ...newOrganizationDetail, organizationExperienceId })
+      .insert(organizationDetails)
+      .values({ ...newOrganizationDetail, organizationId })
       .$returningId();
     return this.getById(insertedDetail[0].id);
   }
@@ -37,17 +41,15 @@ export class OrganizationRepository extends BaseRepository<
     newDetail: Partial<OrganizationDetailInsert>,
   ) {
     await db
-      .update(orgExpDetails)
+      .update(organizationDetails)
       .set(newDetail)
-      .where(eq(orgExpDetails.id, detailId));
+      .where(eq(organizationDetails.id, detailId));
     return this.getDetailById(detailId);
   }
   async deleteProjectWithDetails(id: number) {
     await db
-      .delete(orgExpDetails)
-      .where(eq(orgExpDetails.organizationExperienceId, id));
-    await db
-      .delete(organizationExperience)
-      .where(eq(organizationExperience.id, id));
+      .delete(organizationDetails)
+      .where(eq(organizationDetails.organizationId, id));
+    await db.delete(organization).where(eq(organization.id, id));
   }
 }

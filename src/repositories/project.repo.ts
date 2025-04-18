@@ -3,9 +3,15 @@ import { eq } from "drizzle-orm";
 import { BaseRepository } from "./base.repo";
 import { db } from "../db/index";
 import { projects, projectDetails } from "../db/schema/project.db";
-import type { ProjectDetailsInsert } from "../db/schema/project.db";
+import type {
+  ProjectInsert,
+  ProjectDetailsInsert,
+} from "../db/schema/project.db";
 
-export class ProjectRepository extends BaseRepository<typeof projects> {
+export class ProjectRepository extends BaseRepository<
+  typeof projects,
+  ProjectInsert
+> {
   constructor() {
     super(projects, "id");
   }

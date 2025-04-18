@@ -2,13 +2,12 @@ import { eq } from "drizzle-orm";
 import { db } from "../db";
 import { BaseRepository } from "./base.repo";
 import { courses, courseDetails } from "../db/schema/course.db";
-import type {
-  CourseInsert,
-  CourseSelect,
-  CourseDetailsInsert,
-} from "../db/schema/course.db";
+import type { CourseInsert, CourseDetailsInsert } from "../db/schema/course.db";
 
-export class CourseRepository extends BaseRepository<typeof courses> {
+export class CourseRepository extends BaseRepository<
+  typeof courses,
+  CourseInsert
+> {
   constructor() {
     super(courses, "id");
   }

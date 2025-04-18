@@ -5,16 +5,16 @@ import { BaseRepository } from "./base.repo";
 import { language } from "../db/schema/language.db";
 import type { LanguageInsert, LanguageSelect } from "../db/schema/language.db";
 
-export class LanguageRepository extends BaseRepository<typeof language> {
+export class LanguageRepository extends BaseRepository<
+  typeof language,
+  LanguageInsert
+> {
   constructor() {
     super(language, "id");
   }
 
-  async createWithPersonalId(
-    personalId: number,
-    data: Omit<LanguageInsert, "personalId">,
-  ) {
-    const fullData: LanguageInsert = { ...data, personalId };
+  async createWithPersonalId(personalId: number, data: LanguageInsert) {
+    const fullData: Omit<LanguageSelect, "id"> = { ...data, personalId };
     return await db.insert(this.table).values(fullData);
   }
 
