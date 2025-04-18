@@ -1,6 +1,5 @@
 import { Hono } from "hono";
-import { HTTPException } from "hono/http-exception";
-import { zValidator } from "@hono/zod-validator";
+import { zValidator } from "../utils/validator";
 
 import { Project } from "../services/project.service";
 import { ProjectTechStack } from "../services/project-tech.service";
@@ -32,48 +31,28 @@ export const projectRoutes = new Hono()
       data: project,
     });
   })
-  .post(
-    "/",
-    zValidator("json", projectCreateSchema, (result, c) => {
-      if (!result.success) {
-        throw new HTTPException(400, {
-          message: result.error.issues[0].message,
-        });
-      }
-    }),
-    async (c) => {
-      const validated = c.req.valid("json");
-      const newProject = await projectService.create(validated);
-      return c.json(
-        {
-          message: `new record created with ID: ${newProject.id}`,
-          data: newProject,
-        },
-        201,
-      );
-    },
-  )
-  .patch(
-    "/:id",
-    zValidator("json", projectUpdateSchema, (result, c) => {
-      if (!result.success) {
-        throw new HTTPException(400, {
-          message: result.error.issues[0].message,
-        });
-      }
-    }),
-    async (c) => {
-      const id = Number(c.req.param("id"));
-      const validated = c.req.valid("json");
+  .post("/", zValidator("json", projectCreateSchema), async (c) => {
+    const validated = c.req.valid("json");
+    const newProject = await projectService.create(validated);
+    return c.json(
+      {
+        message: `new record created with ID: ${newProject.id}`,
+        data: newProject,
+      },
+      201,
+    );
+  })
+  .patch("/:id", zValidator("json", projectUpdateSchema), async (c) => {
+    const id = Number(c.req.param("id"));
+    const validated = c.req.valid("json");
 
-      const updated = await projectService.update(id, validated);
-      return c.json({
-        success: true,
-        message: `record ID: ${id} updated successfully`,
-        data: updated,
-      });
-    },
-  )
+    const updated = await projectService.update(id, validated);
+    return c.json({
+      success: true,
+      message: `record ID: ${id} updated successfully`,
+      data: updated,
+    });
+  })
   .delete("/:id", async (c) => {
     const id = Number(c.req.param("id"));
     await projectService.delete(id);
@@ -116,13 +95,7 @@ export const projectRoutes = new Hono()
   })
   .post(
     "/:id/details",
-    zValidator("json", projectDetailCreateSchema, (result, c) => {
-      if (!result.success) {
-        throw new HTTPException(400, {
-          message: result.error.issues[0].message,
-        });
-      }
-    }),
+    zValidator("json", projectDetailCreateSchema),
     async (c) => {
       const id = Number(c.req.param("id"));
       const validatedBody = c.req.valid("json");
@@ -137,13 +110,7 @@ export const projectRoutes = new Hono()
   )
   .patch(
     "/:id/details/:detailId",
-    zValidator("json", projectDetailUpdateSchema, (result, c) => {
-      if (!result.success) {
-        throw new HTTPException(400, {
-          message: result.error.issues[0].message,
-        });
-      }
-    }),
+    zValidator("json", projectDetailUpdateSchema),
     async (c) => {
       const id = Number(c.req.param("id"));
       const detailId = Number(c.req.param("detailId"));
@@ -180,17 +147,7 @@ export const projectRoutes = new Hono()
   })
   .post(
     "/:id/technologies",
-    zValidator(
-      "json",
-      projectTechnologyCreateSchema.omit({ projectId: true }),
-      (result, c) => {
-        if (!result.success) {
-          throw new HTTPException(400, {
-            message: result.error.issues[0].message,
-          });
-        }
-      },
-    ),
+    zValidator("json", projectTechnologyCreateSchema),
     async (c) => {
       const id = Number(c.req.param("id"));
       const validatedBody = c.req.valid("json");
@@ -204,7 +161,7 @@ export const projectRoutes = new Hono()
   )
   .patch(
     "/:id/technologies/:techId",
-    zValidator("json", projectTechnologyUpdateSchema.omit({ projectId: true })),
+    zValidator("json", projectTechnologyUpdateSchema),
     async (c) => {
       const id = Number(c.req.param("id"));
       const techId = Number(c.req.param("techId"));

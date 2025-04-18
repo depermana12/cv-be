@@ -1,6 +1,5 @@
 import { Hono } from "hono";
-import { HTTPException } from "hono/http-exception";
-import { zValidator } from "@hono/zod-validator";
+import { zValidator } from "../utils/validator";
 
 import { Organization } from "../services/organization.service";
 import {
@@ -29,48 +28,28 @@ export const organizationRoutes = new Hono()
       data: org,
     });
   })
-  .post(
-    "/",
-    zValidator("json", organizationCreateSchema, (result, c) => {
-      if (!result.success) {
-        throw new HTTPException(400, {
-          message: result.error.issues[0].message,
-        });
-      }
-    }),
-    async (c) => {
-      const validatedBody = c.req.valid("json");
-      const newOrg = await organization.create(validatedBody);
-      return c.json(
-        {
-          success: true,
-          message: `new record created with ID: ${newOrg.id}`,
-          data: newOrg,
-        },
-        201,
-      );
-    },
-  )
-  .patch(
-    "/:id",
-    zValidator("json", organizationUpdateSchema, (result, c) => {
-      if (!result.success) {
-        throw new HTTPException(400, {
-          message: result.error.issues[0].message,
-        });
-      }
-    }),
-    async (c) => {
-      const id = Number(c.req.param("id"));
-      const validatedBody = c.req.valid("json");
-      const updatedOrgExp = await organization.update(id, validatedBody);
-      return c.json({
+  .post("/", zValidator("json", organizationCreateSchema), async (c) => {
+    const validatedBody = c.req.valid("json");
+    const newOrg = await organization.create(validatedBody);
+    return c.json(
+      {
         success: true,
-        message: `record ID: ${id} updated successfully`,
-        data: updatedOrgExp,
-      });
-    },
-  )
+        message: `new record created with ID: ${newOrg.id}`,
+        data: newOrg,
+      },
+      201,
+    );
+  })
+  .patch("/:id", zValidator("json", organizationUpdateSchema), async (c) => {
+    const id = Number(c.req.param("id"));
+    const validatedBody = c.req.valid("json");
+    const updatedOrgExp = await organization.update(id, validatedBody);
+    return c.json({
+      success: true,
+      message: `record ID: ${id} updated successfully`,
+      data: updatedOrgExp,
+    });
+  })
   .delete("/:id", async (c) => {
     const id = Number(c.req.param("id"));
     await organization.delete(id);
@@ -81,13 +60,7 @@ export const organizationRoutes = new Hono()
   })
   .post(
     "/:id/details",
-    zValidator("json", organizationDetailCreateSchema, (result, c) => {
-      if (!result.success) {
-        throw new HTTPException(400, {
-          message: result.error.issues[0].message,
-        });
-      }
-    }),
+    zValidator("json", organizationDetailCreateSchema),
     async (c) => {
       const orgExpId = Number(c.req.param("id"));
       const validatedBody = c.req.valid("json");
@@ -102,13 +75,7 @@ export const organizationRoutes = new Hono()
   )
   .patch(
     "/:id/details/:detailId",
-    zValidator("json", organizationDetailUpdateSchema, (result, c) => {
-      if (!result.success) {
-        throw new HTTPException(400, {
-          message: result.error.issues[0].message,
-        });
-      }
-    }),
+    zValidator("json", organizationDetailUpdateSchema),
     async (c) => {
       const id = Number(c.req.param("id"));
       const detailId = Number(c.req.param("detailId"));
@@ -116,7 +83,7 @@ export const organizationRoutes = new Hono()
 
       const existingDetail = await organization.getDetailById(detailId);
 
-      if (existingDetail.organizationExperienceId !== id) {
+      if (existingDetail.organizationId !== id) {
         return c.json(
           {
             success: false,

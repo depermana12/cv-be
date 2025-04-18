@@ -1,7 +1,6 @@
 import { Hono } from "hono";
-import { HTTPException } from "hono/http-exception";
-import { zValidator } from "@hono/zod-validator";
 
+import { zValidator } from "../utils/validator";
 import { Skill } from "../services/skill.service";
 import { skillCreateSchema, skillUpdateSchema } from "../schemas/skill.schema";
 
@@ -32,49 +31,29 @@ export const skillRoutes = new Hono()
       data: skill,
     });
   })
-  .post(
-    "/",
-    zValidator("json", skillCreateSchema, (result, c) => {
-      if (!result.success) {
-        throw new HTTPException(400, {
-          message: result.error.issues[0].message,
-        });
-      }
-    }),
-    async (c) => {
-      const validatedBody = c.req.valid("json");
-      const newSkill = await skillService.create(validatedBody);
-      return c.json(
-        {
-          success: true,
-          message: `new record created with ID: ${newSkill.id}`,
-          data: newSkill,
-        },
-        201,
-      );
-    },
-  )
-  .patch(
-    "/:id",
-    zValidator("json", skillUpdateSchema, (result, c) => {
-      if (!result.success) {
-        throw new HTTPException(400, {
-          message: result.error.issues[0].message,
-        });
-      }
-    }),
-    async (c) => {
-      const id = Number(c.req.param("id"));
-      const validatedBody = c.req.valid("json");
-
-      const updated = await skillService.update(id, validatedBody);
-      return c.json({
+  .post("/", zValidator("json", skillCreateSchema), async (c) => {
+    const validatedBody = c.req.valid("json");
+    const newSkill = await skillService.create(validatedBody);
+    return c.json(
+      {
         success: true,
-        message: `record ID: ${id} updated successfully`,
-        data: updated,
-      });
-    },
-  )
+        message: `new record created with ID: ${newSkill.id}`,
+        data: newSkill,
+      },
+      201,
+    );
+  })
+  .patch("/:id", zValidator("json", skillUpdateSchema), async (c) => {
+    const id = Number(c.req.param("id"));
+    const validatedBody = c.req.valid("json");
+
+    const updated = await skillService.update(id, validatedBody);
+    return c.json({
+      success: true,
+      message: `record ID: ${id} updated successfully`,
+      data: updated,
+    });
+  })
   .delete("/:id", async (c) => {
     const id = Number(c.req.param("id"));
     await skillService.delete(id);

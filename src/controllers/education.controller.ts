@@ -1,6 +1,5 @@
 import { Hono } from "hono";
-import { HTTPException } from "hono/http-exception";
-import { zValidator } from "@hono/zod-validator";
+import { zValidator } from "../utils/validator";
 
 import { Education } from "../services/education.service";
 import {
@@ -33,51 +32,31 @@ export const educationRoutes = new Hono()
       200,
     );
   })
-  .post(
-    "/",
-    zValidator("json", educationCreateSchema, (result, c) => {
-      if (!result.success) {
-        throw new HTTPException(400, {
-          message: result.error.issues[0].message,
-        });
-      }
-    }),
-    async (c) => {
-      const validated = c.req.valid("json");
-      const newEducation = await educationService.create(validated);
-      return c.json(
-        {
-          success: true,
-          message: `new record created with ID: ${newEducation.id}`,
-          data: newEducation,
-        },
-        201,
-      );
-    },
-  )
-  .patch(
-    "/:id",
-    zValidator("json", educationUpdateSchema, (result, c) => {
-      if (!result.success) {
-        throw new HTTPException(400, {
-          message: result.error.issues[0].message,
-        });
-      }
-    }),
-    async (c) => {
-      const id = c.req.param("id");
-      const validated = c.req.valid("json");
-      const updatedEdu = await educationService.update(Number(id), validated);
-      return c.json(
-        {
-          success: true,
-          message: `record ID: ${id} updated successfully`,
-          data: updatedEdu,
-        },
-        200,
-      );
-    },
-  )
+  .post("/", zValidator("json", educationCreateSchema), async (c) => {
+    const validated = c.req.valid("json");
+    const newEducation = await educationService.create(validated);
+    return c.json(
+      {
+        success: true,
+        message: `new record created with ID: ${newEducation.id}`,
+        data: newEducation,
+      },
+      201,
+    );
+  })
+  .patch("/:id", zValidator("json", educationUpdateSchema), async (c) => {
+    const id = c.req.param("id");
+    const validated = c.req.valid("json");
+    const updatedEdu = await educationService.update(Number(id), validated);
+    return c.json(
+      {
+        success: true,
+        message: `record ID: ${id} updated successfully`,
+        data: updatedEdu,
+      },
+      200,
+    );
+  })
   .delete("/:id", async (c) => {
     const id = c.req.param("id");
     await educationService.delete(Number(id));

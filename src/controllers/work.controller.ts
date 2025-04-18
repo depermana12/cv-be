@@ -1,7 +1,6 @@
 import { Hono } from "hono";
-import { HTTPException } from "hono/http-exception";
-import { zValidator } from "@hono/zod-validator";
 
+import { zValidator } from "../utils/validator";
 import { Work } from "../services/work.service";
 import {
   workCreateSchema,
@@ -29,48 +28,28 @@ export const workRoutes = new Hono()
       data: work,
     });
   })
-  .post(
-    "/",
-    zValidator("json", workCreateSchema, (result, c) => {
-      if (!result.success) {
-        throw new HTTPException(400, {
-          message: result.error.issues[0].message,
-        });
-      }
-    }),
-    async (c) => {
-      const validatedBody = c.req.valid("json");
-      const newWork = await workService.create(validatedBody);
-      return c.json(
-        {
-          success: true,
-          message: `new record created with ID: ${newWork.id}`,
-          data: newWork,
-        },
-        201,
-      );
-    },
-  )
-  .patch(
-    "/:id",
-    zValidator("json", workUpdateSchema, (result, c) => {
-      if (!result.success) {
-        throw new HTTPException(400, {
-          message: result.error.issues[0].message,
-        });
-      }
-    }),
-    async (c) => {
-      const id = Number(c.req.param("id"));
-      const validatedBody = c.req.valid("json");
-      const updatedWorkExp = await workService.update(id, validatedBody);
-      return c.json({
+  .post("/", zValidator("json", workCreateSchema), async (c) => {
+    const validatedBody = c.req.valid("json");
+    const newWork = await workService.create(validatedBody);
+    return c.json(
+      {
         success: true,
-        message: `record ID: ${id} updated successfully`,
-        data: updatedWorkExp,
-      });
-    },
-  )
+        message: `new record created with ID: ${newWork.id}`,
+        data: newWork,
+      },
+      201,
+    );
+  })
+  .patch("/:id", zValidator("json", workUpdateSchema), async (c) => {
+    const id = Number(c.req.param("id"));
+    const validatedBody = c.req.valid("json");
+    const updatedWorkExp = await workService.update(id, validatedBody);
+    return c.json({
+      success: true,
+      message: `record ID: ${id} updated successfully`,
+      data: updatedWorkExp,
+    });
+  })
   .delete("/:id", async (c) => {
     const id = Number(c.req.param("id"));
     await workService.delete(id);
@@ -81,13 +60,7 @@ export const workRoutes = new Hono()
   })
   .post(
     "/:id/details",
-    zValidator("json", workDetailsCreateSchema, (result, c) => {
-      if (!result.success) {
-        throw new HTTPException(400, {
-          message: result.error.issues[0].message,
-        });
-      }
-    }),
+    zValidator("json", workDetailsCreateSchema),
     async (c) => {
       const id = Number(c.req.param("id"));
       const validatedBody = c.req.valid("json");
@@ -102,13 +75,7 @@ export const workRoutes = new Hono()
   )
   .patch(
     "/:id/details/:detailId",
-    zValidator("json", workDetailsUpdateSchema, (result, c) => {
-      if (!result.success) {
-        throw new HTTPException(400, {
-          message: result.error.issues[0].message,
-        });
-      }
-    }),
+    zValidator("json", workDetailsUpdateSchema),
     async (c) => {
       const id = Number(c.req.param("id"));
       const detailId = Number(c.req.param("detailId"));
@@ -116,7 +83,7 @@ export const workRoutes = new Hono()
 
       const existingDetail = await workService.getDetailById(detailId);
 
-      if (existingDetail.workExperienceId !== id) {
+      if (existingDetail.workId !== id) {
         return c.json(
           {
             success: false,
