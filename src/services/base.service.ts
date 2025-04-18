@@ -2,13 +2,28 @@ import type { InferInsertModel, InferSelectModel } from "drizzle-orm";
 import { MySqlTable } from "drizzle-orm/mysql-core";
 import { BaseRepository } from "../repositories/base.repo";
 import { NotFoundError } from "../errors/not-found.error";
+import { BadRequestError } from "../errors/bad-request.error";
+
+export interface IBaseCrudService<
+  TSelect,
+  TInsert,
+  TUpdate = Partial<TInsert>,
+> {
+  getAll(): Promise<TSelect[]>;
+  getById(id: number): Promise<TSelect | null>;
+  create(data: TInsert): Promise<TSelect>;
+  update(id: number, data: TUpdate): Promise<TSelect>;
+  delete(id: number): Promise<void>;
+  exists(id: number | string): Promise<boolean>;
+}
 
 export class BaseCrudService<
   TTable extends MySqlTable,
   TInsert = InferInsertModel<TTable>,
   TSelect = InferSelectModel<TTable>,
   TUpdate extends Partial<TInsert> = Partial<TInsert>,
-> {
+> implements IBaseCrudService<TSelect, TInsert, TUpdate>
+{
   constructor(
     protected readonly repository: BaseRepository<
       TTable,
@@ -31,24 +46,26 @@ export class BaseCrudService<
     return record;
   }
 
-  async create(
-    data: Omit<TInsert, "personalId"> & { personalId?: number },
-  ): Promise<TSelect> {
-    const record = await this.repository.create(data as TInsert);
+  async create(data: TInsert): Promise<TSelect> {
+    const record = await this.repository.create(data);
     if (!record) {
-      throw new Error("failed to create the record.");
+      throw new BadRequestError("failed to create the record.");
     }
     return record;
   }
 
-  async update(id: number, data: TUpdate) {
+  async update(id: number, data: TUpdate): Promise<TSelect> {
     const exists = await this.exists(id);
     if (!exists) {
       throw new NotFoundError(
         `cannot update: ${this.primaryKey} ${id} not found`,
       );
     }
-    return this.repository.update(id, data);
+    const updated = await this.repository.update(id, data);
+    if (!updated) {
+      throw new BadRequestError(`failed to update: ${this.primaryKey} ${id}`);
+    }
+    return updated;
   }
 
   async delete(id: number): Promise<void> {

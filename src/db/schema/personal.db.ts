@@ -68,6 +68,12 @@ export type SocialBase = typeof socialTable.$inferSelect;
 export type SocialInsert = typeof socialTable.$inferInsert;
 export type SocialUpdate = Partial<SocialInsert> & { id: number };
 
+export type PersonalSelect = {
+  basic: BasicBase;
+  location: LocationBase;
+  socials: SocialBase[];
+};
+
 export type PersonalInsert = {
   basic: BasicInsert;
   location: Omit<LocationInsert, "personalId">;
