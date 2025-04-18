@@ -14,8 +14,7 @@ export class LanguageRepository extends BaseRepository<
   }
 
   async createWithPersonalId(personalId: number, data: LanguageInsert) {
-    const fullData: Omit<LanguageSelect, "id"> = { ...data, personalId };
-    return await db.insert(this.table).values(fullData);
+    return await db.insert(this.table).values({ ...data, personalId });
   }
 
   async getAllByPersonalId(personalId: number): Promise<LanguageSelect[]> {
