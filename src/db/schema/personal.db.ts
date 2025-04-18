@@ -3,14 +3,14 @@ import { mysqlTable, int, varchar, text } from "drizzle-orm/mysql-core";
 
 import { language } from "./language.db";
 import { education } from "./education.db";
-import { workExperience } from "./work.db";
-import { organizationExperience } from "./organization.db";
+import { work } from "./work.db";
+import { organization } from "./organization.db";
 import { projects } from "./project.db";
 import { skills } from "./skill.db";
 import { softSkills } from "./soft-skill.db";
 import { courses } from "./course.db";
 
-export const personalBasic = mysqlTable("personal_basic", {
+export const basicTable = mysqlTable("personal_basic", {
   id: int("id").primaryKey().autoincrement(),
   fullName: varchar("full_name", { length: 100 }),
   bio: varchar("bio", { length: 255 }),
@@ -21,11 +21,11 @@ export const personalBasic = mysqlTable("personal_basic", {
   url: varchar("url", { length: 255 }),
 });
 
-export const personalLocation = mysqlTable("personal_location", {
+export const locationTable = mysqlTable("personal_location", {
   id: int("id").primaryKey().autoincrement(),
   personalId: int("personal_id")
     .notNull()
-    .references(() => personalBasic.id),
+    .references(() => basicTable.id),
   address: varchar("address", { length: 255 }),
   postalCode: varchar("postal_code", { length: 5 }),
   city: varchar("city", { length: 100 }),
@@ -33,40 +33,49 @@ export const personalLocation = mysqlTable("personal_location", {
   state: varchar("state", { length: 100 }),
 });
 
-export const personalSocial = mysqlTable("personal_social", {
+export const socialTable = mysqlTable("personal_social", {
   id: int("id").primaryKey().autoincrement(),
   personalId: int("personal_id")
     .notNull()
-    .references(() => personalBasic.id),
+    .references(() => basicTable.id),
   social: varchar("social", { length: 50 }),
   username: varchar("username", { length: 100 }),
   url: varchar("url", { length: 255 }),
 });
 
-export const personalRelations = relations(personalBasic, ({ many, one }) => ({
-  location: one(personalLocation),
-  socials: many(personalSocial),
+export const personalRelations = relations(basicTable, ({ many, one }) => ({
+  location: one(locationTable),
+  socials: many(socialTable),
   language: many(language),
   education: many(education),
-  workExperience: many(workExperience),
-  organizationExperience: many(organizationExperience),
+  workExperience: many(work),
+  organizationExperience: many(organization),
   projects: many(projects),
   skills: many(skills),
   softSkills: many(softSkills),
   courses: many(courses),
 }));
 
-export type PersonalBasicInsert = typeof personalBasic.$inferInsert;
-export type PersonalLocationInsert = typeof personalLocation.$inferInsert;
-export type PersonalSocialInsert = typeof personalSocial.$inferInsert;
+export type BasicBase = typeof basicTable.$inferSelect;
+export type BasicInsert = typeof basicTable.$inferInsert;
+export type BasicUpdate = Partial<BasicInsert> & { id: number };
+
+export type LocationBase = typeof locationTable.$inferSelect;
+export type LocationInsert = typeof locationTable.$inferInsert;
+export type LocationUpdate = Partial<LocationInsert> & { id: number };
+
+export type SocialBase = typeof socialTable.$inferSelect;
+export type SocialInsert = typeof socialTable.$inferInsert;
+export type SocialUpdate = Partial<SocialInsert> & { id: number };
 
 export type PersonalInsert = {
-  basic: PersonalBasicInsert;
-  location: PersonalLocationInsert;
-  socials: PersonalSocialInsert[];
+  basic: BasicInsert;
+  location: Omit<LocationInsert, "personalId">;
+  socials: Omit<SocialInsert, "personalId">[];
 };
+
 export type PersonalUpdate = {
-  basic?: Partial<PersonalBasicInsert>;
-  location?: Partial<Omit<PersonalLocationInsert, "personalId">>;
-  socials?: Partial<Omit<PersonalSocialInsert, "personalId">>[];
+  basic?: BasicUpdate;
+  location?: LocationUpdate;
+  socials?: SocialUpdate[];
 };

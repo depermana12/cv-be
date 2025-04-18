@@ -1,13 +1,13 @@
 import { relations } from "drizzle-orm";
 import { mysqlTable, int, varchar, text, date } from "drizzle-orm/mysql-core";
 
-import { personalBasic } from "./personal.db";
+import { basicTable } from "./personal.db";
 
 export const projects = mysqlTable("projects", {
   id: int("id").primaryKey().autoincrement(),
   personalId: int("personal_id")
     .notNull()
-    .references(() => personalBasic.id),
+    .references(() => basicTable.id),
   name: varchar("name", { length: 100 }).notNull(),
   startDate: date("start_date"),
   endDate: date("end_date"),
@@ -32,9 +32,9 @@ export const projectTechnologies = mysqlTable("project_technologies", {
 });
 
 export const projectsRelations = relations(projects, ({ one, many }) => ({
-  personalInfo: one(personalBasic, {
+  personal: one(basicTable, {
     fields: [projects.personalId],
-    references: [personalBasic.id],
+    references: [basicTable.id],
   }),
   details: one(projectDetails, {
     fields: [projects.id],
@@ -60,8 +60,14 @@ export const projectTechnologiesRelations = relations(
   }),
 );
 
-export type ProjectInsert = typeof projects.$inferInsert;
 export type ProjectSelect = typeof projects.$inferSelect;
-export type ProjectDetailsInsert = typeof projectDetails.$inferInsert;
+export type ProjectInsert = Omit<typeof projects.$inferInsert, "personalId">;
+export type ProjectDetailsInsert = Omit<
+  typeof projectDetails.$inferInsert,
+  "projectId"
+>;
 export type ProjectDetailsSelect = typeof projectDetails.$inferSelect;
-export type ProjectTechStackInsert = typeof projectTechnologies.$inferInsert;
+export type ProjectTechStackInsert = Omit<
+  typeof projectTechnologies.$inferInsert,
+  "projectId"
+>;
