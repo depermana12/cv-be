@@ -10,6 +10,7 @@ import type {
 
 export class CourseRepository extends BaseRepository<
   typeof courses,
+  CourseSelect,
   CourseInsert
 > {
   constructor() {

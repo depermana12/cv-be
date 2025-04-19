@@ -13,10 +13,14 @@ import { CourseRepository } from "../repositories/course.repo";
 import { ProjectTechStack } from "../repositories/project-tech.repo";
 // import { CurriculumVitae } from "./cv.repo";
 
-export const personalRepository = new PersonalRepository();
 export const basicRepository = new Basic();
 export const locationRepository = new Location();
 export const socialRepository = new Social();
+export const personalRepository = new PersonalRepository(
+  basicRepository,
+  locationRepository,
+  socialRepository,
+);
 export const languageRepository = new LanguageRepository();
 export const educationRepository = new EducationRepository();
 export const workRepository = new WorkRepository();

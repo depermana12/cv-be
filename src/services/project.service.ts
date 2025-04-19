@@ -1,16 +1,24 @@
 import { BaseCrudService } from "./base.service";
 import { projectRepository } from "./instance.repo";
 import { projects } from "../db/schema/project.db";
-import type { ProjectDetailsInsert } from "../db/schema/project.db";
+import type {
+  ProjectDetailsInsert,
+  ProjectInsert,
+  ProjectSelect,
+} from "../db/schema/project.db";
 import { NotFoundError } from "../errors/not-found.error";
 
-export class Project extends BaseCrudService<typeof projects> {
+export class Project extends BaseCrudService<
+  typeof projects,
+  ProjectSelect,
+  ProjectInsert
+> {
   constructor(private readonly repo = projectRepository) {
     super(repo, "id");
   }
 
   async getDetailById(detailId: number) {
-    const record = await this.repo.getDetailById(detailId);
+    const record = await this.repo.getDetail(detailId);
     if (!record) {
       throw new NotFoundError(
         `cannot get: detail ${this.primaryKey} ${detailId} not found`,
@@ -20,7 +28,7 @@ export class Project extends BaseCrudService<typeof projects> {
   }
 
   async addDetails(projectId: number, newProjectDetail: ProjectDetailsInsert) {
-    const record = await this.repo.addDetails(projectId, newProjectDetail);
+    const record = await this.repo.addDetail(projectId, newProjectDetail);
     if (!record) {
       throw new Error("failed to create the record.");
     }
@@ -31,7 +39,7 @@ export class Project extends BaseCrudService<typeof projects> {
     detailId: number,
     newDetail: Partial<ProjectDetailsInsert>,
   ) {
-    const exists = await this.repo.getDetailById(detailId);
+    const exists = await this.repo.getDetail(detailId);
     if (!exists) {
       throw new NotFoundError(
         `cannot update: detail ${this.primaryKey} ${detailId} not found`,
@@ -41,7 +49,7 @@ export class Project extends BaseCrudService<typeof projects> {
   }
 
   override async delete(id: number) {
-    const exists = await this.repo.getDetailById(id);
+    const exists = await this.repo.getDetail(id);
     if (!exists) {
       throw new NotFoundError(
         `cannot delete: detail ${this.primaryKey} ${id} not found`,

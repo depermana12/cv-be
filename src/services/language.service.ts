@@ -1,9 +1,13 @@
 import { BaseCrudService } from "./base.service";
 import { languageRepository } from "./instance.repo";
 import { language } from "../db/schema/language.db";
-import type { LanguageInsert } from "../db/schema/language.db";
+import type { LanguageInsert, LanguageSelect } from "../db/schema/language.db";
 
-export class Language extends BaseCrudService<typeof language> {
+export class Language extends BaseCrudService<
+  typeof language,
+  LanguageSelect,
+  LanguageInsert
+> {
   constructor(private readonly repo = languageRepository) {
     super(repo, "id");
   }

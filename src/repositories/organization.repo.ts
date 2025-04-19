@@ -7,12 +7,14 @@ import {
   organizationDetails,
 } from "../db/schema/organization.db";
 import type {
+  OrganizationSelect,
   OrganizationInsert,
   OrganizationDetailInsert,
 } from "../db/schema/organization.db";
 
 export class OrganizationRepository extends BaseRepository<
   typeof organization,
+  OrganizationSelect,
   OrganizationInsert
 > {
   constructor() {

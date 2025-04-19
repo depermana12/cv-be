@@ -19,6 +19,7 @@ export const softSkillsRelations = relations(softSkills, ({ one }) => ({
   }),
 }));
 
+export type SoftSkillSelect = typeof softSkills.$inferSelect;
 export type SoftSkillInsert = Omit<
   typeof softSkills.$inferInsert,
   "personalId"

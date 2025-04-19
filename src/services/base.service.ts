@@ -1,10 +1,9 @@
-import type { InferInsertModel, InferSelectModel } from "drizzle-orm";
-import { MySqlTable } from "drizzle-orm/mysql-core";
-import { BaseRepository } from "../repositories/base.repo";
+import { type BaseCrudRepository } from "../repositories/base.repo";
 import { NotFoundError } from "../errors/not-found.error";
 import { BadRequestError } from "../errors/bad-request.error";
 
 export interface IBaseCrudService<
+  T,
   TSelect,
   TInsert,
   TUpdate = Partial<TInsert>,
@@ -17,18 +16,14 @@ export interface IBaseCrudService<
   exists(id: number | string): Promise<boolean>;
 }
 
-export class BaseCrudService<
-  TTable extends MySqlTable,
-  TInsert = InferInsertModel<TTable>,
-  TSelect = InferSelectModel<TTable>,
-  TUpdate extends Partial<TInsert> = Partial<TInsert>,
-> implements IBaseCrudService<TSelect, TInsert, TUpdate>
+export class BaseCrudService<T, TSelect, TInsert, TUpdate = Partial<TInsert>>
+  implements IBaseCrudService<T, TSelect, TInsert, TUpdate>
 {
   constructor(
-    protected readonly repository: BaseRepository<
-      TTable,
-      TInsert,
+    protected readonly repository: BaseCrudRepository<
+      T,
       TSelect,
+      TInsert,
       TUpdate
     >,
     protected readonly primaryKey: keyof TSelect & string,
@@ -38,7 +33,7 @@ export class BaseCrudService<
     return this.repository.getAll();
   }
 
-  async getById(id: number | string): Promise<TSelect> {
+  async getById(id: number): Promise<TSelect> {
     const record = await this.repository.getById(id);
     if (!record) {
       throw new NotFoundError(`cannot get: ${this.primaryKey} ${id} not found`);

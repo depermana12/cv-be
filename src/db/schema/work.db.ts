@@ -42,5 +42,6 @@ export const workRelations = relations(work, ({ one }) => ({
   }),
 }));
 
+export type WorkSelect = typeof work.$inferSelect;
 export type WorkInsert = Omit<typeof work.$inferInsert, "personalId">;
 export type WorkDetailInsert = Omit<typeof workDetails.$inferInsert, "workId">;

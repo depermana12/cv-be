@@ -7,6 +7,7 @@ import type { LanguageInsert, LanguageSelect } from "../db/schema/language.db";
 
 export class LanguageRepository extends BaseRepository<
   typeof language,
+  LanguageSelect,
   LanguageInsert
 > {
   constructor() {

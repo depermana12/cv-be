@@ -3,10 +3,15 @@ import { eq } from "drizzle-orm";
 import { db } from "../db/index";
 import { BaseRepository } from "./base.repo";
 import { projectTechnologies } from "../db/schema/project.db";
-import type { ProjectTechStackInsert } from "../db/schema/project.db";
+import type {
+  ProjectTechStackInsert,
+  ProjectTechStackSelect,
+} from "../db/schema/project.db";
 
 export class ProjectTechStack extends BaseRepository<
-  typeof projectTechnologies
+  typeof projectTechnologies,
+  ProjectTechStackSelect,
+  ProjectTechStackInsert
 > {
   constructor() {
     super(db, projectTechnologies, "id");

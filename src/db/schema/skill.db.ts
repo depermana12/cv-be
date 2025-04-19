@@ -17,4 +17,5 @@ export const skillsRelations = relations(skills, ({ one }) => ({
   }),
 }));
 
+export type SkillSelect = typeof skills.$inferSelect;
 export type SkillInsert = Omit<typeof skills.$inferInsert, "personalId">;

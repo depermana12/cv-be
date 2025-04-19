@@ -1,11 +1,16 @@
 import { BaseCrudService } from "./base.service";
 import { projectTechStackRepository } from "./instance.repo";
 import { projectTechnologies } from "../db/schema/project.db";
-import type { ProjectTechStackInsert } from "../db/schema/project.db";
+import type {
+  ProjectTechStackInsert,
+  ProjectTechStackSelect,
+} from "../db/schema/project.db";
 import { NotFoundError } from "../errors/not-found.error";
 
 export class ProjectTechStack extends BaseCrudService<
-  typeof projectTechnologies
+  typeof projectTechnologies,
+  ProjectTechStackSelect,
+  ProjectTechStackInsert
 > {
   constructor(private readonly repo = projectTechStackRepository) {
     super(repo, "id");

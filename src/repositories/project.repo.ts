@@ -6,10 +6,12 @@ import { projects, projectDetails } from "../db/schema/project.db";
 import type {
   ProjectInsert,
   ProjectDetailsInsert,
+  ProjectSelect,
 } from "../db/schema/project.db";
 
 export class ProjectRepository extends BaseRepository<
   typeof projects,
+  ProjectSelect,
   ProjectInsert
 > {
   constructor() {

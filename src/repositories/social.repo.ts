@@ -1,9 +1,17 @@
 import { eq } from "drizzle-orm";
 import { db } from "../db/index";
 import { BaseRepository } from "./base.repo";
-import { socialTable, type SocialInsert } from "../db/schema/personal.db";
+import {
+  socialTable,
+  type SocialBase,
+  type SocialInsert,
+} from "../db/schema/personal.db";
 
-export class Social extends BaseRepository<typeof socialTable, SocialInsert> {
+export class Social extends BaseRepository<
+  typeof socialTable,
+  SocialBase,
+  SocialInsert
+> {
   constructor() {
     super(db, socialTable, "id");
   }
@@ -13,7 +21,10 @@ export class Social extends BaseRepository<typeof socialTable, SocialInsert> {
       .from(this.table)
       .where(eq(this.table.personalId, personalId));
   }
-  async replaceAllForPersonalId(personalId: number, socials: SocialInsert[]) {
+  async replaceAllForPersonalId(
+    personalId: number,
+    socials: SocialInsert[],
+  ): Promise<void> {
     await this.db
       .delete(this.table)
       .where(eq(this.table.personalId, personalId));
@@ -26,8 +37,6 @@ export class Social extends BaseRepository<typeof socialTable, SocialInsert> {
         })),
       );
     }
-
-    return this.getAll();
   }
 
   async deleteByPersonalId(personalId: number) {

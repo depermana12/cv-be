@@ -67,6 +67,7 @@ export type ProjectDetailsInsert = Omit<
   "projectId"
 >;
 export type ProjectDetailsSelect = typeof projectDetails.$inferSelect;
+export type ProjectTechStackSelect = typeof projectTechnologies.$inferSelect;
 export type ProjectTechStackInsert = Omit<
   typeof projectTechnologies.$inferInsert,
   "projectId"

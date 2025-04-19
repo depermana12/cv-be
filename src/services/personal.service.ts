@@ -9,7 +9,7 @@ import { BadRequestError } from "../errors/bad-request.error";
 
 export class Personal {
   private repo: typeof personalRepository;
-  constructor(repository = personalRepository) {
+  constructor(private readonly repository = personalRepository) {
     this.repo = repository;
   }
 

@@ -1,10 +1,14 @@
 import { BaseCrudService } from "./base.service";
 import { workRepository } from "./instance.repo";
 import { work } from "../db/schema/work.db";
-import type { WorkDetailInsert } from "../db/schema/work.db";
+import type {
+  WorkDetailInsert,
+  WorkInsert,
+  WorkSelect,
+} from "../db/schema/work.db";
 import { NotFoundError } from "../errors/not-found.error";
 
-export class Work extends BaseCrudService<typeof work> {
+export class Work extends BaseCrudService<typeof work, WorkSelect, WorkInsert> {
   constructor(private readonly repo = workRepository) {
     super(repo, "id");
   }

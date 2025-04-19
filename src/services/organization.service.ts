@@ -2,10 +2,18 @@ import { BaseCrudService } from "./base.service";
 import { organizationRepository } from "./instance.repo";
 import { organization } from "../db/schema/organization.db";
 
-import type { OrganizationDetailInsert } from "../db/schema/organization.db";
+import type {
+  OrganizationDetailInsert,
+  OrganizationInsert,
+  OrganizationSelect,
+} from "../db/schema/organization.db";
 import { NotFoundError } from "../errors/not-found.error";
 
-export class Organization extends BaseCrudService<typeof organization> {
+export class Organization extends BaseCrudService<
+  typeof organization,
+  OrganizationSelect,
+  OrganizationInsert
+> {
   constructor(private readonly repo = organizationRepository) {
     super(repo, "id");
   }

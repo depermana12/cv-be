@@ -42,7 +42,7 @@ export const organizationDetailsRelations = relations(
     }),
   }),
 );
-
+export type OrganizationSelect = typeof organization.$inferSelect;
 export type OrganizationInsert = Omit<
   typeof organization.$inferInsert,
   "personalId"
