@@ -2,6 +2,7 @@ import { HTTPException } from "hono/http-exception";
 import { type Context } from "hono";
 import { NotFoundError } from "../errors/not-found.error";
 import { BadRequestError } from "../errors/bad-request.error";
+import { DataBaseError } from "../errors/database.error";
 
 export const errorHandler = async (err: Error, c: Context) => {
   if (err instanceof HTTPException) {
@@ -14,7 +15,7 @@ export const errorHandler = async (err: Error, c: Context) => {
       { success: false, message: err.message, error: err.name },
       404,
     );
-  } else if (err instanceof BadRequestError) {
+  } else if (err instanceof BadRequestError || err instanceof DataBaseError) {
     return c.json(
       {
         success: false,
