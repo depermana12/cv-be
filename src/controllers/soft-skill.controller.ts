@@ -1,13 +1,13 @@
 import { Hono } from "hono";
 
 import { zValidator } from "../utils/validator";
-import { SoftSkill } from "../services/soft-skill.service";
+import { SoftSkillService } from "../services/soft-skill.service";
 import {
   softSkillCreateSchema,
   softSkillUpdateSchema,
 } from "../schemas/soft-skill.schema";
 
-const softSkillService = new SoftSkill();
+const softSkillService = new SoftSkillService();
 export const softSkillRoutes = new Hono()
   .get("/", async (c) => {
     const data = await softSkillService.getAll();

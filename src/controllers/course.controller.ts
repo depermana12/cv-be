@@ -1,13 +1,13 @@
 import { Hono } from "hono";
 import { zValidator } from "../utils/validator";
 
-import { Course } from "../services/course.service";
+import { CourseService } from "../services/course.service";
 import {
   courseCreateSchema,
   courseUpdateSchema,
 } from "../schemas/course.schema";
 
-const courseService = new Course();
+const courseService = new CourseService();
 export const courseRoutes = new Hono()
   .get("/", async (c) => {
     const data = await courseService.getAll();

@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { zValidator } from "../utils/validator";
 
-import { Organization } from "../services/organization.service";
+import { OrganizationService } from "../services/organization.service";
 import {
   organizationCreateSchema,
   organizationUpdateSchema,
@@ -9,7 +9,7 @@ import {
   organizationDetailUpdateSchema,
 } from "../schemas/organization.schema";
 
-const organization = new Organization();
+const organization = new OrganizationService();
 export const organizationRoutes = new Hono()
   .get("/", async (c) => {
     const orgs = await organization.getAll();

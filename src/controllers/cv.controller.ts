@@ -1,8 +1,8 @@
 import { Hono } from "hono";
 
-import { CurriculumVitae } from "../services/cv.service";
+import { CVService } from "../services/cv.service";
 
-const cvService = new CurriculumVitae();
+const cvService = new CVService();
 
 // TODO: add validation check
 export const cvRoutes = new Hono()

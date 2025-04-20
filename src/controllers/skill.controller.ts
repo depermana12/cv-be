@@ -1,10 +1,10 @@
 import { Hono } from "hono";
 
 import { zValidator } from "../utils/validator";
-import { Skill } from "../services/skill.service";
+import { SkillService } from "../services/skill.service";
 import { skillCreateSchema, skillUpdateSchema } from "../schemas/skill.schema";
 
-const skillService = new Skill();
+const skillService = new SkillService();
 export const skillRoutes = new Hono()
   .get("/categories", async (c) => {
     const categories = await skillService.getCategories();

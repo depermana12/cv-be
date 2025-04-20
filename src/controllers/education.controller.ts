@@ -1,13 +1,13 @@
 import { Hono } from "hono";
 import { zValidator } from "../utils/validator";
 
-import { Education } from "../services/education.service";
+import { EducationService } from "../services/education.service";
 import {
   educationCreateSchema,
   educationUpdateSchema,
 } from "../schemas/education.schema";
 
-const educationService = new Education();
+const educationService = new EducationService();
 export const educationRoutes = new Hono()
   .get("/", async (c) => {
     const education = await educationService.getAll();

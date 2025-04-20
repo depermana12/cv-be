@@ -1,8 +1,8 @@
 import { Hono } from "hono";
 import { zValidator } from "../utils/validator";
 
-import { Project } from "../services/project.service";
-import { ProjectTechStack } from "../services/project-tech.service";
+import { ProjectService } from "../services/project.service";
+import { ProjectTechStackService } from "../services/project-tech.service";
 import {
   projectCreateSchema,
   projectUpdateSchema,
@@ -12,8 +12,8 @@ import {
   projectTechnologyUpdateSchema,
 } from "../schemas/project.schema";
 
-const projectService = new Project();
-const projectTechStackService = new ProjectTechStack();
+const projectService = new ProjectService();
+const projectTechStackService = new ProjectTechStackService();
 export const projectRoutes = new Hono()
   .get("/", async (c) => {
     const data = await projectService.getAll();

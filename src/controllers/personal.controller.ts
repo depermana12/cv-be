@@ -1,12 +1,12 @@
 import { Hono } from "hono";
 import { zValidator } from "../utils/validator";
-import { Personal } from "../services/personal.service";
+import { PersonalService } from "../services/personal.service";
 import {
   personalCreateSchema,
   personalUpdateSchema,
 } from "../schemas/personal.schema";
 
-const personalService = new Personal();
+const personalService = new PersonalService();
 export const personalRoutes = new Hono()
   .get("/", async (c) => {
     const personalInfo = await personalService.getAll();

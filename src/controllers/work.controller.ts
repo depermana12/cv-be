@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 
 import { zValidator } from "../utils/validator";
-import { Work } from "../services/work.service";
+import { WorkService } from "../services/work.service";
 import {
   workCreateSchema,
   workUpdateSchema,
@@ -9,7 +9,7 @@ import {
   workDetailsUpdateSchema,
 } from "../schemas/work.schema";
 
-const workService = new Work();
+const workService = new WorkService();
 export const workRoutes = new Hono()
   .get("/", async (c) => {
     const works = await workService.getAll();
