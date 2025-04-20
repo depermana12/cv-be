@@ -7,18 +7,16 @@ import {
   organizationDetails,
 } from "../db/schema/organization.db";
 import type {
-  OrganizationSelect,
   OrganizationInsert,
   OrganizationDetailInsert,
 } from "../db/schema/organization.db";
 
 export class OrganizationRepository extends BaseRepository<
   typeof organization,
-  OrganizationSelect,
   OrganizationInsert
 > {
   constructor() {
-    super(db, organization, "id");
+    super(db, organization);
   }
   async getDetailById(organizationExperienceId: number) {
     const rows = await this.db

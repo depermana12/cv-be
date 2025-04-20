@@ -3,19 +3,11 @@ import { eq } from "drizzle-orm";
 import { BaseRepository } from "./base.repo";
 import { db } from "../db/index";
 import { work, workDetails } from "../db/schema/work.db";
-import type {
-  WorkInsert,
-  WorkDetailInsert,
-  WorkSelect,
-} from "../db/schema/work.db";
+import type { WorkInsert, WorkDetailInsert } from "../db/schema/work.db";
 
-export class WorkRepository extends BaseRepository<
-  typeof work,
-  WorkSelect,
-  WorkInsert
-> {
+export class WorkRepository extends BaseRepository<typeof work, WorkInsert> {
   constructor() {
-    super(db, work, "id");
+    super(db, work);
   }
   async getDetailById(workExperienceId: number) {
     const rows = await this.db

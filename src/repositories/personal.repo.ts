@@ -28,19 +28,9 @@ import type {
 import type { BaseRepository } from "./base.repo";
 
 interface BasicRepo
-  extends BaseRepository<
-    typeof basicTable,
-    BasicBase,
-    BasicInsert,
-    BasicUpdate
-  > {}
+  extends BaseRepository<typeof basicTable, BasicInsert, BasicUpdate> {}
 interface LocationRepo
-  extends BaseRepository<
-    typeof locationTable,
-    LocationBase,
-    LocationInsert,
-    LocationUpdate
-  > {
+  extends BaseRepository<typeof locationTable, LocationInsert, LocationUpdate> {
   getByPersonalId(personalId: number): Promise<LocationBase>;
   updateByPersonalId(
     personalId: number,
@@ -49,12 +39,7 @@ interface LocationRepo
   deleteByPersonalId(personalId: number): Promise<void>;
 }
 interface SocialRepo
-  extends BaseRepository<
-    typeof socialTable,
-    SocialBase,
-    SocialInsert,
-    SocialUpdate
-  > {
+  extends BaseRepository<typeof socialTable, SocialInsert, SocialUpdate> {
   getByPersonalId(personalId: number): Promise<SocialBase>;
   replaceAllForPersonalId(
     personalId: number,

@@ -6,16 +6,14 @@ import { projects, projectDetails } from "../db/schema/project.db";
 import type {
   ProjectInsert,
   ProjectDetailsInsert,
-  ProjectSelect,
 } from "../db/schema/project.db";
 
 export class ProjectRepository extends BaseRepository<
   typeof projects,
-  ProjectSelect,
   ProjectInsert
 > {
   constructor() {
-    super(db, projects, "id");
+    super(db, projects);
   }
   async getDetail(projectId: number) {
     const rows = await this.db

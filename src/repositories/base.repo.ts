@@ -1,16 +1,15 @@
-import { eq } from "drizzle-orm";
+import { eq, type InferSelectModel } from "drizzle-orm";
 import { MySqlTable, type TableConfig } from "drizzle-orm/mysql-core";
 import { DataBaseError } from "../errors/database.error";
 
 export interface BaseCrudRepository<
-  T,
   TSelect,
   TInsert,
   TUpdate = Partial<TInsert>,
 > {
   getAll(): Promise<TSelect[]>;
-  getById(id: number): Promise<TSelect>;
-  create(data: TInsert): Promise<TSelect>;
+  getById(id: number): Promise<TSelect | null>;
+  create(data: TInsert): Promise<{ id: number }>;
   update(id: number, data: TUpdate): Promise<TSelect>;
   delete(id: number): Promise<void>;
   exists(id: number | string): Promise<boolean>;
@@ -20,67 +19,57 @@ export interface BaseCrudRepository<
  * Base implementation of the BaseCrudRepository interface.
  * Provides generic CRUD operations using Drizzle ORM.
  *
- * @template T - The type of table database
+ * @template TTable - The type of table database
  * @template TSelect - The type used when returning records
  * @template TInsert - The type used when inserting records
  * @template TUpdate - The type used when updating records (defaults to Partial<TInsert>)
- * @implements {BaseCrudRepository<T, TSelect, TInsert, TUpdate>}
+ * @implements {BaseCrudRepository<TTable, TSelect, TInsert, TUpdate>}
  */
 export class BaseRepository<
-  T extends MySqlTable<TableConfig>,
-  TSelect,
+  TTable extends MySqlTable<TableConfig>,
   TInsert,
+  TSelect = InferSelectModel<TTable>,
   TUpdate = Partial<TInsert>,
-> implements BaseCrudRepository<T, TSelect, TInsert, TUpdate>
+> implements BaseCrudRepository<TSelect, TInsert, TUpdate>
 {
   /**
    * Instanciate baseRepository.
    *
    * @param {any} db - The database connection/client
    * @param {MySqlTable} table - The Drizzle table definition
-   * @param {keyof TSelect & string} primaryKey - The name of the primary key column "id"
    */
-  constructor(
-    protected readonly db: any,
-    protected readonly table: T,
-    protected readonly primaryKey: keyof TSelect & string,
-  ) {}
+  constructor(protected readonly db: any, protected readonly table: TTable) {}
   async getAll(): Promise<TSelect[]> {
     return await this.db.select().from(this.table);
   }
-  async getById(id: number): Promise<TSelect> {
+  async getById(id: number): Promise<TSelect | null> {
     const rows = await this.db
       .select()
       .from(this.table)
-      .where(eq((this.table as any)[this.primaryKey], id));
-    return rows[0] as TSelect;
+      .where(eq((this.table as any).id, id))
+      .limit(1);
+    return rows[0] ?? null;
   }
 
   // the mysql insert returning is problematic
-  async create(data: TInsert): Promise<TSelect> {
-    const [inserted] = await this.db
+  async create(data: TInsert): Promise<{ id: number }> {
+    const inserted = await this.db
       .insert(this.table)
-      .values(data as any)
+      .values(data)
       .$returningId();
 
-    if (!inserted) {
-      throw new DataBaseError("insert did not return an ID.");
+    if (!inserted[0]?.id) {
+      throw new DataBaseError("Insert did not return an ID.");
     }
 
-    const id = (inserted as Record<string, any>)[this.primaryKey as string];
-
-    const result = await this.getById(id);
-    if (!result) {
-      throw new DataBaseError("failed to retrieve the created record.");
-    }
-    return result;
+    return { id: inserted.id };
   }
 
   async update(id: number, data: TUpdate): Promise<TSelect> {
     await this.db
       .update(this.table)
-      .set(data as any)
-      .where(eq((this.table as any)[this.primaryKey], id));
+      .set(data)
+      .where(eq((this.table as any).id, id));
     const result = await this.getById(id);
     if (!result) {
       throw new DataBaseError("failed to retrieve the updated record.");
@@ -89,15 +78,13 @@ export class BaseRepository<
   }
 
   async delete(id: number): Promise<void> {
-    await this.db
-      .delete(this.table)
-      .where(eq((this.table as any)[this.primaryKey], id));
+    await this.db.delete(this.table).where(eq((this.table as any).id, id));
   }
   async exists(id: number | string): Promise<boolean> {
     const result = await this.db
       .select()
       .from(this.table)
-      .where(eq((this.table as any)[this.primaryKey], id))
+      .where(eq((this.table as any).id, id))
       .limit(1);
     return result.length > 0;
   }

@@ -1,19 +1,11 @@
 import { eq } from "drizzle-orm";
 import { db } from "../db/index";
 import { BaseRepository } from "./base.repo";
-import {
-  socialTable,
-  type SocialBase,
-  type SocialInsert,
-} from "../db/schema/personal.db";
+import { socialTable, type SocialInsert } from "../db/schema/personal.db";
 
-export class Social extends BaseRepository<
-  typeof socialTable,
-  SocialBase,
-  SocialInsert
-> {
+export class Social extends BaseRepository<typeof socialTable, SocialInsert> {
   constructor() {
-    super(db, socialTable, "id");
+    super(db, socialTable);
   }
   async getByPersonalId(personalId: number) {
     return this.db

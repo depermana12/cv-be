@@ -3,7 +3,6 @@ import { NotFoundError } from "../errors/not-found.error";
 import { BadRequestError } from "../errors/bad-request.error";
 
 export interface IBaseCrudService<
-  T,
   TSelect,
   TInsert,
   TUpdate = Partial<TInsert>,
@@ -16,17 +15,15 @@ export interface IBaseCrudService<
   exists(id: number | string): Promise<boolean>;
 }
 
-export class BaseCrudService<T, TSelect, TInsert, TUpdate = Partial<TInsert>>
-  implements IBaseCrudService<T, TSelect, TInsert, TUpdate>
+export class BaseCrudService<TSelect, TInsert, TUpdate = Partial<TInsert>>
+  implements IBaseCrudService<TSelect, TInsert, TUpdate>
 {
   constructor(
     protected readonly repository: BaseCrudRepository<
-      T,
       TSelect,
       TInsert,
       TUpdate
     >,
-    protected readonly primaryKey: keyof TSelect & string,
   ) {}
 
   async getAll(): Promise<TSelect[]> {
@@ -36,7 +33,7 @@ export class BaseCrudService<T, TSelect, TInsert, TUpdate = Partial<TInsert>>
   async getById(id: number): Promise<TSelect> {
     const record = await this.repository.getById(id);
     if (!record) {
-      throw new NotFoundError(`cannot get: ${this.primaryKey} ${id} not found`);
+      throw new NotFoundError(`cannot get: ${id} not found`);
     }
     return record;
   }
@@ -46,19 +43,17 @@ export class BaseCrudService<T, TSelect, TInsert, TUpdate = Partial<TInsert>>
     if (!record) {
       throw new BadRequestError("failed to create the record.");
     }
-    return record;
+    return await this.getById(record.id);
   }
 
   async update(id: number, data: TUpdate): Promise<TSelect> {
     const exists = await this.exists(id);
     if (!exists) {
-      throw new NotFoundError(
-        `cannot update: ${this.primaryKey} ${id} not found`,
-      );
+      throw new NotFoundError(`cannot update: ${id} not found`);
     }
     const updated = await this.repository.update(id, data);
     if (!updated) {
-      throw new BadRequestError(`failed to update: ${this.primaryKey} ${id}`);
+      throw new BadRequestError(`failed to update: ${id}`);
     }
     return updated;
   }
@@ -66,9 +61,7 @@ export class BaseCrudService<T, TSelect, TInsert, TUpdate = Partial<TInsert>>
   async delete(id: number): Promise<void> {
     const exists = await this.exists(id);
     if (!exists) {
-      throw new NotFoundError(
-        `cannot delete: ${this.primaryKey} ${id} not found`,
-      );
+      throw new NotFoundError(`cannot delete: ${id} not found`);
     }
     return this.repository.delete(id);
   }

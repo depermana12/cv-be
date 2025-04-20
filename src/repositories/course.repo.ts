@@ -2,19 +2,14 @@ import { eq } from "drizzle-orm";
 import { db } from "../db/index";
 import { BaseRepository } from "./base.repo";
 import { courses, courseDetails } from "../db/schema/course.db";
-import type {
-  CourseInsert,
-  CourseDetailsInsert,
-  CourseSelect,
-} from "../db/schema/course.db";
+import type { CourseInsert, CourseDetailsInsert } from "../db/schema/course.db";
 
 export class CourseRepository extends BaseRepository<
   typeof courses,
-  CourseSelect,
   CourseInsert
 > {
   constructor() {
-    super(db, courses, "id");
+    super(db, courses);
   }
   async getDetail(detailId: number) {
     const rows = await this.db

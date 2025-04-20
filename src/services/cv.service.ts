@@ -9,7 +9,7 @@ import {
   courseService,
 } from "./index.service";
 
-export class CurriculumVitae {
+export class CVService {
   async getCV() {
     const personal = await personalService.getAll();
     const education = await educationService.getAll();

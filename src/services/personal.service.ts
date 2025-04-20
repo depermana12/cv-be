@@ -7,7 +7,7 @@ import type {
 } from "../db/schema/personal.db";
 import { BadRequestError } from "../errors/bad-request.error";
 
-export class Personal {
+export class PersonalService {
   private repo: typeof personalRepository;
   constructor(private readonly repository = personalRepository) {
     this.repo = repository;
