@@ -1,5 +1,7 @@
 import { Hono } from "hono";
 
+import { userRoutes } from "../controllers/user.controller";
+import { introRoutes } from "../controllers/intro.controller";
 import { personalRoutes } from "../controllers/personal.controller";
 import { languageRoutes } from "../controllers/language.controller";
 import { educationRoutes } from "../controllers/education.controller";
@@ -10,18 +12,24 @@ import { courseRoutes } from "../controllers/course.controller";
 import { skillRoutes } from "../controllers/skill.controller";
 import { softSkillRoutes } from "../controllers/soft-skill.controller";
 import { cvRoutes } from "../controllers/cv.controller";
+import { socialRoutes } from "../controllers/social.controller";
+import { locationRoutes } from "../controllers/location.controller";
 
 const router = new Hono();
 
-router.route("/personal", personalRoutes);
-router.route("/languages", languageRoutes);
-router.route("/education", educationRoutes);
-router.route("/work-experiences", workRoutes);
-router.route("/organization-experiences", organizationRoutes);
-router.route("/projects", projectRoutes);
-router.route("/courses", courseRoutes);
-router.route("/skills", skillRoutes);
-router.route("/soft-skills", softSkillRoutes);
-router.route("/cv", cvRoutes);
+router.route("/auth/users", userRoutes);
+router.route("/cv/intros", introRoutes);
+router.route("/cv/locations", locationRoutes);
+router.route("/cv/socials", socialRoutes);
+router.route("/cv/personals", personalRoutes);
+router.route("/cv/languages", languageRoutes);
+router.route("/cv/education", educationRoutes);
+router.route("/cv/works", workRoutes);
+router.route("/cv/organizations", organizationRoutes);
+router.route("/cv/projects", projectRoutes);
+router.route("/cv/courses", courseRoutes);
+router.route("/cv/skills", skillRoutes);
+router.route("/cv/soft-skills", softSkillRoutes);
+router.route("/cv/cvs", cvRoutes);
 
 export default router;

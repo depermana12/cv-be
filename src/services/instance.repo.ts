@@ -1,5 +1,5 @@
 import { PersonalRepository } from "../repositories/personal.repo";
-import { Basic } from "../repositories/basic.repo";
+import { Basic } from "../repositories/intro.repo.ts";
 import { Location } from "../repositories/location.repo.ts";
 import { Social } from "../repositories/social.repo.ts";
 import { LanguageRepository } from "../repositories/language.repo";
@@ -13,11 +13,11 @@ import { CourseRepository } from "../repositories/course.repo";
 import { ProjectTechStack } from "../repositories/project-tech.repo";
 // import { CurriculumVitae } from "./cv.repo";
 
-export const basicRepository = new Basic();
+export const introRepository = new Basic();
 export const locationRepository = new Location();
 export const socialRepository = new Social();
 export const personalRepository = new PersonalRepository(
-  basicRepository,
+  introRepository,
   locationRepository,
   socialRepository,
 );
