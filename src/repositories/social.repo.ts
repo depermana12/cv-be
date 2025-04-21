@@ -1,11 +1,11 @@
 import { eq } from "drizzle-orm";
 import { db } from "../db/index";
 import { BaseRepository } from "./base.repo";
-import { socialTable, type SocialInsert } from "../db/schema/personal.db";
+import { social, type SocialInsert } from "../db/schema/personal.db";
 
-export class Social extends BaseRepository<typeof socialTable, SocialInsert> {
+export class Social extends BaseRepository<typeof social, SocialInsert> {
   constructor() {
-    super(db, socialTable);
+    super(db, social);
   }
   async getByPersonalId(personalId: number) {
     return this.db
@@ -22,7 +22,7 @@ export class Social extends BaseRepository<typeof socialTable, SocialInsert> {
       .where(eq(this.table.personalId, personalId));
 
     if (socials.length > 0) {
-      await this.db.insert(socialTable).values(
+      await this.db.insert(social).values(
         socials.map((social) => ({
           ...social,
           personalId,
