@@ -8,13 +8,13 @@ import {
   boolean,
 } from "drizzle-orm/mysql-core";
 
-import { basicTable } from "./personal.db";
+import { intro } from "./personal.db";
 
 export const work = mysqlTable("work_exp", {
   id: int("id").primaryKey().autoincrement(),
   personalId: int("personal_id")
     .notNull()
-    .references(() => basicTable.id),
+    .references(() => intro.id),
   company: varchar("company", { length: 100 }).notNull(),
   position: varchar("position", { length: 100 }).notNull(),
   startDate: date("start_date"),
@@ -32,9 +32,9 @@ export const workDetails = mysqlTable("work_exp_details", {
 });
 
 export const workRelations = relations(work, ({ one }) => ({
-  personal: one(basicTable, {
+  personal: one(intro, {
     fields: [work.personalId],
-    references: [basicTable.id],
+    references: [intro.id],
   }),
   details: one(workDetails, {
     fields: [work.id],

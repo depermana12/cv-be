@@ -1,13 +1,13 @@
 import { relations } from "drizzle-orm";
 import { mysqlTable, int, varchar, text, date } from "drizzle-orm/mysql-core";
 
-import { basicTable } from "./personal.db";
+import { intro } from "./personal.db";
 
 export const organization = mysqlTable("org_exp", {
   id: int("id").primaryKey().autoincrement(),
   personalId: int("personal_id")
     .notNull()
-    .references(() => basicTable.id),
+    .references(() => intro.id),
   organization: varchar("organization", { length: 100 }).notNull(),
   role: varchar("role", { length: 100 }).notNull(),
   startDate: date("start_date"),
@@ -23,9 +23,9 @@ export const organizationDetails = mysqlTable("org_exp_details", {
 });
 
 export const organizationRelations = relations(organization, ({ one }) => ({
-  personal: one(basicTable, {
+  personal: one(intro, {
     fields: [organization.personalId],
-    references: [basicTable.id],
+    references: [intro.id],
   }),
   details: one(organizationDetails, {
     fields: [organization.id],

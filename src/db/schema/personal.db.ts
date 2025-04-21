@@ -10,7 +10,7 @@ import { skills } from "./skill.db";
 import { softSkills } from "./soft-skill.db";
 import { courses } from "./course.db";
 
-export const basicTable = mysqlTable("personal_basic", {
+export const intro = mysqlTable("personal_basic", {
   id: int("id").primaryKey().autoincrement(),
   fullName: varchar("full_name", { length: 100 }),
   bio: varchar("bio", { length: 255 }),
@@ -21,11 +21,11 @@ export const basicTable = mysqlTable("personal_basic", {
   url: varchar("url", { length: 255 }),
 });
 
-export const locationTable = mysqlTable("personal_location", {
+export const location = mysqlTable("personal_location", {
   id: int("id").primaryKey().autoincrement(),
   personalId: int("personal_id")
     .notNull()
-    .references(() => basicTable.id),
+    .references(() => intro.id),
   address: varchar("address", { length: 255 }),
   postalCode: varchar("postal_code", { length: 5 }),
   city: varchar("city", { length: 100 }),
@@ -33,19 +33,19 @@ export const locationTable = mysqlTable("personal_location", {
   state: varchar("state", { length: 100 }),
 });
 
-export const socialTable = mysqlTable("personal_social", {
+export const social = mysqlTable("personal_social", {
   id: int("id").primaryKey().autoincrement(),
   personalId: int("personal_id")
     .notNull()
-    .references(() => basicTable.id),
+    .references(() => intro.id),
   social: varchar("social", { length: 50 }),
   username: varchar("username", { length: 100 }),
   url: varchar("url", { length: 255 }),
 });
 
-export const personalRelations = relations(basicTable, ({ many, one }) => ({
-  location: one(locationTable),
-  socials: many(socialTable),
+export const personalRelations = relations(intro, ({ many, one }) => ({
+  location: one(location),
+  socials: many(social),
   language: many(language),
   education: many(education),
   workExperience: many(work),
@@ -56,16 +56,16 @@ export const personalRelations = relations(basicTable, ({ many, one }) => ({
   courses: many(courses),
 }));
 
-export type BasicBase = typeof basicTable.$inferSelect;
-export type BasicInsert = typeof basicTable.$inferInsert;
+export type BasicBase = typeof intro.$inferSelect;
+export type BasicInsert = typeof intro.$inferInsert;
 export type BasicUpdate = Partial<BasicInsert> & { id: number };
 
-export type LocationBase = typeof locationTable.$inferSelect;
-export type LocationInsert = typeof locationTable.$inferInsert;
+export type LocationBase = typeof location.$inferSelect;
+export type LocationInsert = typeof location.$inferInsert;
 export type LocationUpdate = Partial<LocationInsert> & { id: number };
 
-export type SocialBase = typeof socialTable.$inferSelect;
-export type SocialInsert = typeof socialTable.$inferInsert;
+export type SocialBase = typeof social.$inferSelect;
+export type SocialInsert = typeof social.$inferInsert;
 export type SocialUpdate = Partial<SocialInsert> & { id: number };
 
 export type PersonalSelect = {

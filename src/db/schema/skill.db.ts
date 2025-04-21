@@ -1,7 +1,7 @@
 import { relations } from "drizzle-orm";
 import { mysqlTable, int, varchar } from "drizzle-orm/mysql-core";
 
-import { basicTable } from "./personal.db";
+import { intro } from "./personal.db";
 
 export const skills = mysqlTable("skills", {
   id: int("id").primaryKey().autoincrement(),
@@ -11,9 +11,9 @@ export const skills = mysqlTable("skills", {
 });
 
 export const skillsRelations = relations(skills, ({ one }) => ({
-  personal: one(basicTable, {
+  personal: one(intro, {
     fields: [skills.personalId],
-    references: [basicTable.id],
+    references: [intro.id],
   }),
 }));
 

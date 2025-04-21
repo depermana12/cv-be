@@ -7,13 +7,13 @@ import {
   decimal,
 } from "drizzle-orm/mysql-core";
 
-import { basicTable } from "./personal.db";
+import { intro } from "./personal.db";
 
 export const education = mysqlTable("education", {
   id: int("id").primaryKey().autoincrement(),
   personalId: int("personal_id")
     .notNull()
-    .references(() => basicTable.id),
+    .references(() => intro.id),
   institution: varchar("institution", { length: 100 }).notNull(),
   degree: varchar("degree", { length: 100 }).notNull(),
   fieldOfStudy: varchar("field_of_study", { length: 100 }),
@@ -24,9 +24,9 @@ export const education = mysqlTable("education", {
 });
 
 export const educationRelations = relations(education, ({ one }) => ({
-  personal: one(basicTable, {
+  personal: one(intro, {
     fields: [education.personalId],
-    references: [basicTable.id],
+    references: [intro.id],
   }),
 }));
 
