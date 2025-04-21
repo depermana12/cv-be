@@ -3,14 +3,27 @@ import { secureHeaders } from "hono/secure-headers";
 
 import router from "./routes";
 import { errorHandler } from "./middlewares/error-handler";
+import { pinoLogger } from "./middlewares/logger";
+import type { PinoLogger } from "hono-pino";
 
-const app = new Hono().basePath("/api/v1");
+type Bindings = {
+  Variables: {
+    logger: PinoLogger;
+  };
+};
 
+const app = new Hono<Bindings>().basePath("/api/v1");
+
+app.use(pinoLogger());
 app.use(secureHeaders());
 app.route("/", router);
 
 app.notFound((c) => {
-  return c.json({ error: "you lost bruh" }, 404);
+  c.var.logger.debug("you lost bruh, only seen on debug level true");
+  return c.json(
+    { error: "you lost bruh", message: `path: ${c.req.path} - NOT FOUND` },
+    404,
+  );
 });
 
 app.onError(errorHandler);
