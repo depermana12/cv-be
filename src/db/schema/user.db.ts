@@ -17,6 +17,8 @@ export const userInsertSchema = createInsertSchema(users).omit({
   id: true,
   createdAt: true,
 });
+export const userLoginSchema = userInsertSchema.omit({ username: true });
+
 export const userUpdateSchema = createInsertSchema(users);
 
 export type UserSelect = z.infer<typeof userSelectSchema>;
