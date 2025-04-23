@@ -1,7 +1,6 @@
 import { Hono } from "hono";
 
 import { userRoutes } from "../controllers/user.controller";
-import { introRoutes } from "../controllers/intro.controller";
 import { personalRoutes } from "../controllers/personal.controller";
 import { languageRoutes } from "../controllers/language.controller";
 import { educationRoutes } from "../controllers/education.controller";
@@ -17,11 +16,10 @@ import { locationRoutes } from "../controllers/location.controller";
 
 const router = new Hono();
 
-router.route("/auth/users", userRoutes);
-router.route("/cv/intros", introRoutes);
+router.route("/auth", userRoutes);
+router.route("/cv/personals", personalRoutes);
 router.route("/cv/locations", locationRoutes);
 router.route("/cv/socials", socialRoutes);
-router.route("/cv/personals", personalRoutes);
 router.route("/cv/languages", languageRoutes);
 router.route("/cv/education", educationRoutes);
 router.route("/cv/works", workRoutes);

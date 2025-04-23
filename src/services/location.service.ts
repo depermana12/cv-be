@@ -1,12 +1,9 @@
 import { BaseCrudService } from "./base.service";
 import { locationRepository } from "./instance.repo";
-import {
-  type LocationBase,
-  type LocationInsert,
-} from "../db/schema/personal.db";
+import type { LocationSelect, LocationInsert } from "../db/schema/location.db";
 
 export class LocationService extends BaseCrudService<
-  LocationBase,
+  LocationSelect,
   LocationInsert
 > {
   constructor(private readonly repo = locationRepository) {

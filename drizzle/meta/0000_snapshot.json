@@ -1,11 +1,11 @@
 {
   "version": "5",
   "dialect": "mysql",
-  "id": "0cbcc18b-3f27-4d6f-99a8-7c66a7b78051",
+  "id": "fb1f19d4-9714-403f-b24e-4ba927bb7199",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
-    "course_details": {
-      "name": "course_details",
+    "course_descriptions": {
+      "name": "course_descriptions",
       "columns": {
         "id": {
           "name": "id",
@@ -31,9 +31,9 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "course_details_course_id_courses_id_fk": {
-          "name": "course_details_course_id_courses_id_fk",
-          "tableFrom": "course_details",
+        "course_descriptions_course_id_courses_id_fk": {
+          "name": "course_descriptions_course_id_courses_id_fk",
+          "tableFrom": "course_descriptions",
           "tableTo": "courses",
           "columnsFrom": [
             "course_id"
@@ -46,8 +46,8 @@
         }
       },
       "compositePrimaryKeys": {
-        "course_details_id": {
-          "name": "course_details_id",
+        "course_descriptions_id": {
+          "name": "course_descriptions_id",
           "columns": [
             "id"
           ]
@@ -104,10 +104,10 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "courses_personal_id_personal_basic_id_fk": {
-          "name": "courses_personal_id_personal_basic_id_fk",
+        "courses_personal_id_personal_id_fk": {
+          "name": "courses_personal_id_personal_id_fk",
           "tableFrom": "courses",
-          "tableTo": "personal_basic",
+          "tableTo": "personal",
           "columnsFrom": [
             "personal_id"
           ],
@@ -129,8 +129,8 @@
       "uniqueConstraints": {},
       "checkConstraint": {}
     },
-    "education": {
-      "name": "education",
+    "educations": {
+      "name": "educations",
       "columns": {
         "id": {
           "name": "id",
@@ -198,10 +198,10 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "education_personal_id_personal_basic_id_fk": {
-          "name": "education_personal_id_personal_basic_id_fk",
-          "tableFrom": "education",
-          "tableTo": "personal_basic",
+        "educations_personal_id_personal_id_fk": {
+          "name": "educations_personal_id_personal_id_fk",
+          "tableFrom": "educations",
+          "tableTo": "personal",
           "columnsFrom": [
             "personal_id"
           ],
@@ -213,8 +213,8 @@
         }
       },
       "compositePrimaryKeys": {
-        "education_id": {
-          "name": "education_id",
+        "educations_id": {
+          "name": "educations_id",
           "columns": [
             "id"
           ]
@@ -223,8 +223,8 @@
       "uniqueConstraints": {},
       "checkConstraint": {}
     },
-    "language": {
-      "name": "language",
+    "languages": {
+      "name": "languages",
       "columns": {
         "id": {
           "name": "id",
@@ -257,10 +257,10 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "language_personal_id_personal_basic_id_fk": {
-          "name": "language_personal_id_personal_basic_id_fk",
-          "tableFrom": "language",
-          "tableTo": "personal_basic",
+        "languages_personal_id_personal_id_fk": {
+          "name": "languages_personal_id_personal_id_fk",
+          "tableFrom": "languages",
+          "tableTo": "personal",
           "columnsFrom": [
             "personal_id"
           ],
@@ -272,8 +272,8 @@
         }
       },
       "compositePrimaryKeys": {
-        "language_id": {
-          "name": "language_id",
+        "languages_id": {
+          "name": "languages_id",
           "columns": [
             "id"
           ]
@@ -282,206 +282,8 @@
       "uniqueConstraints": {},
       "checkConstraint": {}
     },
-    "org_exp_details": {
-      "name": "org_exp_details",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "int",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": true
-        },
-        "org_exp_id": {
-          "name": "org_exp_id",
-          "type": "int",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "description": {
-          "name": "description",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "org_exp_details_org_exp_id_org_exp_id_fk": {
-          "name": "org_exp_details_org_exp_id_org_exp_id_fk",
-          "tableFrom": "org_exp_details",
-          "tableTo": "org_exp",
-          "columnsFrom": [
-            "org_exp_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {
-        "org_exp_details_id": {
-          "name": "org_exp_details_id",
-          "columns": [
-            "id"
-          ]
-        }
-      },
-      "uniqueConstraints": {},
-      "checkConstraint": {}
-    },
-    "org_exp": {
-      "name": "org_exp",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "int",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": true
-        },
-        "personal_id": {
-          "name": "personal_id",
-          "type": "int",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "organization": {
-          "name": "organization",
-          "type": "varchar(100)",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "role": {
-          "name": "role",
-          "type": "varchar(100)",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "start_date": {
-          "name": "start_date",
-          "type": "date",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "end_date": {
-          "name": "end_date",
-          "type": "date",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "org_exp_personal_id_personal_basic_id_fk": {
-          "name": "org_exp_personal_id_personal_basic_id_fk",
-          "tableFrom": "org_exp",
-          "tableTo": "personal_basic",
-          "columnsFrom": [
-            "personal_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {
-        "org_exp_id": {
-          "name": "org_exp_id",
-          "columns": [
-            "id"
-          ]
-        }
-      },
-      "uniqueConstraints": {},
-      "checkConstraint": {}
-    },
-    "personal_basic": {
-      "name": "personal_basic",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "int",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": true
-        },
-        "full_name": {
-          "name": "full_name",
-          "type": "varchar(100)",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "bio": {
-          "name": "bio",
-          "type": "varchar(255)",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "image": {
-          "name": "image",
-          "type": "varchar(255)",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "summary": {
-          "name": "summary",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "phone": {
-          "name": "phone",
-          "type": "varchar(15)",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "email": {
-          "name": "email",
-          "type": "varchar(255)",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "url": {
-          "name": "url",
-          "type": "varchar(255)",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {},
-      "compositePrimaryKeys": {
-        "personal_basic_id": {
-          "name": "personal_basic_id",
-          "columns": [
-            "id"
-          ]
-        }
-      },
-      "uniqueConstraints": {},
-      "checkConstraint": {}
-    },
-    "personal_location": {
-      "name": "personal_location",
+    "location": {
+      "name": "location",
       "columns": {
         "id": {
           "name": "id",
@@ -535,10 +337,10 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "personal_location_personal_id_personal_basic_id_fk": {
-          "name": "personal_location_personal_id_personal_basic_id_fk",
-          "tableFrom": "personal_location",
-          "tableTo": "personal_basic",
+        "location_personal_id_personal_id_fk": {
+          "name": "location_personal_id_personal_id_fk",
+          "tableFrom": "location",
+          "tableTo": "personal",
           "columnsFrom": [
             "personal_id"
           ],
@@ -550,8 +352,8 @@
         }
       },
       "compositePrimaryKeys": {
-        "personal_location_id": {
-          "name": "personal_location_id",
+        "location_id": {
+          "name": "location_id",
           "columns": [
             "id"
           ]
@@ -560,8 +362,60 @@
       "uniqueConstraints": {},
       "checkConstraint": {}
     },
-    "personal_social": {
-      "name": "personal_social",
+    "organization_desc": {
+      "name": "organization_desc",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "organization_id": {
+          "name": "organization_id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "organization_desc_organization_id_organizations_id_fk": {
+          "name": "organization_desc_organization_id_organizations_id_fk",
+          "tableFrom": "organization_desc",
+          "tableTo": "organizations",
+          "columnsFrom": [
+            "organization_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "organization_desc_id": {
+          "name": "organization_desc_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "organizations": {
+      "name": "organizations",
       "columns": {
         "id": {
           "name": "id",
@@ -577,23 +431,30 @@
           "notNull": true,
           "autoincrement": false
         },
-        "social": {
-          "name": "social",
-          "type": "varchar(50)",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "username": {
-          "name": "username",
+        "organization": {
+          "name": "organization",
           "type": "varchar(100)",
           "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "role": {
+          "name": "role",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "start_date": {
+          "name": "start_date",
+          "type": "date",
+          "primaryKey": false,
           "notNull": false,
           "autoincrement": false
         },
-        "url": {
-          "name": "url",
-          "type": "varchar(255)",
+        "end_date": {
+          "name": "end_date",
+          "type": "date",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
@@ -601,10 +462,10 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "personal_social_personal_id_personal_basic_id_fk": {
-          "name": "personal_social_personal_id_personal_basic_id_fk",
-          "tableFrom": "personal_social",
-          "tableTo": "personal_basic",
+        "organizations_personal_id_personal_id_fk": {
+          "name": "organizations_personal_id_personal_id_fk",
+          "tableFrom": "organizations",
+          "tableTo": "personal",
           "columnsFrom": [
             "personal_id"
           ],
@@ -616,8 +477,8 @@
         }
       },
       "compositePrimaryKeys": {
-        "personal_social_id": {
-          "name": "personal_social_id",
+        "organizations_id": {
+          "name": "organizations_id",
           "columns": [
             "id"
           ]
@@ -626,8 +487,110 @@
       "uniqueConstraints": {},
       "checkConstraint": {}
     },
-    "project_details": {
-      "name": "project_details",
+    "personal": {
+      "name": "personal",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "full_name": {
+          "name": "full_name",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "bio": {
+          "name": "bio",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "image": {
+          "name": "image",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "summary": {
+          "name": "summary",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "phone": {
+          "name": "phone",
+          "type": "varchar(15)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "email": {
+          "name": "email",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "url": {
+          "name": "url",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false,
+          "default": "(now())"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "personal_user_id_users_id_fk": {
+          "name": "personal_user_id_users_id_fk",
+          "tableFrom": "personal",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "personal_id": {
+          "name": "personal_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "project_descriptions": {
+      "name": "project_descriptions",
       "columns": {
         "id": {
           "name": "id",
@@ -653,9 +616,9 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "project_details_project_id_projects_id_fk": {
-          "name": "project_details_project_id_projects_id_fk",
-          "tableFrom": "project_details",
+        "project_descriptions_project_id_projects_id_fk": {
+          "name": "project_descriptions_project_id_projects_id_fk",
+          "tableFrom": "project_descriptions",
           "tableTo": "projects",
           "columnsFrom": [
             "project_id"
@@ -668,8 +631,8 @@
         }
       },
       "compositePrimaryKeys": {
-        "project_details_id": {
-          "name": "project_details_id",
+        "project_descriptions_id": {
+          "name": "project_descriptions_id",
           "columns": [
             "id"
           ]
@@ -702,8 +665,8 @@
           "notNull": true,
           "autoincrement": false
         },
-        "type": {
-          "name": "type",
+        "category": {
+          "name": "category",
           "type": "varchar(100)",
           "primaryKey": false,
           "notNull": true,
@@ -785,10 +748,10 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "projects_personal_id_personal_basic_id_fk": {
-          "name": "projects_personal_id_personal_basic_id_fk",
+        "projects_personal_id_personal_id_fk": {
+          "name": "projects_personal_id_personal_id_fk",
           "tableFrom": "projects",
-          "tableTo": "personal_basic",
+          "tableTo": "personal",
           "columnsFrom": [
             "personal_id"
           ],
@@ -843,10 +806,90 @@
         }
       },
       "indexes": {},
-      "foreignKeys": {},
+      "foreignKeys": {
+        "skills_personal_id_personal_id_fk": {
+          "name": "skills_personal_id_personal_id_fk",
+          "tableFrom": "skills",
+          "tableTo": "personal",
+          "columnsFrom": [
+            "personal_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
       "compositePrimaryKeys": {
         "skills_id": {
           "name": "skills_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "socials": {
+      "name": "socials",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "personal_id": {
+          "name": "personal_id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "social": {
+          "name": "social",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "username": {
+          "name": "username",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "url": {
+          "name": "url",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "socials_personal_id_personal_id_fk": {
+          "name": "socials_personal_id_personal_id_fk",
+          "tableFrom": "socials",
+          "tableTo": "personal",
+          "columnsFrom": [
+            "personal_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "socials_id": {
+          "name": "socials_id",
           "columns": [
             "id"
           ]
@@ -889,10 +932,10 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "soft_skills_personal_id_personal_basic_id_fk": {
-          "name": "soft_skills_personal_id_personal_basic_id_fk",
+        "soft_skills_personal_id_personal_id_fk": {
+          "name": "soft_skills_personal_id_personal_id_fk",
           "tableFrom": "soft_skills",
-          "tableTo": "personal_basic",
+          "tableTo": "personal",
           "columnsFrom": [
             "personal_id"
           ],
@@ -914,8 +957,126 @@
       "uniqueConstraints": {},
       "checkConstraint": {}
     },
-    "work_exp": {
-      "name": "work_exp",
+    "users": {
+      "name": "users",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "username": {
+          "name": "username",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "email": {
+          "name": "email",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "password": {
+          "name": "password",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false,
+          "default": "(now())"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "users_id": {
+          "name": "users_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {
+        "users_username_unique": {
+          "name": "users_username_unique",
+          "columns": [
+            "username"
+          ]
+        },
+        "users_email_unique": {
+          "name": "users_email_unique",
+          "columns": [
+            "email"
+          ]
+        }
+      },
+      "checkConstraint": {}
+    },
+    "work_descriptions": {
+      "name": "work_descriptions",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "work_id": {
+          "name": "work_id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "work_descriptions_work_id_works_id_fk": {
+          "name": "work_descriptions_work_id_works_id_fk",
+          "tableFrom": "work_descriptions",
+          "tableTo": "works",
+          "columnsFrom": [
+            "work_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "work_descriptions_id": {
+          "name": "work_descriptions_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "works": {
+      "name": "works",
       "columns": {
         "id": {
           "name": "id",
@@ -977,10 +1138,10 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "work_exp_personal_id_personal_basic_id_fk": {
-          "name": "work_exp_personal_id_personal_basic_id_fk",
-          "tableFrom": "work_exp",
-          "tableTo": "personal_basic",
+        "works_personal_id_personal_id_fk": {
+          "name": "works_personal_id_personal_id_fk",
+          "tableFrom": "works",
+          "tableTo": "personal",
           "columnsFrom": [
             "personal_id"
           ],
@@ -992,60 +1153,8 @@
         }
       },
       "compositePrimaryKeys": {
-        "work_exp_id": {
-          "name": "work_exp_id",
-          "columns": [
-            "id"
-          ]
-        }
-      },
-      "uniqueConstraints": {},
-      "checkConstraint": {}
-    },
-    "work_exp_details": {
-      "name": "work_exp_details",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "int",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": true
-        },
-        "work_exp_id": {
-          "name": "work_exp_id",
-          "type": "int",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "description": {
-          "name": "description",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "work_exp_details_work_exp_id_work_exp_id_fk": {
-          "name": "work_exp_details_work_exp_id_work_exp_id_fk",
-          "tableFrom": "work_exp_details",
-          "tableTo": "work_exp",
-          "columnsFrom": [
-            "work_exp_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {
-        "work_exp_details_id": {
-          "name": "work_exp_details_id",
+        "works_id": {
+          "name": "works_id",
           "columns": [
             "id"
           ]

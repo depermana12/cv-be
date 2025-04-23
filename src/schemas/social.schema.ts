@@ -2,7 +2,7 @@ import { z } from "zod";
 
 const idSchema = z.number().int().positive();
 
-export const socialBaseSchema = z.object({
+export const socialSelectSchema = z.object({
   id: idSchema,
   personalId: z.number().int(),
   social: z.string().max(50, { message: "Must be 50 characters or fewer" }),
@@ -10,15 +10,15 @@ export const socialBaseSchema = z.object({
   url: z.string().url({ message: "Invalid url" }).max(255),
 });
 
-export const socialCreateSchema = socialBaseSchema.omit({
+export const socialInsertSchema = socialSelectSchema.omit({
   id: true,
   personalId: true,
 });
 
-export const socialUpdateSchema = socialCreateSchema
+export const socialUpdateSchema = socialInsertSchema
   .extend({ id: idSchema })
   .partial();
 
-export type SocialBase = z.infer<typeof socialBaseSchema>;
-export type SocialCreate = z.infer<typeof socialCreateSchema>;
+export type SocialSelect = z.infer<typeof socialSelectSchema>;
+export type SocialCreate = z.infer<typeof socialInsertSchema>;
 export type SocialUpdate = z.infer<typeof socialUpdateSchema>;

@@ -1,53 +1,53 @@
 import { relations } from "drizzle-orm";
 import { mysqlTable, int, varchar, text, date } from "drizzle-orm/mysql-core";
 
-import { intro } from "./personal.db";
+import { personal } from "./personal.db";
 
-export const organization = mysqlTable("org_exp", {
+export const organizations = mysqlTable("organizations", {
   id: int("id").primaryKey().autoincrement(),
   personalId: int("personal_id")
     .notNull()
-    .references(() => intro.id),
+    .references(() => personal.id),
   organization: varchar("organization", { length: 100 }).notNull(),
   role: varchar("role", { length: 100 }).notNull(),
   startDate: date("start_date"),
   endDate: date("end_date"),
 });
 
-export const organizationDetails = mysqlTable("org_exp_details", {
+export const organizationDesc = mysqlTable("organization_desc", {
   id: int("id").primaryKey().autoincrement(),
-  organizationId: int("org_exp_id")
+  organizationId: int("organization_id")
     .notNull()
-    .references(() => organization.id),
+    .references(() => organizations.id),
   description: text("description"),
 });
 
-export const organizationRelations = relations(organization, ({ one }) => ({
-  personal: one(intro, {
-    fields: [organization.personalId],
-    references: [intro.id],
+export const organizationRelations = relations(
+  organizations,
+  ({ one, many }) => ({
+    personal: one(personal, {
+      fields: [organizations.personalId],
+      references: [personal.id],
+    }),
+    descriptions: many(organizationDesc),
   }),
-  details: one(organizationDetails, {
-    fields: [organization.id],
-    references: [organizationDetails.organizationId],
-  }),
-}));
+);
 
-export const organizationDetailsRelations = relations(
-  organizationDetails,
+export const organizationDescRelations = relations(
+  organizationDesc,
   ({ one }) => ({
-    organization: one(organization, {
-      fields: [organizationDetails.organizationId],
-      references: [organization.id],
+    organization: one(organizations, {
+      fields: [organizationDesc.organizationId],
+      references: [organizations.id],
     }),
   }),
 );
-export type OrganizationSelect = typeof organization.$inferSelect;
+export type OrganizationSelect = typeof organizations.$inferSelect;
 export type OrganizationInsert = Omit<
-  typeof organization.$inferInsert,
+  typeof organizations.$inferInsert,
   "personalId"
 >;
 export type OrganizationDetailInsert = Omit<
-  typeof organizationDetails.$inferInsert,
+  typeof organizationDesc.$inferInsert,
   "organizationId"
 >;

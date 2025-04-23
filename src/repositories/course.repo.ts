@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
 import { db } from "../db/index";
 import { BaseRepository } from "./base.repo";
-import { courses, courseDetails } from "../db/schema/course.db";
+import { courses, courseDescriptions } from "../db/schema/course.db";
 import type { CourseInsert, CourseDetailsInsert } from "../db/schema/course.db";
 
 export class CourseRepository extends BaseRepository<
@@ -14,14 +14,14 @@ export class CourseRepository extends BaseRepository<
   async getDetail(detailId: number) {
     const rows = await this.db
       .select()
-      .from(courseDetails)
-      .where(eq(courseDetails.id, detailId));
+      .from(courseDescriptions)
+      .where(eq(courseDescriptions.id, detailId));
     return rows[0];
   }
 
   async addDetail(courseId: number, newCourseDetail: CourseDetailsInsert) {
     const insertedDetail = await this.db
-      .insert(courseDetails)
+      .insert(courseDescriptions)
       .values({ ...newCourseDetail, courseId })
       .$returningId();
     return this.getById(insertedDetail[0].id);
@@ -32,14 +32,16 @@ export class CourseRepository extends BaseRepository<
     newDetail: Partial<CourseDetailsInsert>,
   ) {
     await this.db
-      .update(courseDetails)
+      .update(courseDescriptions)
       .set(newDetail)
-      .where(eq(courseDetails.id, detailId));
+      .where(eq(courseDescriptions.id, detailId));
     return this.getDetail(detailId);
   }
 
   async deleteCourseWithDetails(id: number) {
-    await this.db.delete(courseDetails).where(eq(courseDetails.courseId, id));
+    await this.db
+      .delete(courseDescriptions)
+      .where(eq(courseDescriptions.courseId, id));
     await this.db.delete(courses).where(eq(courses.id, id));
   }
 }

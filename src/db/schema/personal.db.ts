@@ -1,17 +1,30 @@
-import { relations } from "drizzle-orm";
-import { mysqlTable, int, varchar, text } from "drizzle-orm/mysql-core";
+import { createInsertSchema, createSelectSchema } from "drizzle-zod";
+import {
+  mysqlTable,
+  text,
+  varchar,
+  int,
+  timestamp,
+} from "drizzle-orm/mysql-core";
+import { z } from "zod";
 
-import { language } from "./language.db";
-import { education } from "./education.db";
-import { work } from "./work.db";
-import { organization } from "./organization.db";
+import { users } from "./user.db";
+import { relations } from "drizzle-orm";
+import { location } from "./location.db";
+import { socials } from "./social.db";
+import { educations } from "./education.db";
+import { works } from "./work.db";
+import { organizations } from "./organization.db";
 import { projects } from "./project.db";
 import { skills } from "./skill.db";
 import { softSkills } from "./soft-skill.db";
 import { courses } from "./course.db";
 
-export const intro = mysqlTable("personal_basic", {
+export const personal = mysqlTable("personal", {
   id: int("id").primaryKey().autoincrement(),
+  userId: int("user_id")
+    .notNull()
+    .references(() => users.id),
   fullName: varchar("full_name", { length: 100 }),
   bio: varchar("bio", { length: 255 }),
   image: varchar("image", { length: 255 }),
@@ -19,69 +32,27 @@ export const intro = mysqlTable("personal_basic", {
   phone: varchar("phone", { length: 15 }),
   email: varchar("email", { length: 255 }),
   url: varchar("url", { length: 255 }),
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
-export const location = mysqlTable("personal_location", {
-  id: int("id").primaryKey().autoincrement(),
-  personalId: int("personal_id")
-    .notNull()
-    .references(() => intro.id),
-  address: varchar("address", { length: 255 }),
-  postalCode: varchar("postal_code", { length: 5 }),
-  city: varchar("city", { length: 100 }),
-  countryCode: varchar("country_code", { length: 3 }),
-  state: varchar("state", { length: 100 }),
-});
-
-export const social = mysqlTable("personal_social", {
-  id: int("id").primaryKey().autoincrement(),
-  personalId: int("personal_id")
-    .notNull()
-    .references(() => intro.id),
-  social: varchar("social", { length: 50 }),
-  username: varchar("username", { length: 100 }),
-  url: varchar("url", { length: 255 }),
-});
-
-export const personalRelations = relations(intro, ({ many, one }) => ({
+export const personalRelations = relations(personal, ({ one, many }) => ({
   location: one(location),
-  socials: many(social),
-  language: many(language),
-  education: many(education),
-  workExperience: many(work),
-  organizationExperience: many(organization),
+  socials: many(socials),
+  educations: many(educations),
+  works: many(works),
+  organizations: many(organizations),
   projects: many(projects),
   skills: many(skills),
   softSkills: many(softSkills),
   courses: many(courses),
 }));
 
-export type BasicBase = typeof intro.$inferSelect;
-export type BasicInsert = typeof intro.$inferInsert;
-export type BasicUpdate = Partial<BasicInsert> & { id: number };
+export const personalSelectSchema = createSelectSchema(personal);
+export const personalInsertSchema = createInsertSchema(personal).omit({
+  userId: true,
+});
+export const personalUpdateSchema = personalInsertSchema.omit({ id: true });
 
-export type LocationBase = typeof location.$inferSelect;
-export type LocationInsert = typeof location.$inferInsert;
-export type LocationUpdate = Partial<LocationInsert> & { id: number };
-
-export type SocialBase = typeof social.$inferSelect;
-export type SocialInsert = typeof social.$inferInsert;
-export type SocialUpdate = Partial<SocialInsert> & { id: number };
-
-export type PersonalSelect = {
-  basic: BasicBase;
-  location: LocationBase;
-  socials: SocialBase[];
-};
-
-export type PersonalInsert = {
-  basic: BasicInsert;
-  location: Omit<LocationInsert, "personalId">;
-  socials: Omit<SocialInsert, "personalId">[];
-};
-
-export type PersonalUpdate = {
-  basic?: BasicUpdate;
-  location?: LocationUpdate;
-  socials?: SocialUpdate[];
-};
+export type PersonalSelect = z.infer<typeof personalSelectSchema>;
+export type PersonalInsert = z.infer<typeof personalInsertSchema>;
+export type PersonalUpdate = z.infer<typeof personalUpdateSchema>;

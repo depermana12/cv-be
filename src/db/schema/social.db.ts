@@ -4,22 +4,30 @@ import {
   createSelectSchema,
   createUpdateSchema,
 } from "drizzle-zod";
-import { intro } from "./personal.db";
 import type { z } from "zod";
+import { relations } from "drizzle-orm";
+import { personal } from "./personal.db";
 
-export const social = mysqlTable("personal_social", {
+export const socials = mysqlTable("socials", {
   id: int("id").primaryKey().autoincrement(),
   personalId: int("personal_id")
     .notNull()
-    .references(() => intro.id),
+    .references(() => personal.id),
   social: varchar("social", { length: 50 }),
   username: varchar("username", { length: 100 }),
   url: varchar("url", { length: 255 }),
 });
 
-export const socialSelectSchema = createSelectSchema(social);
-export const socialInsertSchema = createInsertSchema(social);
-export const socialUpdateSchema = createUpdateSchema(social).omit({
+const socialRelations = relations(socials, ({ one }) => ({
+  personal: one(personal, {
+    fields: [socials.personalId],
+    references: [personal.id],
+  }),
+}));
+
+export const socialSelectSchema = createSelectSchema(socials);
+export const socialInsertSchema = createInsertSchema(socials);
+export const socialUpdateSchema = createUpdateSchema(socials).omit({
   personalId: true,
   id: true,
 });

@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
 import { db } from "../db/index";
 import { BaseRepository } from "./base.repo";
-import { location, type LocationInsert } from "../db/schema/personal.db";
+import { location, type LocationInsert } from "../db/schema/location.db";
 
 export class Location extends BaseRepository<typeof location, LocationInsert> {
   constructor() {

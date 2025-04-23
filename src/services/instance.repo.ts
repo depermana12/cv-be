@@ -1,5 +1,4 @@
-import { PersonalRepository } from "../repositories/personal.repo";
-import { Basic } from "../repositories/intro.repo.ts";
+import { Basic } from "../repositories/personal.repo.ts";
 import { Location } from "../repositories/location.repo.ts";
 import { Social } from "../repositories/social.repo.ts";
 import { LanguageRepository } from "../repositories/language.repo";
@@ -16,11 +15,6 @@ import { ProjectTechStack } from "../repositories/project-tech.repo";
 export const introRepository = new Basic();
 export const locationRepository = new Location();
 export const socialRepository = new Social();
-export const personalRepository = new PersonalRepository(
-  introRepository,
-  locationRepository,
-  socialRepository,
-);
 export const languageRepository = new LanguageRepository();
 export const educationRepository = new EducationRepository();
 export const workRepository = new WorkRepository();

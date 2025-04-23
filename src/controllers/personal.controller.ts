@@ -2,61 +2,58 @@ import { Hono } from "hono";
 import { zValidator } from "../utils/validator";
 import { PersonalService } from "../services/personal.service";
 import {
-  personalCreateSchema,
+  personalInsertSchema,
   personalUpdateSchema,
-} from "../schemas/personal.schema";
+} from "../db/schema/personal.db";
 
 const personalService = new PersonalService();
 export const personalRoutes = new Hono()
   .get("/", async (c) => {
-    const personalInfo = await personalService.getAll();
+    const intro = await personalService.getAll();
 
     return c.json(
       {
         success: true,
-        message: `retrieved ${personalInfo.length} records successfully`,
-        data: personalInfo,
+        message: `retrieved ${intro.length} records successfully`,
+        data: intro,
       },
       200,
     );
   })
   .get("/:id", async (c) => {
-    const id = c.req.param("id");
-    const personalInfo = await personalService.getById(Number(id));
+    const id = Number(c.req.param("id"));
+    const intro = await personalService.getById(id);
     return c.json(
       {
         success: true,
         message: `record ID: ${id} retrieved successfully`,
-        data: personalInfo,
+        data: intro,
       },
       200,
     );
   })
-  .post("/", zValidator("json", personalCreateSchema), async (c) => {
+  .post("/", zValidator("json", personalInsertSchema), async (c) => {
     const validatedBody = c.req.valid("json");
-    const newPersonData = await personalService.create(validatedBody);
+    const newIntro = await personalService.create(validatedBody);
     return c.json(
       {
         success: true,
         message: `new record created`,
-        data: newPersonData,
+        data: newIntro,
       },
       201,
     );
   })
   .patch("/:id", zValidator("json", personalUpdateSchema), async (c) => {
-    const id = c.req.param("id");
+    const id = Number(c.req.param("id"));
     const validatedBody = c.req.valid("json");
 
-    const personUpdated = await personalService.update(
-      Number(id),
-      validatedBody,
-    );
+    const introUpdated = await personalService.update(id, validatedBody);
     return c.json(
       {
         success: true,
         message: `record ID: ${id} updated successfully`,
-        data: personUpdated,
+        data: introUpdated,
       },
       200,
     );

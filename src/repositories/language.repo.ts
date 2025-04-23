@@ -1,15 +1,15 @@
 import { eq } from "drizzle-orm";
 import { db } from "../db/index";
 import { BaseRepository } from "./base.repo";
-import { language } from "../db/schema/language.db";
+import { languages } from "../db/schema/language.db";
 import type { LanguageInsert, LanguageSelect } from "../db/schema/language.db";
 
 export class LanguageRepository extends BaseRepository<
-  typeof language,
+  typeof languages,
   LanguageInsert
 > {
   constructor() {
-    super(db, language);
+    super(db, languages);
   }
 
   async createWithPersonalId(personalId: number, data: LanguageInsert) {

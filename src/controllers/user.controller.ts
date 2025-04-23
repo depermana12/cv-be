@@ -2,18 +2,19 @@ import { Hono } from "hono";
 import { zValidator } from "../utils/validator";
 import { UserService } from "../services/user.service";
 import {
+  userInputEmail,
+  userInputResetPassword,
   userInsertSchema,
   userLoginSchema,
   userSelectSchema,
 } from "../db/schema/user.db";
 import { jwt } from "../middlewares/auth";
-import { decode } from "hono/jwt";
 import type { Bindings } from "../lib/types";
 
 const userService = new UserService();
 export const userRoutes = new Hono<Bindings>()
-  .use("/me", jwt())
-  .get("/me", async (c) => {
+  .use("/users/me", jwt())
+  .get("/users/me", async (c) => {
     const { id } = c.get("jwtPayload");
     const me = await userService.getById(Number(id));
     return c.json(
@@ -41,4 +42,30 @@ export const userRoutes = new Hono<Bindings>()
       message: "user login successfully",
       data: login,
     });
-  });
+  })
+  .post("/forget-password", zValidator("json", userInputEmail), async (c) => {
+    const validatedInput = c.req.valid("json");
+    const user = await userService.getByEmail(validatedInput.email);
+
+    await userService.createResetPasswordToken({
+      id: user.id.toString(),
+      email: user.email,
+    });
+
+    //TODO: email service
+  })
+  .post(
+    "/reset-password/:token",
+    zValidator("json", userInputResetPassword),
+    async (c) => {
+      const token = c.req.param("token");
+      const user = await userService.validateDecodeResetToken(token);
+
+      const validatedInput = c.req.valid("json");
+      await userService.updatePassword(
+        Number(user.id),
+        validatedInput.password,
+      );
+      return c.json({ success: true, message: "password reset successfully" });
+    },
+  );

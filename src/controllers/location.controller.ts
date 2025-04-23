@@ -1,8 +1,10 @@
 import { Hono } from "hono";
 import { zValidator } from "../utils/validator";
 import { LocationService } from "../services/location.service";
-import { locationInsertSchema } from "../db/schema/location.db";
-import { locationUpdateSchema } from "../schemas/personal.schema";
+import {
+  locationInsertSchema,
+  locationUpdateSchema,
+} from "../db/schema/location.db";
 
 const locationService = new LocationService();
 export const locationRoutes = new Hono()

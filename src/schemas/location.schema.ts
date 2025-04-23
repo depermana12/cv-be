@@ -2,7 +2,7 @@ import { z } from "zod";
 
 const idSchema = z.number().int().positive();
 
-export const locationBaseSchema = z.object({
+export const locationSelectSchema = z.object({
   id: idSchema,
   personalId: z.number().int(),
   address: z
@@ -14,15 +14,15 @@ export const locationBaseSchema = z.object({
   state: z.string().max(100, { message: "Must be 100 characters or fewer" }),
 });
 
-export const locationCreateSchema = locationBaseSchema.omit({
+export const locationInsertSchema = locationSelectSchema.omit({
   id: true,
   personalId: true,
 });
 
-export const locationUpdateSchema = locationCreateSchema
+export const locationUpdateSchema = locationInsertSchema
   .extend({ id: idSchema })
   .partial();
 
-export type LocationBase = z.infer<typeof locationBaseSchema>;
-export type LocationCreate = z.infer<typeof locationCreateSchema>;
+export type LocationSelect = z.infer<typeof locationSelectSchema>;
+export type LocationCreate = z.infer<typeof locationInsertSchema>;
 export type LocationUpdate = z.infer<typeof locationUpdateSchema>;

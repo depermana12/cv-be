@@ -1,1 +1,0 @@
-ALTER TABLE `personal_basic` MODIFY COLUMN `full_name` varchar(100);

@@ -8,13 +8,13 @@ import {
   boolean,
 } from "drizzle-orm/mysql-core";
 
-import { intro } from "./personal.db";
+import { personal } from "./personal.db";
 
-export const work = mysqlTable("work_exp", {
+export const works = mysqlTable("works", {
   id: int("id").primaryKey().autoincrement(),
   personalId: int("personal_id")
     .notNull()
-    .references(() => intro.id),
+    .references(() => personal.id),
   company: varchar("company", { length: 100 }).notNull(),
   position: varchar("position", { length: 100 }).notNull(),
   startDate: date("start_date"),
@@ -23,25 +23,25 @@ export const work = mysqlTable("work_exp", {
   isCurrent: boolean("is_current").default(false),
 });
 
-export const workDetails = mysqlTable("work_exp_details", {
+export const workDescriptions = mysqlTable("work_descriptions", {
   id: int("id").primaryKey().autoincrement(),
-  workId: int("work_exp_id")
+  workId: int("work_id")
     .notNull()
-    .references(() => work.id),
+    .references(() => works.id),
   description: text("description"),
 });
 
-export const workRelations = relations(work, ({ one }) => ({
-  personal: one(intro, {
-    fields: [work.personalId],
-    references: [intro.id],
+export const workRelations = relations(works, ({ one, many }) => ({
+  personal: one(personal, {
+    fields: [works.personalId],
+    references: [personal.id],
   }),
-  details: one(workDetails, {
-    fields: [work.id],
-    references: [workDetails.workId],
-  }),
+  descriptions: many(workDescriptions),
 }));
 
-export type WorkSelect = typeof work.$inferSelect;
-export type WorkInsert = Omit<typeof work.$inferInsert, "personalId">;
-export type WorkDetailInsert = Omit<typeof workDetails.$inferInsert, "workId">;
+export type WorkSelect = typeof works.$inferSelect;
+export type WorkInsert = Omit<typeof works.$inferInsert, "personalId">;
+export type WorkDetailInsert = Omit<
+  typeof workDescriptions.$inferInsert,
+  "workId"
+>;

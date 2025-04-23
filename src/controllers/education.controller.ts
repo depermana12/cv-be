@@ -45,9 +45,9 @@ export const educationRoutes = new Hono()
     );
   })
   .patch("/:id", zValidator("json", educationUpdateSchema), async (c) => {
-    const id = c.req.param("id");
+    const id = Number(c.req.param("id"));
     const validated = c.req.valid("json");
-    const updatedEdu = await educationService.update(Number(id), validated);
+    const updatedEdu = await educationService.update(id, validated);
     return c.json(
       {
         success: true,
@@ -58,8 +58,8 @@ export const educationRoutes = new Hono()
     );
   })
   .delete("/:id", async (c) => {
-    const id = c.req.param("id");
-    await educationService.delete(Number(id));
+    const id = Number(c.req.param("id"));
+    await educationService.delete(id);
     return c.json({
       success: true,
       message: `record id: ${id} deleted successfully`,

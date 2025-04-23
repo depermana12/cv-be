@@ -49,13 +49,11 @@ export class UserRepository {
     const { password, ...rest } = createdUser;
     return { ...rest };
   }
-  async update(id: number, newData: UserUpdate): Promise<UserSelect> {
-    await this.db.update(this.table).set(newData).where(eq(this.table.id, id));
-    const row = await this.getById(id);
-    if (!row) {
-      throw new DataBaseError("failed to retrieve updated user record");
-    }
-    return row;
+  async updatePassword(id: number, newPw: string): Promise<void> {
+    await this.db
+      .update(this.table)
+      .set({ password: newPw })
+      .where(eq(this.table.id, id));
   }
   async delete(id: number): Promise<void> {
     await this.db.delete(this.table).where(eq(this.table.id, id));

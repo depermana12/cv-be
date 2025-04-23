@@ -1,21 +1,21 @@
 import { relations } from "drizzle-orm";
 import { mysqlTable, int, varchar, text } from "drizzle-orm/mysql-core";
 
-import { intro } from "./personal.db";
+import { personal } from "./personal.db";
 
 export const softSkills = mysqlTable("soft_skills", {
   id: int("id").primaryKey().autoincrement(),
   personalId: int("personal_id")
     .notNull()
-    .references(() => intro.id),
+    .references(() => personal.id),
   category: varchar("category", { length: 50 }).notNull(),
   description: text("description"),
 });
 
 export const softSkillsRelations = relations(softSkills, ({ one }) => ({
-  personal: one(intro, {
+  personal: one(personal, {
     fields: [softSkills.personalId],
-    references: [intro.id],
+    references: [personal.id],
   }),
 }));
 
