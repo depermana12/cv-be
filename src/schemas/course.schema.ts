@@ -2,7 +2,7 @@ import { z } from "zod";
 
 const idSchema = z.number().int().positive();
 
-export const courseBaseSchema = z.object({
+export const courseSelectSchema = z.object({
   id: idSchema,
   personalId: idSchema,
   provider: z.string().max(100, { message: "Must be 100 characters or fewer" }),
@@ -13,38 +13,36 @@ export const courseBaseSchema = z.object({
   endDate: z.coerce.date(),
 });
 
-export const courseCreateSchema = courseBaseSchema.omit({
+export const courseInsertSchema = courseSelectSchema.omit({
   id: true,
   personalId: true,
 });
 
-export const courseUpdateSchema = courseCreateSchema
+export const courseUpdateSchema = courseInsertSchema
   .extend({
     id: idSchema,
   })
   .partial();
 
-export type Course = z.infer<typeof courseBaseSchema>;
-export type CourseCreate = z.infer<typeof courseCreateSchema>;
+export type CourseSelect = z.infer<typeof courseSelectSchema>;
+export type CourseInsert = z.infer<typeof courseInsertSchema>;
 export type CourseUpdate = z.infer<typeof courseUpdateSchema>;
 
-export const courseDetailBaseSchema = z.object({
+export const courseDescSelectSchema = z.object({
   id: idSchema,
   courseId: idSchema,
   description: z.string(),
 });
 
-export const courseDetailCreateSchema = courseDetailBaseSchema.omit({
+export const courseDescInsertSchema = courseDescSelectSchema.omit({
   id: true,
   courseId: true,
 });
 
-export const courseDetailUpdateSchema = courseDetailCreateSchema
-  .partial()
-  .extend({
-    id: idSchema,
-  });
+export const courseDescUpdateSchema = courseDescInsertSchema.partial().extend({
+  id: idSchema,
+});
 
-export type CourseDetail = z.infer<typeof courseDetailBaseSchema>;
-export type CourseDetailCreate = z.infer<typeof courseDetailCreateSchema>;
-export type CourseDetailUpdate = z.infer<typeof courseDetailUpdateSchema>;
+export type CourseDescSelect = z.infer<typeof courseDescSelectSchema>;
+export type CourseDescInsert = z.infer<typeof courseDescInsertSchema>;
+export type CourseDescUpdate = z.infer<typeof courseDescUpdateSchema>;

@@ -15,6 +15,14 @@ export class ProjectRepository extends BaseRepository<
   constructor() {
     super(db, projects);
   }
+  async searchProject(term: string) {
+    return this.findMany({
+      search: {
+        columns: ["name"],
+        term: term,
+      },
+    });
+  }
   async getDetail(projectId: number) {
     const rows = await this.db
       .select()

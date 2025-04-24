@@ -1,66 +1,62 @@
 export type {
-  BasicBase as PersonalBasicBase,
-  BasicCreate as PersonalBasicCreate,
-  BasicUpdate as PersonalBasicUpdate,
-  PersonalCreate as FullPersonalCreate,
-  PersonalUpdate as FullPersonalUpdate,
-} from "./personal.schema";
-
-export type {
-  LanguageBase as LanguageBase,
-  LanguageCreate as LanguageCreate,
+  LanguageSelect as LanguageSelect,
+  LanguageInsert as LanguageInsert,
   LanguageUpdate as LanguageUpdate,
 } from "./language.schema";
 
 export type {
-  EducationBase as EducationBase,
-  EducationCreate as EducationCreate,
+  EducationSelect as EducationSelect,
+  EducationInsert as EducationInsert,
   EducationUpdate as EducationUpdate,
 } from "./education.schema";
 
 export type {
-  WorkBase,
-  WorkCreate,
+  WorkSelect as WorkBase,
+  WorkInsert as WorkCreate,
   WorkUpdate,
-  WorkDetailsBase,
-  WorkDetailsCreate,
-  WorkDetailsUpdate,
+  WorkDescSelect as WorkDetailsBase,
+  WorkDescInsert as WorkDetailsCreate,
+  WorkDescUpdate as WorkDetailsUpdate,
 } from "./work.schema";
 
 export type {
-  OrganizationType as Organization,
-  OrganizationCreateType as OrganizationCreate,
-  OrganizationUpdateType as OrganizationUpdate,
-  OrganizationDetail,
-  OrganizationDetailCreate,
-  OrganizationDetailUpdate,
+  OrganizationSelect as Organization,
+  OrganizationInsert as OrganizationCreate,
+  OrganizationUpdate as OrganizationUpdate,
+  OrganizationDescSelect as OrganizationDetail,
+  OrganizationDescInsert as OrganizationDetailCreate,
+  OrganizationDescUpdate as OrganizationDetailUpdate,
 } from "./organization.schema";
 
 export type {
-  Project,
-  ProjectCreate,
+  ProjectSelect as Project,
+  ProjectInsert as ProjectCreate,
   ProjectUpdate,
-  ProjectDetail,
-  ProjectDetailCreate,
-  ProjectDetailUpdate,
-  ProjectTechnology,
-  ProjectTechnologyCreate,
-  ProjectTechnologyUpdate,
+  ProjectDescSelect as ProjectDetail,
+  ProjectDescInsert as ProjectDetailCreate,
+  ProjectDescUpdate as ProjectDetailUpdate,
+  ProjectTechSelect as ProjectTechnology,
+  ProjectTechInsert as ProjectTechnologyCreate,
+  ProjectTechUpdate as ProjectTechnologyUpdate,
 } from "./project.schema";
 
-export type { Skill, SkillCreate, SkillUpdate } from "./skill.schema";
+export type {
+  SkillSelect as Skill,
+  SkillInsert as SkillCreate,
+  SkillUpdate,
+} from "./skill.schema";
 
 export type {
-  SoftSkill,
-  SoftSkillCreate,
+  SoftSkillSelect as SoftSkill,
+  SoftSkillInsert as SoftSkillCreate,
   SoftSkillUpdate,
 } from "./soft-skill.schema";
 
 export type {
-  Course as Course,
-  CourseCreate as CourseCreate,
+  CourseSelect as CourseSelect,
+  CourseInsert as CourseInsert,
   CourseUpdate as CourseUpdate,
-  CourseDetail as CourseDetail,
-  CourseDetailCreate as CourseDetailCreate,
-  CourseDetailUpdate as CourseDetailUpdate,
+  CourseDescSelect as CourseDescSelect,
+  CourseDescInsert as CourseDescInsert,
+  CourseDescUpdate as CourseDescUpdate,
 } from "./course.schema";

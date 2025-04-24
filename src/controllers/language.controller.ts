@@ -3,7 +3,7 @@ import { zValidator } from "../utils/validator";
 
 import { languageService } from "../services/index.service";
 import {
-  languageCreateSchema,
+  languageInsertSchema,
   languageUpdateSchema,
 } from "../schemas/language.schema";
 
@@ -26,7 +26,7 @@ export const languageRoutes = new Hono()
       data: lang,
     });
   })
-  .post("/:personalId", zValidator("json", languageCreateSchema), async (c) => {
+  .post("/:personalId", zValidator("json", languageInsertSchema), async (c) => {
     const personalId = Number(c.req.param("personalId"));
     const validateBody = c.req.valid("json");
 

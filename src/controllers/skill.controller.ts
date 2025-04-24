@@ -2,7 +2,7 @@ import { Hono } from "hono";
 
 import { zValidator } from "../utils/validator";
 import { SkillService } from "../services/skill.service";
-import { skillCreateSchema, skillUpdateSchema } from "../schemas/skill.schema";
+import { skillInsertSchema, skillUpdateSchema } from "../schemas/skill.schema";
 
 const skillService = new SkillService();
 export const skillRoutes = new Hono()
@@ -31,7 +31,7 @@ export const skillRoutes = new Hono()
       data: skill,
     });
   })
-  .post("/", zValidator("json", skillCreateSchema), async (c) => {
+  .post("/", zValidator("json", skillInsertSchema), async (c) => {
     const validatedBody = c.req.valid("json");
     const newSkill = await skillService.create(validatedBody);
     return c.json(

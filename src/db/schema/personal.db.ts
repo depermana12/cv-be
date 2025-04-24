@@ -48,9 +48,7 @@ export const personalRelations = relations(personal, ({ one, many }) => ({
 }));
 
 export const personalSelectSchema = createSelectSchema(personal);
-export const personalInsertSchema = createInsertSchema(personal).omit({
-  userId: true,
-});
+export const personalInsertSchema = createInsertSchema(personal);
 export const personalUpdateSchema = personalInsertSchema.omit({ id: true });
 
 export type PersonalSelect = z.infer<typeof personalSelectSchema>;

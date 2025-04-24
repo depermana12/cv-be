@@ -2,7 +2,7 @@ import { z } from "zod";
 
 const idSchema = z.number().int().positive();
 
-export const educationBaseSchema = z.object({
+export const educationSelectSchema = z.object({
   id: idSchema,
   personalId: idSchema,
   institution: z
@@ -22,15 +22,15 @@ export const educationBaseSchema = z.object({
   url: z.string().url({ message: "Invalid URL format" }),
 });
 
-export const educationCreateSchema = educationBaseSchema.omit({
+export const educationInsertSchema = educationSelectSchema.omit({
   personalId: true,
   id: true,
 });
-export const educationUpdateSchema = educationCreateSchema.partial().extend({
+export const educationUpdateSchema = educationInsertSchema.partial().extend({
   id: idSchema,
 });
 
 // Inferred types
-export type EducationBase = z.infer<typeof educationBaseSchema>;
-export type EducationCreate = z.infer<typeof educationCreateSchema>;
+export type EducationSelect = z.infer<typeof educationSelectSchema>;
+export type EducationInsert = z.infer<typeof educationInsertSchema>;
 export type EducationUpdate = z.infer<typeof educationUpdateSchema>;

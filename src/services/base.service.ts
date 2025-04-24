@@ -1,6 +1,7 @@
 import { type BaseCrudRepository } from "../repositories/base.repo";
 import { NotFoundError } from "../errors/not-found.error";
 import { BadRequestError } from "../errors/bad-request.error";
+import type { QueryOptions } from "../lib/query-builder";
 
 export interface IBaseCrudService<
   TSelect,
@@ -8,6 +9,7 @@ export interface IBaseCrudService<
   TUpdate = Partial<TInsert>,
 > {
   getAll(): Promise<TSelect[]>;
+  findMany(query: QueryOptions): Promise<TSelect[]>;
   getById(id: number): Promise<TSelect | null>;
   create(data: TInsert): Promise<TSelect>;
   update(id: number, data: TUpdate): Promise<TSelect>;
@@ -28,6 +30,10 @@ export class BaseCrudService<TSelect, TInsert, TUpdate = Partial<TInsert>>
 
   async getAll(): Promise<TSelect[]> {
     return this.repository.getAll();
+  }
+
+  async findMany(query: QueryOptions): Promise<TSelect[]> {
+    return this.repository.findMany(query);
   }
 
   async getById(id: number): Promise<TSelect> {

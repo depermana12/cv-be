@@ -3,10 +3,10 @@ import { zValidator } from "../utils/validator";
 
 import { OrganizationService } from "../services/organization.service";
 import {
-  organizationCreateSchema,
+  organizationInsertSchema,
   organizationUpdateSchema,
-  organizationDetailCreateSchema,
-  organizationDetailUpdateSchema,
+  organizationDescInsertSchema,
+  organizationDescUpdateSchema,
 } from "../schemas/organization.schema";
 
 const organization = new OrganizationService();
@@ -28,7 +28,7 @@ export const organizationRoutes = new Hono()
       data: org,
     });
   })
-  .post("/", zValidator("json", organizationCreateSchema), async (c) => {
+  .post("/", zValidator("json", organizationInsertSchema), async (c) => {
     const validatedBody = c.req.valid("json");
     const newOrg = await organization.create(validatedBody);
     return c.json(
@@ -60,7 +60,7 @@ export const organizationRoutes = new Hono()
   })
   .post(
     "/:id/details",
-    zValidator("json", organizationDetailCreateSchema),
+    zValidator("json", organizationDescInsertSchema),
     async (c) => {
       const orgExpId = Number(c.req.param("id"));
       const validatedBody = c.req.valid("json");
@@ -75,7 +75,7 @@ export const organizationRoutes = new Hono()
   )
   .patch(
     "/:id/details/:detailId",
-    zValidator("json", organizationDetailUpdateSchema),
+    zValidator("json", organizationDescUpdateSchema),
     async (c) => {
       const id = Number(c.req.param("id"));
       const detailId = Number(c.req.param("detailId"));

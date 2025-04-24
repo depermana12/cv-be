@@ -1,6 +1,8 @@
 import { eq, type InferSelectModel } from "drizzle-orm";
 import { MySqlTable, type TableConfig } from "drizzle-orm/mysql-core";
 import { DataBaseError } from "../errors/database.error";
+import { QueryBuilder } from "../lib/query-builder";
+import type { QueryOptions } from "../lib/query-builder";
 
 export interface BaseCrudRepository<
   TSelect,
@@ -8,6 +10,7 @@ export interface BaseCrudRepository<
   TUpdate = Partial<TInsert>,
 > {
   getAll(): Promise<TSelect[]>;
+  findMany(options: QueryOptions): Promise<TSelect[]>;
   getById(id: number): Promise<TSelect | null>;
   create(data: TInsert): Promise<{ id: number }>;
   update(id: number, data: TUpdate): Promise<TSelect>;
@@ -15,16 +18,6 @@ export interface BaseCrudRepository<
   exists(id: number | string): Promise<boolean>;
 }
 
-/**
- * Base implementation of the BaseCrudRepository interface.
- * Provides generic CRUD operations using Drizzle ORM.
- *
- * @template TTable - The type of table database
- * @template TSelect - The type used when returning records
- * @template TInsert - The type used when inserting records
- * @template TUpdate - The type used when updating records (defaults to Partial<TInsert>)
- * @implements {BaseCrudRepository<TTable, TSelect, TInsert, TUpdate>}
- */
 export class BaseRepository<
   TTable extends MySqlTable<TableConfig>,
   TInsert,
@@ -32,13 +25,13 @@ export class BaseRepository<
   TUpdate = Partial<TInsert>,
 > implements BaseCrudRepository<TSelect, TInsert, TUpdate>
 {
-  /**
-   * Instanciate baseRepository.
-   *
-   * @param {any} db - The database connection/client
-   * @param {MySqlTable} table - The Drizzle table definition
-   */
   constructor(protected readonly db: any, protected readonly table: TTable) {}
+
+  async findMany(options: QueryOptions = {}): Promise<TSelect[]> {
+    const qb = new QueryBuilder(this.table, this.db.select().from(this.table));
+    const query = qb.build(options).getQuery();
+    return (await query.execute()) as TSelect[];
+  }
   async getAll(): Promise<TSelect[]> {
     return await this.db.select().from(this.table);
   }
@@ -51,7 +44,6 @@ export class BaseRepository<
     return rows[0] ?? null;
   }
 
-  // the mysql insert returning is problematic
   async create(data: TInsert): Promise<{ id: number }> {
     const inserted = await this.db
       .insert(this.table)

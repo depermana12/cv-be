@@ -2,21 +2,21 @@ import { z } from "zod";
 
 const idSchema = z.number().int().positive();
 
-export const languageBaseSchema = z.object({
+export const languageSelectSchema = z.object({
   id: idSchema,
   personalId: idSchema,
   language: z.string().max(100, { message: "Must be 100 characters or fewer" }),
   fluency: z.string().max(25, { message: "Must be 25 characters or fewer" }),
 });
 
-export const languageCreateSchema = languageBaseSchema.omit({
+export const languageInsertSchema = languageSelectSchema.omit({
   personalId: true,
   id: true,
 });
-export const languageUpdateSchema = languageCreateSchema
+export const languageUpdateSchema = languageInsertSchema
   .partial()
   .extend({ id: idSchema });
 
-export type LanguageBase = z.infer<typeof languageBaseSchema>;
-export type LanguageCreate = z.infer<typeof languageCreateSchema>;
+export type LanguageSelect = z.infer<typeof languageSelectSchema>;
+export type LanguageInsert = z.infer<typeof languageInsertSchema>;
 export type LanguageUpdate = z.infer<typeof languageUpdateSchema>;

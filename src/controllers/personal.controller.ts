@@ -1,13 +1,13 @@
-import { Hono } from "hono";
 import { zValidator } from "../utils/validator";
 import { PersonalService } from "../services/personal.service";
 import {
   personalInsertSchema,
   personalUpdateSchema,
 } from "../db/schema/personal.db";
+import { createHonoBindings } from "../lib/create-hono";
 
 const personalService = new PersonalService();
-export const personalRoutes = new Hono()
+export const personalRoutes = createHonoBindings()
   .get("/", async (c) => {
     const intro = await personalService.getAll();
 
@@ -34,12 +34,16 @@ export const personalRoutes = new Hono()
   })
   .post("/", zValidator("json", personalInsertSchema), async (c) => {
     const validatedBody = c.req.valid("json");
-    const newIntro = await personalService.create(validatedBody);
+    const { id } = c.get("jwtPayload");
+    const newPersonal = await personalService.create({
+      ...validatedBody,
+      userId: Number(id),
+    });
     return c.json(
       {
         success: true,
         message: `new record created`,
-        data: newIntro,
+        data: newPersonal,
       },
       201,
     );

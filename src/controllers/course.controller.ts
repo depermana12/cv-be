@@ -3,7 +3,7 @@ import { zValidator } from "../utils/validator";
 
 import { CourseService } from "../services/course.service";
 import {
-  courseCreateSchema,
+  courseInsertSchema,
   courseUpdateSchema,
 } from "../schemas/course.schema";
 
@@ -26,7 +26,7 @@ export const courseRoutes = new Hono()
       data: course,
     });
   })
-  .post("/", zValidator("json", courseCreateSchema), async (c) => {
+  .post("/", zValidator("json", courseInsertSchema), async (c) => {
     const validated = c.req.valid("json");
     const newCourse = await courseService.create(validated);
 

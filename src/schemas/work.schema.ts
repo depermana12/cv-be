@@ -2,7 +2,7 @@ import { z } from "zod";
 
 const idSchema = z.number().int().positive();
 
-export const workBaseSchema = z.object({
+export const workSelectSchema = z.object({
   id: idSchema,
   personalId: idSchema,
   company: z.string().max(100, { message: "Must be 100 characters or fewer" }),
@@ -13,38 +13,38 @@ export const workBaseSchema = z.object({
   isCurrent: z.boolean(),
 });
 
-export const workCreateSchema = workBaseSchema.omit({
+export const workInsertSchema = workSelectSchema.omit({
   id: true,
   personalId: true,
 });
 
-export const workUpdateSchema = workCreateSchema
+export const workUpdateSchema = workInsertSchema
   .extend({
     id: idSchema,
   })
   .partial();
 
-export type WorkBase = z.infer<typeof workBaseSchema>;
-export type WorkCreate = z.infer<typeof workCreateSchema>;
+export type WorkSelect = z.infer<typeof workSelectSchema>;
+export type WorkInsert = z.infer<typeof workInsertSchema>;
 export type WorkUpdate = z.infer<typeof workUpdateSchema>;
 
-export const workDetailsBaseSchema = z.object({
+export const workDescSelectSchema = z.object({
   id: idSchema,
   workExperienceId: idSchema,
   description: z.string(),
 });
 
-export const workDetailsCreateSchema = workDetailsBaseSchema.omit({
+export const workDescInsertSchema = workDescSelectSchema.omit({
   id: true,
   workExperienceId: true,
 });
 
-export const workDetailsUpdateSchema = workDetailsCreateSchema
+export const workDescUpdateSchema = workDescInsertSchema
   .extend({
     id: idSchema,
   })
   .partial();
 
-export type WorkDetailsBase = z.infer<typeof workDetailsBaseSchema>;
-export type WorkDetailsCreate = z.infer<typeof workDetailsCreateSchema>;
-export type WorkDetailsUpdate = z.infer<typeof workDetailsUpdateSchema>;
+export type WorkDescSelect = z.infer<typeof workDescSelectSchema>;
+export type WorkDescInsert = z.infer<typeof workDescInsertSchema>;
+export type WorkDescUpdate = z.infer<typeof workDescUpdateSchema>;

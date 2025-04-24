@@ -2,7 +2,7 @@ import { z } from "zod";
 
 const idSchema = z.number().int().positive();
 
-export const organizationBaseSchema = z.object({
+export const organizationSelectSchema = z.object({
   id: idSchema,
   personalId: idSchema,
   organization: z
@@ -13,41 +13,44 @@ export const organizationBaseSchema = z.object({
   endDate: z.coerce.date({ invalid_type_error: "Invalid end date" }),
 });
 
-export const organizationCreateSchema = organizationBaseSchema.omit({
+export const organizationInsertSchema = organizationSelectSchema.omit({
   id: true,
   personalId: true,
 });
 
-export const organizationUpdateSchema = organizationCreateSchema
+export const organizationUpdateSchema = organizationInsertSchema
   .partial()
   .extend({
     id: idSchema,
   });
 
-export type OrganizationType = z.infer<typeof organizationBaseSchema>;
-export type OrganizationCreateType = z.infer<typeof organizationCreateSchema>;
-export type OrganizationUpdateType = z.infer<typeof organizationUpdateSchema>;
+export type OrganizationSelect = z.infer<typeof organizationSelectSchema>;
+export type OrganizationInsert = z.infer<typeof organizationInsertSchema>;
+export type OrganizationUpdate = z.infer<typeof organizationUpdateSchema>;
 
-export const organizationDetailBaseSchema = z.object({
+export const organizationDescSelectSchema = z.object({
   id: idSchema,
   organizationExperienceId: idSchema,
   description: z.string(),
 });
 
-export const organizationDetailCreateSchema = organizationDetailBaseSchema.omit(
-  { id: true, organizationExperienceId: true },
-);
+export const organizationDescInsertSchema = organizationDescSelectSchema.omit({
+  id: true,
+  organizationExperienceId: true,
+});
 
-export const organizationDetailUpdateSchema = organizationDetailCreateSchema
+export const organizationDescUpdateSchema = organizationDescInsertSchema
   .partial()
   .extend({
     id: idSchema,
   });
 
-export type OrganizationDetail = z.infer<typeof organizationDetailBaseSchema>;
-export type OrganizationDetailCreate = z.infer<
-  typeof organizationDetailCreateSchema
+export type OrganizationDescSelect = z.infer<
+  typeof organizationDescSelectSchema
 >;
-export type OrganizationDetailUpdate = z.infer<
-  typeof organizationDetailUpdateSchema
+export type OrganizationDescInsert = z.infer<
+  typeof organizationDescInsertSchema
+>;
+export type OrganizationDescUpdate = z.infer<
+  typeof organizationDescUpdateSchema
 >;

@@ -3,10 +3,10 @@ import { Hono } from "hono";
 import { zValidator } from "../utils/validator";
 import { WorkService } from "../services/work.service";
 import {
-  workCreateSchema,
+  workInsertSchema,
   workUpdateSchema,
-  workDetailsCreateSchema,
-  workDetailsUpdateSchema,
+  workDescInsertSchema,
+  workDescUpdateSchema,
 } from "../schemas/work.schema";
 
 const workService = new WorkService();
@@ -28,7 +28,7 @@ export const workRoutes = new Hono()
       data: work,
     });
   })
-  .post("/", zValidator("json", workCreateSchema), async (c) => {
+  .post("/", zValidator("json", workInsertSchema), async (c) => {
     const validatedBody = c.req.valid("json");
     const newWork = await workService.create(validatedBody);
     return c.json(
@@ -58,24 +58,20 @@ export const workRoutes = new Hono()
       message: `record id: ${id} deleted successfully`,
     });
   })
-  .post(
-    "/:id/details",
-    zValidator("json", workDetailsCreateSchema),
-    async (c) => {
-      const id = Number(c.req.param("id"));
-      const validatedBody = c.req.valid("json");
+  .post("/:id/details", zValidator("json", workDescInsertSchema), async (c) => {
+    const id = Number(c.req.param("id"));
+    const validatedBody = c.req.valid("json");
 
-      const data = await workService.addDetail(id, validatedBody);
-      return c.json({
-        success: true,
-        message: `new detail created with ID: ${data.id}`,
-        data,
-      });
-    },
-  )
+    const data = await workService.addDetail(id, validatedBody);
+    return c.json({
+      success: true,
+      message: `new detail created with ID: ${data.id}`,
+      data,
+    });
+  })
   .patch(
     "/:id/details/:detailId",
-    zValidator("json", workDetailsUpdateSchema),
+    zValidator("json", workDescUpdateSchema),
     async (c) => {
       const id = Number(c.req.param("id"));
       const detailId = Number(c.req.param("detailId"));

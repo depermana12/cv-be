@@ -3,7 +3,7 @@ import { Hono } from "hono";
 import { zValidator } from "../utils/validator";
 import { SoftSkillService } from "../services/soft-skill.service";
 import {
-  softSkillCreateSchema,
+  softSkillInsertSchema,
   softSkillUpdateSchema,
 } from "../schemas/soft-skill.schema";
 
@@ -26,7 +26,7 @@ export const softSkillRoutes = new Hono()
       data: softSkill,
     });
   })
-  .post("/", zValidator("json", softSkillCreateSchema), async (c) => {
+  .post("/", zValidator("json", softSkillInsertSchema), async (c) => {
     const validatedBody = c.req.valid("json");
     const newSoftSkill = await softSkillService.create(validatedBody);
     return c.json(

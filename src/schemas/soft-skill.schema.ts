@@ -2,24 +2,24 @@ import { z } from "zod";
 
 const idSchema = z.number().int().positive();
 
-export const softSkillBaseSchema = z.object({
+export const softSkillSelectSchema = z.object({
   id: idSchema,
   personalId: idSchema,
   category: z.string().max(50, { message: "Must be 50 characters or fewer" }),
   description: z.string(),
 });
 
-export const softSkillCreateSchema = softSkillBaseSchema.omit({
+export const softSkillInsertSchema = softSkillSelectSchema.omit({
   id: true,
   personalId: true,
 });
 
-export const softSkillUpdateSchema = softSkillCreateSchema
+export const softSkillUpdateSchema = softSkillInsertSchema
   .extend({
     id: idSchema,
   })
   .partial();
 
-export type SoftSkill = z.infer<typeof softSkillBaseSchema>;
-export type SoftSkillCreate = z.infer<typeof softSkillCreateSchema>;
+export type SoftSkillSelect = z.infer<typeof softSkillSelectSchema>;
+export type SoftSkillInsert = z.infer<typeof softSkillInsertSchema>;
 export type SoftSkillUpdate = z.infer<typeof softSkillUpdateSchema>;

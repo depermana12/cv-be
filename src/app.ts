@@ -4,9 +4,9 @@ import { secureHeaders } from "hono/secure-headers";
 
 import router from "./routes";
 import { errorHandler } from "./middlewares/error-handler";
+import { notFoundHandler } from "./middlewares/not-found";
 import { pinoLogger } from "./middlewares/logger";
 import type { Bindings } from "./lib/types";
-import { notFoundHandler } from "./middlewares/not-found";
 
 const app = new Hono<Bindings>().basePath("/api/v1");
 

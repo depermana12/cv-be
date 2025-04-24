@@ -2,7 +2,7 @@ import { z } from "zod";
 
 const idSchema = z.number().int().positive();
 
-export const projectBaseSchema = z.object({
+export const projectSelectSchema = z.object({
   id: idSchema,
   personalId: idSchema,
   name: z.string().max(100, { message: "Must be 100 characters or fewer" }),
@@ -11,43 +11,43 @@ export const projectBaseSchema = z.object({
   url: z.string().url({ message: "Invalid URL format" }),
 });
 
-export const projectCreateSchema = projectBaseSchema.omit({
+export const projectInsertSchema = projectSelectSchema.omit({
   id: true,
   personalId: true,
 });
 
-export const projectUpdateSchema = projectCreateSchema
+export const projectUpdateSchema = projectInsertSchema
   .extend({
     id: idSchema,
   })
   .partial();
 
-export type Project = z.infer<typeof projectBaseSchema>;
-export type ProjectCreate = z.infer<typeof projectCreateSchema>;
+export type ProjectSelect = z.infer<typeof projectSelectSchema>;
+export type ProjectInsert = z.infer<typeof projectInsertSchema>;
 export type ProjectUpdate = z.infer<typeof projectUpdateSchema>;
 
-export const projectDetailBaseSchema = z.object({
+export const projectDescSelectSchema = z.object({
   id: idSchema,
   projectId: idSchema,
   description: z.string(),
 });
 
-export const projectDetailCreateSchema = projectDetailBaseSchema.omit({
+export const projectDescInsertSchema = projectDescSelectSchema.omit({
   id: true,
   projectId: true,
 });
 
-export const projectDetailUpdateSchema = projectDetailCreateSchema
+export const projectDescUpdateSchema = projectDescInsertSchema
   .extend({
     id: idSchema,
   })
   .partial();
 
-export type ProjectDetail = z.infer<typeof projectDetailBaseSchema>;
-export type ProjectDetailCreate = z.infer<typeof projectDetailCreateSchema>;
-export type ProjectDetailUpdate = z.infer<typeof projectDetailUpdateSchema>;
+export type ProjectDescSelect = z.infer<typeof projectDescSelectSchema>;
+export type ProjectDescInsert = z.infer<typeof projectDescInsertSchema>;
+export type ProjectDescUpdate = z.infer<typeof projectDescUpdateSchema>;
 
-export const projectTechnologyBaseSchema = z.object({
+export const projectTechSelectSchema = z.object({
   id: idSchema,
   projectId: idSchema,
   technology: z
@@ -56,21 +56,17 @@ export const projectTechnologyBaseSchema = z.object({
   category: z.string().max(100, { message: "Must be 100 characters or fewer" }),
 });
 
-export const projectTechnologyCreateSchema = projectTechnologyBaseSchema.omit({
+export const projectTechInsertSchema = projectTechSelectSchema.omit({
   id: true,
   projectId: true,
 });
 
-export const projectTechnologyUpdateSchema = projectTechnologyCreateSchema
+export const projectTechUpdateSchema = projectTechInsertSchema
   .extend({
     id: idSchema,
   })
   .partial();
 
-export type ProjectTechnology = z.infer<typeof projectTechnologyBaseSchema>;
-export type ProjectTechnologyCreate = z.infer<
-  typeof projectTechnologyCreateSchema
->;
-export type ProjectTechnologyUpdate = z.infer<
-  typeof projectTechnologyUpdateSchema
->;
+export type ProjectTechSelect = z.infer<typeof projectTechSelectSchema>;
+export type ProjectTechInsert = z.infer<typeof projectTechInsertSchema>;
+export type ProjectTechUpdate = z.infer<typeof projectTechUpdateSchema>;

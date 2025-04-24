@@ -4,12 +4,12 @@ import { zValidator } from "../utils/validator";
 import { ProjectService } from "../services/project.service";
 import { ProjectTechStackService } from "../services/project-tech.service";
 import {
-  projectCreateSchema,
+  projectInsertSchema,
   projectUpdateSchema,
-  projectDetailCreateSchema,
-  projectDetailUpdateSchema,
-  projectTechnologyCreateSchema,
-  projectTechnologyUpdateSchema,
+  projectDescInsertSchema,
+  projectDescUpdateSchema,
+  projectTechInsertSchema,
+  projectTechUpdateSchema,
 } from "../schemas/project.schema";
 
 const projectService = new ProjectService();
@@ -31,7 +31,7 @@ export const projectRoutes = new Hono()
       data: project,
     });
   })
-  .post("/", zValidator("json", projectCreateSchema), async (c) => {
+  .post("/", zValidator("json", projectInsertSchema), async (c) => {
     const validated = c.req.valid("json");
     const newProject = await projectService.create(validated);
     return c.json(
@@ -95,7 +95,7 @@ export const projectRoutes = new Hono()
   })
   .post(
     "/:id/details",
-    zValidator("json", projectDetailCreateSchema),
+    zValidator("json", projectDescInsertSchema),
     async (c) => {
       const id = Number(c.req.param("id"));
       const validatedBody = c.req.valid("json");
@@ -110,7 +110,7 @@ export const projectRoutes = new Hono()
   )
   .patch(
     "/:id/details/:detailId",
-    zValidator("json", projectDetailUpdateSchema),
+    zValidator("json", projectDescUpdateSchema),
     async (c) => {
       const id = Number(c.req.param("id"));
       const detailId = Number(c.req.param("detailId"));
@@ -147,7 +147,7 @@ export const projectRoutes = new Hono()
   })
   .post(
     "/:id/technologies",
-    zValidator("json", projectTechnologyCreateSchema),
+    zValidator("json", projectTechInsertSchema),
     async (c) => {
       const id = Number(c.req.param("id"));
       const validatedBody = c.req.valid("json");
@@ -161,7 +161,7 @@ export const projectRoutes = new Hono()
   )
   .patch(
     "/:id/technologies/:techId",
-    zValidator("json", projectTechnologyUpdateSchema),
+    zValidator("json", projectTechUpdateSchema),
     async (c) => {
       const id = Number(c.req.param("id"));
       const techId = Number(c.req.param("techId"));
