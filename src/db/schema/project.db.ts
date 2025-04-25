@@ -62,7 +62,7 @@ export const projectTechnologiesRelations = relations(
 
 export type ProjectSelect = typeof projects.$inferSelect;
 export type ProjectInsert = Omit<typeof projects.$inferInsert, "personalId">;
-export type ProjectDetailsInsert = Omit<
+export type ProjectDescInsert = Omit<
   typeof projectDescription.$inferInsert,
   "projectId"
 >;

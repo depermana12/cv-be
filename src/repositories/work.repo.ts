@@ -3,35 +3,38 @@ import { eq } from "drizzle-orm";
 import { BaseRepository } from "./base.repo";
 import { db } from "../db/index";
 import { works, workDescriptions } from "../db/schema/work.db";
-import type { WorkInsert, WorkDetailInsert } from "../db/schema/work.db";
+import type { WorkInsert, WorkDescInsert } from "../db/schema/work.db";
 
 export class WorkRepository extends BaseRepository<typeof works, WorkInsert> {
   constructor() {
     super(db, works);
   }
-  async getDetailById(workExperienceId: number) {
+  async getDescription(descId: number) {
     const rows = await this.db
       .select()
       .from(workDescriptions)
-      .where(eq(workDescriptions.id, workExperienceId));
-    return rows[0];
+      .where(eq(workDescriptions.workId, descId));
+    return rows[0] ?? null;
   }
-  async addDetails(workId: number, newProjectDetail: WorkDetailInsert) {
+  async addDescription(workId: number, description: WorkDescInsert) {
     const insertedDetail = await this.db
       .insert(workDescriptions)
-      .values({ ...newProjectDetail, workId })
+      .values({ ...description, workId })
       .$returningId();
     return this.getById(insertedDetail[0].id);
   }
 
-  async updateDetails(detailId: number, newDetail: Partial<WorkDetailInsert>) {
+  async updateDescription(
+    descId: number,
+    newDescription: Partial<WorkDescInsert>,
+  ) {
     await this.db
       .update(workDescriptions)
-      .set(newDetail)
-      .where(eq(workDescriptions.id, detailId));
-    return this.getDetailById(detailId);
+      .set(newDescription)
+      .where(eq(workDescriptions.id, descId));
+    return this.getDescription(descId);
   }
-  async deleteProjectWithDetails(id: number) {
+  async deleteProjectCascade(id: number) {
     await this.db
       .delete(workDescriptions)
       .where(eq(workDescriptions.workId, id));

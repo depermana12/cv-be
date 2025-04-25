@@ -5,7 +5,7 @@ import { db } from "../db/index";
 import { organizations, organizationDesc } from "../db/schema/organization.db";
 import type {
   OrganizationInsert,
-  OrganizationDetailInsert,
+  OrganizationDescInsert,
 } from "../db/schema/organization.db";
 
 export class OrganizationRepository extends BaseRepository<
@@ -15,35 +15,37 @@ export class OrganizationRepository extends BaseRepository<
   constructor() {
     super(db, organizations);
   }
-  async getDetailById(organizationExperienceId: number) {
+  async getDescription(descId: number) {
     const rows = await this.db
       .select()
       .from(organizationDesc)
-      .where(eq(organizationDesc.id, organizationExperienceId));
-    return rows[0];
+      .where(eq(organizationDesc.organizationId, descId));
+    return rows[0] ?? null;
   }
-  async addDetails(
+  async addDescription(
     organizationId: number,
-    newOrganizationDetail: OrganizationDetailInsert,
+    description: OrganizationDescInsert,
   ) {
     const insertedDetail = await this.db
       .insert(organizationDesc)
-      .values({ ...newOrganizationDetail, organizationId })
+      .values({ ...description, organizationId })
       .$returningId();
+
+    // TODO: should return description or whole org by id?
     return this.getById(insertedDetail[0].id);
   }
 
-  async updateDetails(
-    detailId: number,
-    newDetail: Partial<OrganizationDetailInsert>,
+  async updateDescription(
+    descId: number,
+    newDescription: Partial<OrganizationDescInsert>,
   ) {
     await this.db
       .update(organizationDesc)
-      .set(newDetail)
-      .where(eq(organizationDesc.id, detailId));
-    return this.getDetailById(detailId);
+      .set(newDescription)
+      .where(eq(organizationDesc.id, descId));
+    return this.getDescription(descId);
   }
-  async deleteProjectWithDetails(id: number) {
+  async deleteProjectCascade(id: number) {
     await this.db
       .delete(organizationDesc)
       .where(eq(organizationDesc.organizationId, id));

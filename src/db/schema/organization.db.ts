@@ -47,7 +47,7 @@ export type OrganizationInsert = Omit<
   typeof organizations.$inferInsert,
   "personalId"
 >;
-export type OrganizationDetailInsert = Omit<
+export type OrganizationDescInsert = Omit<
   typeof organizationDesc.$inferInsert,
   "organizationId"
 >;

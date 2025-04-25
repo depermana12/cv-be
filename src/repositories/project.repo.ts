@@ -2,11 +2,12 @@ import { eq } from "drizzle-orm";
 
 import { BaseRepository } from "./base.repo";
 import { db } from "../db/index";
-import { projects, projectDescription } from "../db/schema/project.db";
-import type {
-  ProjectInsert,
-  ProjectDetailsInsert,
+import {
+  projects,
+  projectDescription,
+  projectTechnologies,
 } from "../db/schema/project.db";
+import type { ProjectInsert, ProjectDescInsert } from "../db/schema/project.db";
 
 export class ProjectRepository extends BaseRepository<
   typeof projects,
@@ -23,35 +24,38 @@ export class ProjectRepository extends BaseRepository<
       },
     });
   }
-  async getDetail(projectId: number) {
+  async getDescription(descId: number) {
     const rows = await this.db
       .select()
       .from(projectDescription)
-      .where(eq(projectDescription.id, projectId));
-    return rows[0];
+      .where(eq(projectDescription.projectId, descId));
+    return rows[0] ?? null;
   }
-  async addDetail(projectId: number, newProjectDetail: ProjectDetailsInsert) {
+  async addDescription(projectId: number, description: ProjectDescInsert) {
     const [insertedDetail] = await this.db
       .insert(projectDescription)
-      .values({ ...newProjectDetail, projectId })
+      .values({ ...description, projectId })
       .$returningId();
     return this.getById(insertedDetail.id);
   }
 
-  async updateDetails(
-    detailId: number,
-    newDetail: Partial<ProjectDetailsInsert>,
+  async updateDescription(
+    descId: number,
+    newDescription: Partial<ProjectDescInsert>,
   ) {
     await this.db
       .update(projectDescription)
-      .set(newDetail)
-      .where(eq(projectDescription.id, detailId));
-    return this.getDetail(detailId);
+      .set(newDescription)
+      .where(eq(projectDescription.id, descId));
+    return this.getDescription(descId);
   }
-  async deleteProjectWithDetails(id: number) {
+  async deleteProjectCascade(id: number) {
     await this.db
       .delete(projectDescription)
       .where(eq(projectDescription.projectId, id));
+    await this.db
+      .delete(projectTechnologies)
+      .where(eq(projectTechnologies.projectId, id));
     await this.db.delete(projects).where(eq(projects.id, id));
   }
 }

@@ -2,7 +2,7 @@ import { BaseCrudService } from "./base.service";
 import { courseRepository } from "./instance.repo";
 
 import type {
-  CourseDetailsInsert,
+  CourseDescInsert,
   CourseInsert,
   CourseSelect,
 } from "../db/schema/course.db";
@@ -14,30 +14,27 @@ export class CourseService extends BaseCrudService<CourseSelect, CourseInsert> {
   }
 
   async getDetailById(detailId: number) {
-    const record = await this.repo.getDetail(detailId);
+    const record = await this.repo.getDescription(detailId);
     if (!record) {
       throw new NotFoundError(`cannot get: detail ${detailId} not found`);
     }
     return record;
   }
 
-  async addDetails(courseId: number, newCourseDetail: CourseDetailsInsert) {
-    const record = await this.repo.addDetail(courseId, newCourseDetail);
+  async addDetails(courseId: number, newCourseDetail: CourseDescInsert) {
+    const record = await this.repo.addDescription(courseId, newCourseDetail);
     if (!record) {
       throw new Error("failed to create the record.");
     }
     return record;
   }
 
-  async updateDetails(
-    detailId: number,
-    newDetail: Partial<CourseDetailsInsert>,
-  ) {
-    const exists = await this.repo.getDetail(detailId);
+  async updateDetails(detailId: number, newDetail: Partial<CourseDescInsert>) {
+    const exists = await this.repo.getDescription(detailId);
     if (!exists) {
       throw new NotFoundError(`cannot update: detail ${detailId} not found`);
     }
-    return this.repo.updateDetail(detailId, newDetail);
+    return this.repo.updateDescription(detailId, newDetail);
   }
 
   override async delete(id: number) {
@@ -45,6 +42,6 @@ export class CourseService extends BaseCrudService<CourseSelect, CourseInsert> {
     if (!exists) {
       throw new NotFoundError(`cannot delete: detail ${id} not found`);
     }
-    return this.repo.deleteCourseWithDetails(id);
+    return this.repo.deleteCourseCascade(id);
   }
 }

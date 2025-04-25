@@ -64,7 +64,7 @@ export const projectRoutes = new Hono()
   .get("/:id/details", async (c) => {
     const id = Number(c.req.param("id"));
 
-    const details = await projectService.getDetailById(id);
+    const details = await projectService.getDescription(id);
     return c.json({
       success: true,
       message: "success get project details",
@@ -75,7 +75,7 @@ export const projectRoutes = new Hono()
     const id = Number(c.req.param("id"));
     const detailId = Number(c.req.param("detailId"));
 
-    const detail = await projectService.getDetailById(detailId);
+    const detail = await projectService.getDescription(detailId);
 
     if (detail.id !== id) {
       return c.json(
@@ -100,7 +100,10 @@ export const projectRoutes = new Hono()
       const id = Number(c.req.param("id"));
       const validatedBody = c.req.valid("json");
 
-      const addedDetail = await projectService.addDetails(id, validatedBody);
+      const addedDetail = await projectService.addDescription(
+        id,
+        validatedBody,
+      );
       return c.json({
         success: true,
         message: `new detail created with ID: ${addedDetail.id}`,
@@ -116,7 +119,7 @@ export const projectRoutes = new Hono()
       const detailId = Number(c.req.param("detailId"));
       const validatedBody = c.req.valid("json");
 
-      const existingDetail = await projectService.getDetailById(id);
+      const existingDetail = await projectService.getDescription(id);
 
       if (existingDetail.projectId !== id) {
         return c.json(
@@ -125,7 +128,7 @@ export const projectRoutes = new Hono()
         );
       }
 
-      const updatedDetail = await projectService.updateDetails(
+      const updatedDetail = await projectService.updateDescription(
         detailId,
         validatedBody,
       );

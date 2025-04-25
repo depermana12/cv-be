@@ -42,7 +42,7 @@ export const courseDescriptionRelations = relations(
 
 export type CourseSelect = typeof courses.$inferSelect;
 export type CourseInsert = Omit<typeof courses.$inferInsert, "personalId">;
-export type CourseDetailsInsert = Omit<
+export type CourseDescInsert = Omit<
   typeof courseDescriptions.$inferInsert,
   "courseId"
 >;

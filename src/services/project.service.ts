@@ -1,7 +1,7 @@
 import { BaseCrudService } from "./base.service";
 import { projectRepository } from "./instance.repo";
 import type {
-  ProjectDetailsInsert,
+  ProjectDescInsert,
   ProjectInsert,
   ProjectSelect,
 } from "../db/schema/project.db";
@@ -15,38 +15,38 @@ export class ProjectService extends BaseCrudService<
     super(repo);
   }
 
-  async getDetailById(detailId: number) {
-    const record = await this.repo.getDetail(detailId);
+  async getDescription(descId: number) {
+    const record = await this.repo.getDescription(descId);
     if (!record) {
-      throw new NotFoundError(`cannot get: detail ${detailId} not found`);
+      throw new NotFoundError(`cannot get: detail ${descId} not found`);
     }
     return record;
   }
 
-  async addDetails(projectId: number, newProjectDetail: ProjectDetailsInsert) {
-    const record = await this.repo.addDetail(projectId, newProjectDetail);
+  async addDescription(projectId: number, description: ProjectDescInsert) {
+    const record = await this.repo.addDescription(projectId, description);
     if (!record) {
       throw new Error("failed to create the record.");
     }
     return record;
   }
 
-  async updateDetails(
-    detailId: number,
-    newDetail: Partial<ProjectDetailsInsert>,
+  async updateDescription(
+    descId: number,
+    newDescription: Partial<ProjectDescInsert>,
   ) {
-    const exists = await this.repo.getDetail(detailId);
+    const exists = await this.repo.getDescription(descId);
     if (!exists) {
-      throw new NotFoundError(`cannot update: detail ${detailId} not found`);
+      throw new NotFoundError(`cannot update: detail ${descId} not found`);
     }
-    return this.repo.updateDetails(detailId, newDetail);
+    return this.repo.updateDescription(descId, newDescription);
   }
 
   override async delete(id: number) {
-    const exists = await this.repo.getDetail(id);
+    const exists = await this.repo.getDescription(id);
     if (!exists) {
       throw new NotFoundError(`cannot delete: detail ${id} not found`);
     }
-    return this.repo.deleteProjectWithDetails(id);
+    return this.repo.deleteProjectCascade(id);
   }
 }
