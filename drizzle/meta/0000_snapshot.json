@@ -1,7 +1,7 @@
 {
   "version": "5",
   "dialect": "mysql",
-  "id": "fb1f19d4-9714-403f-b24e-4ba927bb7199",
+  "id": "303f17cf-4663-4fa0-b63b-0315f71c9821",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "course_descriptions": {
