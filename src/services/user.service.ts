@@ -10,8 +10,8 @@ import type { JWTPayload } from "hono/utils/jwt/types";
 const userRepository = new UserRepository();
 export class UserService {
   private readonly repo: UserRepository;
-  constructor(private readonly repository = userRepository) {
-    this.repo = repository;
+  constructor(repository?: UserRepository) {
+    this.repo = repository || new UserRepository();
   }
 
   async getById(id: number): Promise<Omit<UserSelect, "password">> {

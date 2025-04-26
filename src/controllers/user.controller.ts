@@ -80,5 +80,4 @@ export const createUserRoutes = (
   return app;
 };
 
-const userService = new UserService();
-export const userRoutes = createUserRoutes(userService, jwt());
+export const userRoutes = createUserRoutes(new UserService(), jwt());
