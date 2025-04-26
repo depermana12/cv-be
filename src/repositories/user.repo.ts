@@ -5,13 +5,16 @@ import {
   type UserUpdate,
 } from "../db/schema/user.db";
 
-import { db } from "../db";
-import { eq, getTableColumns } from "drizzle-orm";
+import { db as dbClient } from "../db/index";
+import { eq } from "drizzle-orm";
 import { DataBaseError } from "../errors/database.error";
+import type { MySql2Database } from "drizzle-orm/mysql2";
 
 export class UserRepository {
-  private readonly db = db;
-  constructor(db = {}, private readonly table = users) {
+  constructor(
+    private readonly db: MySql2Database = dbClient,
+    private readonly table = users,
+  ) {
     this.table = users;
   }
   async getAll(): Promise<UserSelect[]> {
