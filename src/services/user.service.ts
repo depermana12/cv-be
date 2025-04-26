@@ -9,11 +9,10 @@ import type { JWTPayload } from "hono/utils/jwt/types";
 import { db } from "../db/index";
 
 const userRepository = new UserRepository();
+//no more global instances, explicitly pass dependencies
+// No default! Must be provided
 export class UserService {
-  private readonly repo: UserRepository;
-  constructor(repository?: UserRepository) {
-    this.repo = repository || new UserRepository(db);
-  }
+  constructor(private readonly repo: UserRepository) {}
 
   async getById(id: number): Promise<Omit<UserSelect, "password">> {
     const user = await this.repo.getById(id);

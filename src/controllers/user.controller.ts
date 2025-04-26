@@ -10,6 +10,8 @@ import {
 } from "../db/schema/user.db";
 import { jwt } from "../middlewares/auth";
 import type { Bindings } from "../lib/types";
+import { UserRepository } from "../repositories/user.repo";
+import { db } from "../db/index";
 
 export const createUserRoutes = (
   userService: UserService,
@@ -80,4 +82,8 @@ export const createUserRoutes = (
   return app;
 };
 
-export const userRoutes = createUserRoutes(new UserService(), jwt());
+const userRepository = new UserRepository(db);
+export const userRoutes = createUserRoutes(
+  new UserService(userRepository),
+  jwt(),
+);
