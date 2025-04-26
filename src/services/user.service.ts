@@ -72,7 +72,6 @@ export class UserService {
       id: createdUser.id.toString(),
       email: createdUser.email,
     });
-
     return { ...createdUser, token };
   }
 

@@ -17,7 +17,9 @@ export const userRelations = relations(users, ({ many }) => ({
 }));
 
 export const userSelectSchema = createSelectSchema(users);
-export const userInsertSchema = createInsertSchema(users).omit({
+export const userInsertSchema = createInsertSchema(users, {
+  email: z.string().email({ message: "invalid email address" }),
+}).omit({
   id: true,
   createdAt: true,
 });

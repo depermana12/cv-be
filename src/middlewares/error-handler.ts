@@ -24,8 +24,9 @@ const errResponse = (
 };
 
 export const errorHandler = async (err: Error, c: Context<Bindings>) => {
-  const logger = c.get("logger");
-  logger.error(
+  const logger = c.var?.logger ?? console;
+
+  logger.error?.(
     {
       reqId: c.var.requestId,
       name: err.name,
@@ -43,7 +44,7 @@ export const errorHandler = async (err: Error, c: Context<Bindings>) => {
   } else if (err instanceof BadRequestError || err instanceof DataBaseError) {
     return errResponse(c, err.message, err.name, 400);
   } else if (err instanceof ValidationError) {
-    return errResponse(c, err.message, err.name, 401);
+    return errResponse(c, err.message, err.name, 400);
   } else {
     return errResponse(c, "Internal Server Error", "Oops that's  on us", 500);
   }

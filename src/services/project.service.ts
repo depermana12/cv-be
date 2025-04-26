@@ -23,6 +23,10 @@ export class ProjectService extends BaseCrudService<
     return record;
   }
 
+  async searchProject(term: string) {
+    return this.repo.searchProject(term);
+  }
+
   async addDescription(projectId: number, description: ProjectDescInsert) {
     const record = await this.repo.addDescription(projectId, description);
     if (!record) {
