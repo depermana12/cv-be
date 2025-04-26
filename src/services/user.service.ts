@@ -6,12 +6,13 @@ import { ValidationError } from "../errors/validation.error";
 import { NotFoundError } from "../errors/not-found.error";
 import type { UserPayload } from "../lib/types";
 import type { JWTPayload } from "hono/utils/jwt/types";
+import { db } from "../db/index";
 
 const userRepository = new UserRepository();
 export class UserService {
   private readonly repo: UserRepository;
   constructor(repository?: UserRepository) {
-    this.repo = repository || new UserRepository();
+    this.repo = repository || new UserRepository(db);
   }
 
   async getById(id: number): Promise<Omit<UserSelect, "password">> {
