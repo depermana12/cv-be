@@ -1,4 +1,5 @@
 import { jwt as jsonWebToken } from "hono/jwt";
+import "dotenv/config";
 
 import type { MiddlewareHandler } from "hono";
 import {
@@ -8,9 +9,17 @@ import {
 } from "hono/utils/jwt/types";
 import { HTTPException } from "hono/http-exception";
 
+export const config = {
+  jwtSecret: process.env.SECRET || "devmode",
+};
+
+if (!process.env.SECRET && process.env.NODE_ENV === "production") {
+  throw new Error("JWT_SECRET is required in production");
+}
+
 export const jwt = (): MiddlewareHandler => {
   const baseJwt = jsonWebToken({
-    secret: process.env.SECRET!,
+    secret: config.jwtSecret,
   });
 
   return async (c, next) => {
