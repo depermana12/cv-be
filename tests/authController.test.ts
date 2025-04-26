@@ -6,7 +6,6 @@ import {
   userRoutes,
 } from "../src/controllers/user.controller";
 import type { Context, Next } from "hono";
-import { password } from "bun";
 import { errorHandler } from "../src/middlewares/error-handler";
 
 const mockUserRepository = {

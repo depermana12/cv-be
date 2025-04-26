@@ -6,6 +6,8 @@ import { ValidationError } from "../errors/validation.error";
 import { NotFoundError } from "../errors/not-found.error";
 import type { UserPayload } from "../lib/types";
 import type { JWTPayload } from "hono/utils/jwt/types";
+import { config } from "../middlewares/auth";
+import { AlgorithmTypes } from "hono/utils/jwt/jwa";
 
 //no more global instances, explicitly pass dependencies
 // No default! Must be provided
@@ -31,7 +33,7 @@ export class UserService {
   }
 
   async createToken(payload: UserPayload) {
-    return sign(payload, process.env.SECRET!);
+    return sign(payload, config.jwtSecret);
   }
 
   async createResetPasswordToken(payload: UserPayload) {

@@ -11,6 +11,7 @@ import { HTTPException } from "hono/http-exception";
 
 export const config = {
   jwtSecret: process.env.SECRET || "devmode",
+  jwtAlgorithm: "HS256" as const,
 };
 
 if (!process.env.SECRET && process.env.NODE_ENV === "production") {
