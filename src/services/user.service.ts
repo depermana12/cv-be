@@ -8,7 +8,7 @@ import type { UserPayload } from "../lib/types";
 import type { JWTPayload } from "hono/utils/jwt/types";
 import { db } from "../db/index";
 
-const userRepository = new UserRepository();
+const userRepository = new UserRepository(db);
 //no more global instances, explicitly pass dependencies
 // No default! Must be provided
 export class UserService {

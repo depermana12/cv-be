@@ -12,7 +12,7 @@ import type { MySql2Database } from "drizzle-orm/mysql2";
 
 export class UserRepository {
   constructor(
-    private readonly db: MySql2Database = dbClient,
+    private readonly db: MySql2Database,
     private readonly table = users,
   ) {
     this.table = users;
