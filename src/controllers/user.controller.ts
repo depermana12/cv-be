@@ -82,7 +82,7 @@ export const createUserRoutes = (
   return app;
 };
 
-const userRepository = new UserRepository(await db);
+const userRepository = new UserRepository(db);
 export const userRoutes = createUserRoutes(
   new UserService(userRepository),
   jwt(),
