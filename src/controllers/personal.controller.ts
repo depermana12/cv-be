@@ -1,10 +1,10 @@
 import { zValidator } from "../utils/validator";
 import { PersonalService } from "../services/personal.service";
+import { createHonoBindings } from "../lib/create-hono";
 import {
   personalInsertSchema,
   personalUpdateSchema,
-} from "../db/schema/personal.db";
-import { createHonoBindings } from "../lib/create-hono";
+} from "../schemas/personal.schema";
 
 const personalService = new PersonalService();
 export const personalRoutes = createHonoBindings()
@@ -15,18 +15,6 @@ export const personalRoutes = createHonoBindings()
       {
         success: true,
         message: `retrieved ${intro.length} records successfully`,
-        data: intro,
-      },
-      200,
-    );
-  })
-  .get("/:id", async (c) => {
-    const id = Number(c.req.param("id"));
-    const intro = await personalService.getById(id);
-    return c.json(
-      {
-        success: true,
-        message: `record ID: ${id} retrieved successfully`,
         data: intro,
       },
       200,
@@ -46,6 +34,18 @@ export const personalRoutes = createHonoBindings()
         data: newPersonal,
       },
       201,
+    );
+  })
+  .get("/:id", async (c) => {
+    const id = Number(c.req.param("id"));
+    const intro = await personalService.getById(id);
+    return c.json(
+      {
+        success: true,
+        message: `record ID: ${id} retrieved successfully`,
+        data: intro,
+      },
+      200,
     );
   })
   .patch("/:id", zValidator("json", personalUpdateSchema), async (c) => {
