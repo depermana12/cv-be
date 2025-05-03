@@ -12,12 +12,14 @@ const errResponse = (
   message: string,
   error: string,
   status: ContentfulStatusCode | undefined,
+  cause?: unknown,
 ) => {
   return c.json(
     {
       success: false,
       message,
       error,
+      cause,
     },
     status,
   );
@@ -38,7 +40,7 @@ export const errorHandler = async (err: Error, c: Context<Bindings>) => {
     "Error handled",
   );
   if (err instanceof HTTPException) {
-    return errResponse(c, err.message, err.name, err.status);
+    return errResponse(c, err.message, err.name, err.status, err.cause);
   } else if (err instanceof NotFoundError) {
     return errResponse(c, err.message, err.name, 404);
   } else if (err instanceof BadRequestError || err instanceof DataBaseError) {
