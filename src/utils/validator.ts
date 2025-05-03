@@ -17,7 +17,7 @@ export const zValidator = <
       const formattedError = zFormatter(result.error);
       throw new HTTPException(400, {
         cause: formattedError,
-        message: "Validation failed",
+        message: result.error.name || "Validation failed",
       });
     }
   });
