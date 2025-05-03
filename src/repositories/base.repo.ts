@@ -49,12 +49,11 @@ export class BaseRepository<
       .insert(this.table)
       .values(data)
       .$returningId();
-
     if (!inserted[0]?.id) {
       throw new DataBaseError("Insert did not return an ID.");
     }
 
-    return { id: inserted.id };
+    return { id: inserted[0].id };
   }
 
   async update(id: number, data: TUpdate): Promise<TSelect> {
