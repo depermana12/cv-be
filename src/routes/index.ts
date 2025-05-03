@@ -14,11 +14,13 @@ import { cvRoutes } from "../controllers/cv.controller";
 import { socialRoutes } from "../controllers/social.controller";
 import { locationRoutes } from "../controllers/location.controller";
 import { jwt } from "../middlewares/auth";
+import { uploadRoutes } from "../controllers/upload.controller";
 
 const router = new Hono();
 
 router.route("/auth", userRoutes);
 router.use("*", jwt());
+router.route("/cv/uploads", uploadRoutes);
 router.route("/cv/personals", personalRoutes);
 router.route("/cv/locations", locationRoutes);
 router.route("/cv/socials", socialRoutes);
