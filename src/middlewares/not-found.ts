@@ -2,7 +2,8 @@ import type { Context } from "hono";
 import type { Bindings } from "../lib/types";
 
 export const notFoundHandler = (c: Context<Bindings>) => {
-  c.var.logger.debug(
+  const logger = c.var?.logger ?? console;
+  logger.debug(
     {
       reqId: c.var.requestId,
       path: c.req.path,
