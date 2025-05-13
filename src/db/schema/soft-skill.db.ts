@@ -18,9 +18,3 @@ export const softSkillsRelations = relations(softSkills, ({ one }) => ({
     references: [personal.id],
   }),
 }));
-
-export type SoftSkillSelect = typeof softSkills.$inferSelect;
-export type SoftSkillInsert = Omit<
-  typeof softSkills.$inferInsert,
-  "personalId"
->;

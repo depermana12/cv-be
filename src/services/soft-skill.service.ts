@@ -3,7 +3,7 @@ import { softSkillRepository } from "./instance.repo";
 import {
   type SoftSkillInsert,
   type SoftSkillSelect,
-} from "../db/schema/soft-skill.db";
+} from "../db/types/soft-skill.type";
 
 export class SoftSkillService extends BaseCrudService<
   SoftSkillSelect,
