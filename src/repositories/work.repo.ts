@@ -7,7 +7,7 @@ import type {
   WorkInsert,
   WorkDescInsert,
   WorkSelect,
-} from "../db/schema/work.db";
+} from "../db/types/work.type";
 
 export class WorkRepository extends BaseRepository<
   typeof works,
@@ -18,7 +18,7 @@ export class WorkRepository extends BaseRepository<
     super(db, works);
   }
 
-  // probably not working since i setup relations not in spreaded
+  // probably not working since i setup schema relations not in spreaded
   async getByIdWithDescriptions(id: number) {
     return await this.db.query.works.findFirst({
       where: eq(works.id, id),

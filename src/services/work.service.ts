@@ -4,7 +4,7 @@ import type {
   WorkDescInsert,
   WorkInsert,
   WorkSelect,
-} from "../db/schema/work.db";
+} from "../db/types/work.type";
 import { NotFoundError } from "../errors/not-found.error";
 import type { WorkInsertWithDescriptions } from "../schemas/work.schema";
 
