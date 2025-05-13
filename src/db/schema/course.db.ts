@@ -39,10 +39,3 @@ export const courseDescriptionRelations = relations(
     }),
   }),
 );
-
-export type CourseSelect = typeof courses.$inferSelect;
-export type CourseInsert = Omit<typeof courses.$inferInsert, "personalId">;
-export type CourseDescInsert = Omit<
-  typeof courseDescriptions.$inferInsert,
-  "courseId"
->;

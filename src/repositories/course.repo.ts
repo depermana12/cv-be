@@ -2,7 +2,7 @@ import { eq } from "drizzle-orm";
 import { db } from "../db/index";
 import { BaseRepository } from "./base.repo";
 import { courses, courseDescriptions } from "../db/schema/course.db";
-import type { CourseInsert, CourseDescInsert } from "../db/schema/course.db";
+import type { CourseInsert, CourseDescInsert } from "../db/types/course.type";
 
 export class CourseRepository extends BaseRepository<
   typeof courses,

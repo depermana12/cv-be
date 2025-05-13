@@ -5,7 +5,7 @@ import type {
   CourseDescInsert,
   CourseInsert,
   CourseSelect,
-} from "../db/schema/course.db";
+} from "../db/types/course.type";
 import { NotFoundError } from "../errors/not-found.error";
 
 export class CourseService extends BaseCrudService<CourseSelect, CourseInsert> {
