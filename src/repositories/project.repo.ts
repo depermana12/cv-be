@@ -7,7 +7,10 @@ import {
   projectDescription,
   projectTechnologies,
 } from "../db/schema/project.db";
-import type { ProjectInsert, ProjectDescInsert } from "../db/schema/project.db";
+import type {
+  ProjectInsert,
+  ProjectDescInsert,
+} from "../db/types/project.type";
 
 export class ProjectRepository extends BaseRepository<
   typeof projects,

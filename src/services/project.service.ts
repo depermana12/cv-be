@@ -4,7 +4,7 @@ import type {
   ProjectDescInsert,
   ProjectInsert,
   ProjectSelect,
-} from "../db/schema/project.db";
+} from "../db/types/project.type";
 import { NotFoundError } from "../errors/not-found.error";
 
 export class ProjectService extends BaseCrudService<
