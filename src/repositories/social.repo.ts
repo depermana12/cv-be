@@ -1,7 +1,8 @@
 import { eq } from "drizzle-orm";
 import { db } from "../db/index";
 import { BaseRepository } from "./base.repo";
-import { socials, type SocialInsert } from "../db/schema/social.db";
+import { socials } from "../db/schema/social.db";
+import type { SocialInsert } from "../db/types/social.type";
 
 export class Social extends BaseRepository<typeof socials, SocialInsert> {
   constructor() {
