@@ -7,6 +7,7 @@ import {
   workUpdateSchema,
   workDescInsertSchema,
   workDescUpdateSchema,
+  workInsertWithDescriptionsSchema,
 } from "../schemas/work.schema";
 
 const workService = new WorkService();
@@ -28,18 +29,22 @@ export const workRoutes = new Hono()
       data: work,
     });
   })
-  .post("/", zValidator("json", workInsertSchema), async (c) => {
-    const validatedBody = c.req.valid("json");
-    const newWork = await workService.create(validatedBody);
-    return c.json(
-      {
-        success: true,
-        message: `new record created with ID: ${newWork.id}`,
-        data: newWork,
-      },
-      201,
-    );
-  })
+  .post(
+    "/",
+    zValidator("json", workInsertWithDescriptionsSchema),
+    async (c) => {
+      const validatedBody = c.req.valid("json");
+      const newWork = await workService.createWithDescriptions(validatedBody);
+      return c.json(
+        {
+          success: true,
+          message: `new record created with ID: ${newWork?.id}`,
+          data: newWork,
+        },
+        201,
+      );
+    },
+  )
   .patch("/:id", zValidator("json", workUpdateSchema), async (c) => {
     const id = Number(c.req.param("id"));
     const validatedBody = c.req.valid("json");
