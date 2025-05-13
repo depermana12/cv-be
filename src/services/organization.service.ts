@@ -5,7 +5,7 @@ import type {
   OrganizationDescInsert,
   OrganizationInsert,
   OrganizationSelect,
-} from "../db/schema/organization.db";
+} from "../db/types/organization.type";
 import { NotFoundError } from "../errors/not-found.error";
 
 export class OrganizationService extends BaseCrudService<

@@ -6,7 +6,7 @@ import { organizations, organizationDesc } from "../db/schema/organization.db";
 import type {
   OrganizationInsert,
   OrganizationDescInsert,
-} from "../db/schema/organization.db";
+} from "../db/types/organization.type";
 
 export class OrganizationRepository extends BaseRepository<
   typeof organizations,
