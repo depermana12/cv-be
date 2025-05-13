@@ -45,6 +45,14 @@ export const workDescUpdateSchema = workDescInsertSchema
   })
   .partial();
 
+export const workInsertWithDescriptionsSchema = workInsertSchema.extend({
+  descriptions: z.array(workDescInsertSchema).optional(),
+});
+
 export type WorkDescSelect = z.infer<typeof workDescSelectSchema>;
 export type WorkDescInsert = z.infer<typeof workDescInsertSchema>;
 export type WorkDescUpdate = z.infer<typeof workDescUpdateSchema>;
+
+export type WorkInsertWithDescriptions = z.infer<
+  typeof workInsertWithDescriptionsSchema
+>;

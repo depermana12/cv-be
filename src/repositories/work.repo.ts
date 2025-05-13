@@ -3,17 +3,35 @@ import { eq } from "drizzle-orm";
 import { BaseRepository } from "./base.repo";
 import { db } from "../db/index";
 import { works, workDescriptions } from "../db/schema/work.db";
-import type { WorkInsert, WorkDescInsert } from "../db/schema/work.db";
+import type {
+  WorkInsert,
+  WorkDescInsert,
+  WorkSelect,
+} from "../db/schema/work.db";
 
-export class WorkRepository extends BaseRepository<typeof works, WorkInsert> {
+export class WorkRepository extends BaseRepository<
+  typeof works,
+  WorkInsert,
+  WorkSelect
+> {
   constructor() {
     super(db, works);
+  }
+
+  // probably not working since i setup relations not in spreaded
+  async getByIdWithDescriptions(id: number) {
+    return await this.db.query.works.findFirst({
+      where: eq(works.id, id),
+      with: {
+        descriptions: true,
+      },
+    });
   }
   async getDescription(descId: number) {
     const rows = await this.db
       .select()
       .from(workDescriptions)
-      .where(eq(workDescriptions.workId, descId));
+      .where(eq(workDescriptions.id, descId));
     return rows[0] ?? null;
   }
   async addDescription(workId: number, description: WorkDescInsert) {

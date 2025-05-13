@@ -6,10 +6,30 @@ import type {
   WorkSelect,
 } from "../db/schema/work.db";
 import { NotFoundError } from "../errors/not-found.error";
+import type { WorkInsertWithDescriptions } from "../schemas/work.schema";
 
 export class WorkService extends BaseCrudService<WorkSelect, WorkInsert> {
   constructor(private readonly repo = workRepository) {
     super(repo);
+  }
+  // nested create work with descriptions
+  // gonna have problem with the test
+  async createWithDescriptions(data: WorkInsertWithDescriptions) {
+    const { descriptions = [], ...workData } = data;
+
+    // create the work record
+    const workRecord = await this.repo.create(workData);
+
+    if (descriptions.length > 0) {
+      // create the descriptions
+      await Promise.all(
+        descriptions.map((desc) =>
+          this.repo.addDescription(workRecord.id, desc),
+        ),
+      );
+    }
+
+    return this.repo.getByIdWithDescriptions(workRecord.id);
   }
 
   async getDetailById(detailId: number) {
