@@ -1,6 +1,6 @@
 import { BaseCrudService } from "./base.service";
 import { skillRepository } from "./instance.repo";
-import { type SkillInsert, type SkillSelect } from "../db/schema/skill.db";
+import type { SkillInsert, SkillSelect } from "../db/types/skill.type";
 
 export class SkillService extends BaseCrudService<SkillSelect, SkillInsert> {
   constructor(private readonly repo = skillRepository) {
