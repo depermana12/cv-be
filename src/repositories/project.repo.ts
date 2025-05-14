@@ -1,7 +1,5 @@
 import { eq } from "drizzle-orm";
-
 import { BaseRepository } from "./base.repo";
-import { db } from "../db/index";
 import {
   projects,
   projectDescription,
@@ -17,7 +15,7 @@ export class ProjectRepository extends BaseRepository<
   ProjectInsert
 > {
   constructor() {
-    super(db, projects);
+    super(projects);
   }
   async searchProject(term: string) {
     return this.findMany({

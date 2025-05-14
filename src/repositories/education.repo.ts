@@ -1,5 +1,4 @@
 import { eq } from "drizzle-orm";
-import { db } from "../db/index";
 import { BaseRepository } from "./base.repo";
 import { educations } from "../db/schema/education.db";
 import type {
@@ -12,7 +11,7 @@ export class EducationRepository extends BaseRepository<
   EducationInsert
 > {
   constructor() {
-    super(db, educations);
+    super(educations);
   }
   async getAllByPersonalId(personalId: number): Promise<EducationSelect[]> {
     return this.db

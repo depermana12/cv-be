@@ -28,8 +28,8 @@ export class BaseRepository<
 > implements BaseCrudRepository<TSelect, TInsert, TUpdate>
 {
   constructor(
-    protected readonly db: MySql2Database<typeof schema> = dbInstance,
     protected readonly table: TTable,
+    protected readonly db: MySql2Database<typeof schema> = dbInstance,
   ) {}
 
   async findMany(options: QueryOptions = {}): Promise<TSelect[]> {

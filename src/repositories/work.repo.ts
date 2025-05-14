@@ -1,7 +1,5 @@
 import { eq } from "drizzle-orm";
-
 import { BaseRepository } from "./base.repo";
-import { db } from "../db/index";
 import { works, workDescriptions } from "../db/schema/work.db";
 import type {
   WorkInsert,
@@ -15,7 +13,7 @@ export class WorkRepository extends BaseRepository<
   WorkSelect
 > {
   constructor() {
-    super(db, works);
+    super(works);
   }
 
   // probably not working since i setup schema relations not in spreaded

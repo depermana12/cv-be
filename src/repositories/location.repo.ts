@@ -1,12 +1,11 @@
 import { eq } from "drizzle-orm";
-import { db } from "../db/index";
 import { BaseRepository } from "./base.repo";
 import { location } from "../db/schema/location.db";
 import type { LocationInsert } from "../db/types/location.type";
 
 export class Location extends BaseRepository<typeof location, LocationInsert> {
   constructor() {
-    super(db, location);
+    super(location);
   }
   async getByPersonalId(personalId: number) {
     return this.db

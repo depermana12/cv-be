@@ -1,5 +1,4 @@
 import { BaseRepository } from "./base.repo";
-import { db } from "../db/index";
 import { skills } from "../db/schema/skill.db";
 import type { SkillInsert } from "../db/types/skill.type";
 
@@ -8,7 +7,7 @@ export class SkillRepository extends BaseRepository<
   SkillInsert
 > {
   constructor() {
-    super(db, skills);
+    super(skills);
   }
   async getCategories() {
     const rows = await this.db

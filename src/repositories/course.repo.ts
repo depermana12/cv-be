@@ -1,5 +1,4 @@
 import { eq } from "drizzle-orm";
-import { db } from "../db/index";
 import { BaseRepository } from "./base.repo";
 import { courses, courseDescriptions } from "../db/schema/course.db";
 import type { CourseInsert, CourseDescInsert } from "../db/types/course.type";
@@ -9,7 +8,7 @@ export class CourseRepository extends BaseRepository<
   CourseInsert
 > {
   constructor() {
-    super(db, courses);
+    super(courses);
   }
   async getDescription(descId: number) {
     const rows = await this.db

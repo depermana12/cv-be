@@ -1,7 +1,5 @@
 import { eq } from "drizzle-orm";
-
 import { BaseRepository } from "./base.repo";
-import { db } from "../db/index";
 import { organizations, organizationDesc } from "../db/schema/organization.db";
 import type {
   OrganizationInsert,
@@ -13,7 +11,7 @@ export class OrganizationRepository extends BaseRepository<
   OrganizationInsert
 > {
   constructor() {
-    super(db, organizations);
+    super(organizations);
   }
   async getDescription(descId: number) {
     const rows = await this.db
