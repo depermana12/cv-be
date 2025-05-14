@@ -4,10 +4,11 @@ import { users } from "../db/schema/user.db";
 import { eq } from "drizzle-orm";
 import { DataBaseError } from "../errors/database.error";
 import type { MySql2Database } from "drizzle-orm/mysql2";
+import { db as dbInstance, type schema } from "../db";
 
 export class UserRepository {
   constructor(
-    private readonly db: MySql2Database,
+    private readonly db: MySql2Database<typeof schema> = dbInstance,
     private readonly table = users,
   ) {
     this.table = users;
