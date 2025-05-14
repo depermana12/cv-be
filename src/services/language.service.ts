@@ -1,6 +1,6 @@
 import { BaseCrudService } from "./base.service";
 import { languageRepository } from "./instance.repo";
-import type { LanguageInsert, LanguageSelect } from "../db/schema/language.db";
+import type { LanguageInsert, LanguageSelect } from "../db/types/language.type";
 
 export class LanguageService extends BaseCrudService<
   LanguageSelect,

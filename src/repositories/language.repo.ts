@@ -2,7 +2,7 @@ import { eq } from "drizzle-orm";
 import { db } from "../db/index";
 import { BaseRepository } from "./base.repo";
 import { languages } from "../db/schema/language.db";
-import type { LanguageInsert, LanguageSelect } from "../db/schema/language.db";
+import type { LanguageInsert, LanguageSelect } from "../db/types/language.type";
 
 export class LanguageRepository extends BaseRepository<
   typeof languages,
