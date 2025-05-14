@@ -4,7 +4,7 @@ import { LocationService } from "../services/location.service";
 import {
   locationInsertSchema,
   locationUpdateSchema,
-} from "../db/schema/location.db";
+} from "../schemas/location.schema";
 
 const locationService = new LocationService();
 export const locationRoutes = new Hono()
