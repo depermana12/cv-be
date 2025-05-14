@@ -1,13 +1,11 @@
 import { decode, sign, verify } from "hono/jwt";
 
-import type { UserInsert, UserSelect, UserUpdate } from "../db/schema/user.db";
+import type { UserInsert, UserSelect, UserUpdate } from "../db/types/user.type";
 import { UserRepository } from "../repositories/user.repo";
 import { ValidationError } from "../errors/validation.error";
 import { NotFoundError } from "../errors/not-found.error";
 import type { UserPayload } from "../lib/types";
-import type { JWTPayload } from "hono/utils/jwt/types";
 import { config } from "../middlewares/auth";
-import { AlgorithmTypes } from "hono/utils/jwt/jwa";
 
 //no more global instances, explicitly pass dependencies
 // No default! Must be provided

@@ -1,11 +1,6 @@
-import {
-  users,
-  type UserInsert,
-  type UserSelect,
-  type UserUpdate,
-} from "../db/schema/user.db";
+import type { UserInsert, UserSelect, UserUpdate } from "../db/types/user.type";
+import { users } from "../db/schema/user.db";
 
-import { db as dbClient } from "../db/index";
 import { eq } from "drizzle-orm";
 import { DataBaseError } from "../errors/database.error";
 import type { MySql2Database } from "drizzle-orm/mysql2";

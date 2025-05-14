@@ -6,8 +6,7 @@ import {
   userInputResetPassword,
   userInsertSchema,
   userLoginSchema,
-  userSelectSchema,
-} from "../db/schema/user.db";
+} from "../schemas/user.schema";
 import { jwt } from "../middlewares/auth";
 import type { Bindings } from "../lib/types";
 import { UserRepository } from "../repositories/user.repo";
