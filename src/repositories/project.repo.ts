@@ -27,6 +27,14 @@ export class ProjectRepository extends BaseRepository<
       },
     });
   }
+  async getByIdWithDescription(id: number) {
+    return await this.db.query.projects.findFirst({
+      where: eq(projects.id, id),
+      with: {
+        descriptions: true,
+      },
+    });
+  }
   async getDescription(descId: number) {
     const rows = await this.db
       .select()
