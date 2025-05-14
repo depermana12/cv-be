@@ -19,6 +19,7 @@ export class WorkRepository extends BaseRepository<
   }
 
   // probably not working since i setup schema relations not in spreaded
+  // i already setup spreaded schema drizzle queries in 14/05/25
   async getByIdWithDescriptions(id: number) {
     return await this.db.query.works.findFirst({
       where: eq(works.id, id),
