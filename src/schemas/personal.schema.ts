@@ -22,7 +22,6 @@ export const personalSelectSchema = z.object({
 
 export const personalInsertSchema = personalSelectSchema.omit({
   id: true,
-  userId: true,
   createdAt: true,
 });
 

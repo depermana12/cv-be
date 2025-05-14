@@ -1,4 +1,3 @@
-import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import {
   mysqlTable,
   text,
@@ -6,7 +5,6 @@ import {
   int,
   timestamp,
 } from "drizzle-orm/mysql-core";
-import { z } from "zod";
 
 import { users } from "./user.db";
 import { relations } from "drizzle-orm";
@@ -46,11 +44,3 @@ export const personalRelations = relations(personal, ({ one, many }) => ({
   softSkills: many(softSkills),
   courses: many(courses),
 }));
-
-export const personalSelectSchema = createSelectSchema(personal);
-export const personalInsertSchema = createInsertSchema(personal);
-export const personalUpdateSchema = personalInsertSchema.omit({ id: true });
-
-export type PersonalSelect = z.infer<typeof personalSelectSchema>;
-export type PersonalInsert = z.infer<typeof personalInsertSchema>;
-export type PersonalUpdate = z.infer<typeof personalUpdateSchema>;

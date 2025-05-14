@@ -1,6 +1,6 @@
 import { BaseCrudService } from "./base.service";
 import { introRepository } from "./instance.repo";
-import type { PersonalSelect, PersonalInsert } from "../db/schema/personal.db";
+import type { PersonalSelect, PersonalInsert } from "../db/types/personal.type";
 
 export class PersonalService extends BaseCrudService<
   PersonalSelect,
