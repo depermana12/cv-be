@@ -2,12 +2,15 @@ import "dotenv/config";
 import { drizzle } from "drizzle-orm/mysql2";
 import mysql from "mysql2/promise";
 
+// pool make the db hang
 export async function initializeDb() {
   const pool = mysql.createPool({
     uri: process.env.DATABASE_URL,
     connectionLimit: 10,
   });
 }
+
+const client = await mysql.createConnection({ uri: process.env.DATABASE_URL });
 
 import * as user from "./schema/user.db";
 import * as personal from "./schema/personal.db";
@@ -22,7 +25,7 @@ import * as skill from "./schema/skill.db";
 import * as softSkill from "./schema/soft-skill.db";
 import * as course from "./schema/course.db";
 
-const schema = {
+export const schema = {
   ...user,
   ...personal,
   ...language,
@@ -37,7 +40,7 @@ const schema = {
   ...course,
 };
 
-export const db = drizzle(process.env.DATABASE_URL!, {
+export const db = drizzle(client, {
   schema,
   mode: "default",
 });
