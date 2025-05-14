@@ -29,10 +29,3 @@ export const educationRelations = relations(educations, ({ one }) => ({
     references: [personal.id],
   }),
 }));
-
-export type EducationSelect = typeof educations.$inferSelect;
-export type EducationInsert = Omit<
-  typeof educations.$inferInsert,
-  "personalId"
->;
-export type EducationUpdate = Omit<EducationInsert, "personalId">;

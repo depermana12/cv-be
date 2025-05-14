@@ -5,7 +5,7 @@ import { educations } from "../db/schema/education.db";
 import type {
   EducationSelect,
   EducationInsert,
-} from "../db/schema/education.db";
+} from "../db/types/education.type";
 
 export class EducationRepository extends BaseRepository<
   typeof educations,

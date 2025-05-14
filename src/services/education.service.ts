@@ -3,7 +3,7 @@ import { educationRepository } from "./instance.repo";
 import {
   type EducationInsert,
   type EducationSelect,
-} from "../db/schema/education.db";
+} from "../db/types/education.type";
 
 export class EducationService extends BaseCrudService<
   EducationSelect,
