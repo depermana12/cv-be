@@ -1,11 +1,5 @@
 import { int, mysqlTable, varchar } from "drizzle-orm/mysql-core";
 import { personal } from "./personal.db";
-import {
-  createInsertSchema,
-  createSelectSchema,
-  createUpdateSchema,
-} from "drizzle-zod";
-import type { z } from "zod";
 import { relations } from "drizzle-orm";
 
 export const location = mysqlTable("location", {
@@ -26,14 +20,3 @@ export const locationRelations = relations(location, ({ one }) => ({
     references: [personal.id],
   }),
 }));
-
-export const locationSelectSchema = createSelectSchema(location);
-export const locationInsertSchema = createInsertSchema(location);
-export const locationUpdateSchema = createUpdateSchema(location).omit({
-  personalId: true,
-  id: true,
-});
-
-export type LocationSelect = z.infer<typeof locationSelectSchema>;
-export type LocationInsert = z.infer<typeof locationInsertSchema>;
-export type LocationUpdate = z.infer<typeof locationUpdateSchema>;
