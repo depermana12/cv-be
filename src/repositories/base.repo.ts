@@ -3,6 +3,8 @@ import { MySqlTable, type TableConfig } from "drizzle-orm/mysql-core";
 import { DataBaseError } from "../errors/database.error";
 import { QueryBuilder } from "../lib/query-builder";
 import type { QueryOptions } from "../lib/query-builder";
+import type { MySql2Database } from "drizzle-orm/mysql2";
+import { db as dbInstance, type schema } from "../db";
 
 export interface BaseCrudRepository<
   TSelect,
@@ -25,35 +27,44 @@ export class BaseRepository<
   TUpdate = Partial<TInsert>,
 > implements BaseCrudRepository<TSelect, TInsert, TUpdate>
 {
-  constructor(protected readonly db: any, protected readonly table: TTable) {}
+  constructor(
+    protected readonly db: MySql2Database<typeof schema> = dbInstance,
+    protected readonly table: TTable,
+  ) {}
 
   async findMany(options: QueryOptions = {}): Promise<TSelect[]> {
-    const qb = new QueryBuilder(this.table, this.db.select().from(this.table));
+    const qb = new QueryBuilder(
+      this.table,
+      this.db.select().from(this.table) as any,
+    );
     const query = qb.build(options).getQuery();
     return (await query.execute()) as TSelect[];
   }
   async getAll(): Promise<TSelect[]> {
-    return await this.db.select().from(this.table);
+    return (await this.db.select().from(this.table)) as TSelect[];
   }
   async getById(id: number): Promise<TSelect | null> {
-    const rows = await this.db
+    const rows = (await this.db
       .select()
       .from(this.table)
       .where(eq((this.table as any).id, id))
-      .limit(1);
+      .limit(1)) as TSelect[];
     return rows[0] ?? null;
   }
 
   async create(data: TInsert): Promise<{ id: number }> {
     const inserted = await this.db
       .insert(this.table)
-      .values(data)
+      .values(data as any)
       .$returningId();
-    if (!inserted[0]?.id) {
+
+    const id = (inserted as Array<{ id: number }>)[0]?.id;
+
+    if (!id) {
       throw new DataBaseError("Insert did not return an ID.");
     }
 
-    return { id: inserted[0].id };
+    return { id };
   }
 
   async update(id: number, data: TUpdate): Promise<TSelect> {
