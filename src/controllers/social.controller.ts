@@ -1,7 +1,10 @@
 import { Hono } from "hono";
 import { zValidator } from "../utils/validator";
 import { SocialService } from "../services/social.service";
-import { socialInsertSchema, socialUpdateSchema } from "../db/schema/social.db";
+import {
+  socialInsertSchema,
+  socialUpdateSchema,
+} from "../schemas/social.schema";
 
 const socialService = new SocialService();
 export const socialRoutes = new Hono()
