@@ -2,10 +2,12 @@ import { eq } from "drizzle-orm";
 import { BaseRepository } from "./base.repo";
 import { location } from "../db/schema/location.db";
 import type { LocationInsert } from "../db/types/location.type";
+import { getDb } from "../db";
 
+const db = await getDb();
 export class Location extends BaseRepository<typeof location, LocationInsert> {
   constructor() {
-    super(location);
+    super(location, db);
   }
   async getByPersonalId(personalId: number) {
     return this.db

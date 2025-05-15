@@ -4,9 +4,7 @@ import { DataBaseError } from "../errors/database.error";
 import { QueryBuilder } from "../lib/query-builder";
 import type { QueryOptions } from "../lib/query-builder";
 import type { MySql2Database } from "drizzle-orm/mysql2";
-import { getDb, type schema } from "../db";
-
-const dbInstance = await getDb();
+import { type schema } from "../db";
 export interface BaseCrudRepository<
   TSelect,
   TInsert,
@@ -30,7 +28,7 @@ export class BaseRepository<
 {
   constructor(
     protected readonly table: TTable,
-    protected readonly db: MySql2Database<typeof schema> = dbInstance,
+    protected readonly db: MySql2Database<typeof schema>,
   ) {}
 
   async findMany(options: QueryOptions = {}): Promise<TSelect[]> {

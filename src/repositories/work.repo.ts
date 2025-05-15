@@ -6,14 +6,16 @@ import type {
   WorkDescInsert,
   WorkSelect,
 } from "../db/types/work.type";
+import { getDb } from "../db";
 
+const db = await getDb();
 export class WorkRepository extends BaseRepository<
   typeof works,
   WorkInsert,
   WorkSelect
 > {
   constructor() {
-    super(works);
+    super(works, db);
   }
 
   // probably not working since i setup schema relations not in spreaded

@@ -9,13 +9,15 @@ import type {
   ProjectInsert,
   ProjectDescInsert,
 } from "../db/types/project.type";
+import { getDb } from "../db";
 
+const db = await getDb();
 export class ProjectRepository extends BaseRepository<
   typeof projects,
   ProjectInsert
 > {
   constructor() {
-    super(projects);
+    super(projects, db);
   }
   async searchProject(term: string) {
     return this.findMany({

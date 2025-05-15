@@ -5,13 +5,15 @@ import type {
   EducationSelect,
   EducationInsert,
 } from "../db/types/education.type";
+import { getDb } from "../db";
 
+const db = await getDb();
 export class EducationRepository extends BaseRepository<
   typeof educations,
   EducationInsert
 > {
   constructor() {
-    super(educations);
+    super(educations, db);
   }
   async getAllByPersonalId(personalId: number): Promise<EducationSelect[]> {
     return this.db

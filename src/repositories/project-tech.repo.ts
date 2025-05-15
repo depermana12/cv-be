@@ -2,13 +2,15 @@ import { eq } from "drizzle-orm";
 import { BaseRepository } from "./base.repo";
 import { projectTechnologies } from "../db/schema/project.db";
 import type { ProjectTechStackInsert } from "../db/types/project.type";
+import { getDb } from "../db";
 
+const db = await getDb();
 export class ProjectTechStack extends BaseRepository<
   typeof projectTechnologies,
   ProjectTechStackInsert
 > {
   constructor() {
-    super(projectTechnologies);
+    super(projectTechnologies, db);
   }
 
   async getByProjectId(projectId: number) {

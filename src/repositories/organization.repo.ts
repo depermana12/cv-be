@@ -5,13 +5,16 @@ import type {
   OrganizationInsert,
   OrganizationDescInsert,
 } from "../db/types/organization.type";
+import { getDb } from "../db";
+
+const db = await getDb();
 
 export class OrganizationRepository extends BaseRepository<
   typeof organizations,
   OrganizationInsert
 > {
   constructor() {
-    super(organizations);
+    super(organizations, db);
   }
   async getDescription(descId: number) {
     const rows = await this.db
