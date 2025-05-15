@@ -80,4 +80,4 @@ export const createUserRoutes = (
   return app;
 };
 
-export const userRoutes = createUserRoutes(createUserService(), jwt());
+export const userRoutes = createUserRoutes(await createUserService(), jwt());

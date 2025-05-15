@@ -4,8 +4,9 @@ import { DataBaseError } from "../errors/database.error";
 import { QueryBuilder } from "../lib/query-builder";
 import type { QueryOptions } from "../lib/query-builder";
 import type { MySql2Database } from "drizzle-orm/mysql2";
-import { db as dbInstance, type schema } from "../db";
+import { getDb, type schema } from "../db";
 
+const dbInstance = await getDb();
 export interface BaseCrudRepository<
   TSelect,
   TInsert,
