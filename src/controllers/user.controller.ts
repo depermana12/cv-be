@@ -9,7 +9,7 @@ import {
 } from "../schemas/user.schema";
 import { jwt } from "../middlewares/auth";
 import type { Bindings } from "../lib/types";
-import { UserRepository } from "../repositories/user.repo";
+import { createUserService } from "../factories/user.factory";
 
 export const createUserRoutes = (
   userService: UserService,
@@ -80,4 +80,4 @@ export const createUserRoutes = (
   return app;
 };
 
-export const userRoutes = createUserRoutes(new UserService(), jwt());
+export const userRoutes = createUserRoutes(createUserService(), jwt());

@@ -9,10 +9,8 @@ import { config } from "../middlewares/auth";
 
 //no more global instances, explicitly pass dependencies
 // No default! Must be provided
-
-const userRepository = new UserRepository();
 export class UserService {
-  constructor(private readonly repo: UserRepository = userRepository) {}
+  constructor(private readonly repo: UserRepository) {}
 
   async getById(id: number): Promise<Omit<UserSelect, "password">> {
     const user = await this.repo.getById(id);
