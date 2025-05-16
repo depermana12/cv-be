@@ -2,14 +2,6 @@ import "dotenv/config";
 import { drizzle } from "drizzle-orm/mysql2";
 import mysql from "mysql2/promise";
 
-// pool make the db hang
-// export async function initializeDb() {
-//   const pool = mysql.createPool({
-//     uri: process.env.DATABASE_URL,
-//     connectionLimit: 10,
-//   });
-// }
-
 import * as user from "./schema/user.db";
 import * as personal from "./schema/personal.db";
 import * as language from "./schema/language.db";
@@ -39,13 +31,38 @@ export const schema = {
 };
 
 export const getDb = async () => {
-  const client = await mysql.createConnection({
-    uri: process.env.DATABASE_URL,
-  });
-  return drizzle(client, {
-    schema,
-    mode: "default",
-  });
+  // const client = await mysql.createConnection({
+  //   uri: process.env.DATABASE_URL,
+  // });
+  // return drizzle(client, {
+  //   schema,
+  //   mode: "default",
+  // });
+
+  const globalAny = global as typeof globalThis & {
+    __drizzleDbInstance?: ReturnType<typeof drizzle>;
+    __drizzlePool?: mysql.Pool;
+  };
+
+  if (!globalAny.__drizzleDbInstance) {
+    if (!process.env.DATABASE_URL) {
+      throw new Error("DATABASE_URL is not defined in environment variables");
+    }
+
+    const pool = mysql.createPool({
+      uri: process.env.DATABASE_URL,
+      connectionLimit: 5,
+      waitForConnections: true,
+      idleTimeout: 60000,
+      enableKeepAlive: true,
+      keepAliveInitialDelay: 0,
+    });
+
+    globalAny.__drizzlePool = pool;
+    globalAny.__drizzleDbInstance = drizzle(pool, { schema, mode: "default" });
+  }
+
+  return globalAny.__drizzleDbInstance;
 };
 
 // export const db = drizzle(process.env.DATABASE_URL!, {
