@@ -9,7 +9,7 @@ export abstract class CvChildRepository<
   TSelect = InferSelectModel<TTable>,
   TUpdate = Partial<TInsert>,
 > extends BaseRepository<TTable, TInsert, TSelect, TUpdate> {
-  async existsInCv(cvId: number, id: number): Promise<Boolean> {
+  async existsInCv(cvId: number, id: number): Promise<boolean> {
     const record = await this.db
       .select()
       .from(this.table)

@@ -1,11 +1,12 @@
 import { eq } from "drizzle-orm";
-import { BaseRepository } from "./base.repo";
+
+import { CvChildRepository } from "./cvChild.repo";
 import { socials } from "../db/schema/social.db";
 import type { SocialInsert } from "../db/types/social.type";
 import { getDb } from "../db";
 
 const db = await getDb();
-export class Social extends BaseRepository<typeof socials, SocialInsert> {
+export class Social extends CvChildRepository<typeof socials, SocialInsert> {
   constructor() {
     super(socials, db);
   }

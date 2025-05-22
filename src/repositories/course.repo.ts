@@ -1,17 +1,19 @@
 import { eq } from "drizzle-orm";
-import { BaseRepository } from "./base.repo";
+
+import { CvChildRepository } from "./cvChild.repo";
 import { courses, courseDescriptions } from "../db/schema/course.db";
 import type { CourseInsert, CourseDescInsert } from "../db/types/course.type";
 import { getDb } from "../db";
 
 const db = await getDb();
-export class CourseRepository extends BaseRepository<
+export class CourseRepository extends CvChildRepository<
   typeof courses,
   CourseInsert
 > {
   constructor() {
     super(courses, db);
   }
+
   async getDescription(descId: number) {
     const rows = await this.db
       .select()

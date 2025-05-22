@@ -1,5 +1,6 @@
 import { eq } from "drizzle-orm";
-import { BaseRepository } from "./base.repo";
+
+import { CvChildRepository } from "./cvChild.repo";
 import { works, workDescriptions } from "../db/schema/work.db";
 import type {
   WorkInsert,
@@ -9,7 +10,7 @@ import type {
 import { getDb } from "../db";
 
 const db = await getDb();
-export class WorkRepository extends BaseRepository<
+export class WorkRepository extends CvChildRepository<
   typeof works,
   WorkInsert,
   WorkSelect

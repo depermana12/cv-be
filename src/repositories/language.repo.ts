@@ -1,11 +1,12 @@
 import { eq } from "drizzle-orm";
-import { BaseRepository } from "./base.repo";
+
+import { CvChildRepository } from "./cvChild.repo";
 import { languages } from "../db/schema/language.db";
 import type { LanguageInsert, LanguageSelect } from "../db/types/language.type";
 import { getDb } from "../db";
 
 const db = await getDb();
-export class LanguageRepository extends BaseRepository<
+export class LanguageRepository extends CvChildRepository<
   typeof languages,
   LanguageInsert
 > {

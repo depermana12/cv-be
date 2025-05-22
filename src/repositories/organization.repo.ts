@@ -1,5 +1,6 @@
 import { eq } from "drizzle-orm";
-import { BaseRepository } from "./base.repo";
+
+import { CvChildRepository } from "./cvChild.repo";
 import { organizations, organizationDesc } from "../db/schema/organization.db";
 import type {
   OrganizationInsert,
@@ -8,8 +9,7 @@ import type {
 import { getDb } from "../db";
 
 const db = await getDb();
-
-export class OrganizationRepository extends BaseRepository<
+export class OrganizationRepository extends CvChildRepository<
   typeof organizations,
   OrganizationInsert
 > {

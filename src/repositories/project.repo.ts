@@ -1,5 +1,6 @@
 import { eq } from "drizzle-orm";
-import { BaseRepository } from "./base.repo";
+
+import { CvChildRepository } from "./cvChild.repo";
 import {
   projects,
   projectDescription,
@@ -12,7 +13,7 @@ import type {
 import { getDb } from "../db";
 
 const db = await getDb();
-export class ProjectRepository extends BaseRepository<
+export class ProjectRepository extends CvChildRepository<
   typeof projects,
   ProjectInsert
 > {
