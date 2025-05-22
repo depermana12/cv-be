@@ -38,9 +38,11 @@ export class ProjectTechStack extends BaseRepository<
     projectId: number,
     tech: Omit<ProjectTechStackInsert, "projectId">,
   ) {
+    // Ensure all required fields are present
+    const { category, technology } = tech;
     const inserted = await this.db
       .insert(this.table)
-      .values({ ...tech, projectId })
+      .values({ category, technology, projectId })
       .$returningId();
 
     return this.getById(inserted[0].id);

@@ -42,6 +42,7 @@ export class BaseRepository<
   async getAll(): Promise<TSelect[]> {
     return (await this.db.select().from(this.table)) as TSelect[];
   }
+
   async getById(id: number): Promise<TSelect | null> {
     const rows = (await this.db
       .select()
