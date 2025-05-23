@@ -22,7 +22,6 @@ export const profile = mysqlTable("profile", {
   phone: varchar("phone", { length: 15 }),
   email: varchar("email", { length: 255 }),
   url: varchar("url", { length: 255 }),
-  createdAt: timestamp("created_at").defaultNow(),
 });
 
 export const profileRelations = relations(profile, ({ one }) => ({

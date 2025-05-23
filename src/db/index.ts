@@ -3,7 +3,8 @@ import { drizzle } from "drizzle-orm/mysql2";
 import mysql from "mysql2/promise";
 
 import * as user from "./schema/user.db";
-import * as personal from "./schema/personal.db";
+import * as cv from "./schema/cv.db";
+import * as profile from "./schema/profile.db";
 import * as language from "./schema/language.db";
 import * as education from "./schema/education.db";
 import * as location from "./schema/location.db";
@@ -17,7 +18,8 @@ import * as course from "./schema/course.db";
 
 export const schema = {
   ...user,
-  ...personal,
+  ...cv,
+  ...profile,
   ...language,
   ...education,
   ...location,
