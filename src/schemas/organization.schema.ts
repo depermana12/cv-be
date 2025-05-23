@@ -2,9 +2,9 @@ import { z } from "zod";
 
 const idSchema = z.number().int().positive();
 
-export const organizationSelectSchema = z.object({
+export const orgSelectSchema = z.object({
   id: idSchema,
-  personalId: idSchema,
+  cvId: idSchema,
   organization: z
     .string()
     .max(100, { message: "Must be 100 characters or fewer" }),
@@ -13,44 +13,36 @@ export const organizationSelectSchema = z.object({
   endDate: z.coerce.date({ invalid_type_error: "Invalid end date" }),
 });
 
-export const organizationInsertSchema = organizationSelectSchema.omit({
+export const orgInsertSchema = orgSelectSchema.omit({
   id: true,
-  personalId: true,
+  cvId: true,
 });
 
-export const organizationUpdateSchema = organizationInsertSchema
-  .partial()
-  .extend({
-    id: idSchema,
-  });
+export const orgUpdateSchema = orgInsertSchema.partial();
 
-export type OrganizationSelect = z.infer<typeof organizationSelectSchema>;
-export type OrganizationInsert = z.infer<typeof organizationInsertSchema>;
-export type OrganizationUpdate = z.infer<typeof organizationUpdateSchema>;
+export type OrgSelect = z.infer<typeof orgSelectSchema>;
+export type OrgInsert = z.infer<typeof orgInsertSchema>;
+export type OrgUpdate = z.infer<typeof orgUpdateSchema>;
 
-export const organizationDescSelectSchema = z.object({
+export const orgDescSelectSchema = z.object({
   id: idSchema,
-  organizationExperienceId: idSchema,
+  organizationId: idSchema,
   description: z.string(),
 });
 
-export const organizationDescInsertSchema = organizationDescSelectSchema.omit({
+export const orgDescInsertSchema = orgDescSelectSchema.omit({
   id: true,
-  organizationExperienceId: true,
+  organizationId: true,
 });
 
-export const organizationDescUpdateSchema = organizationDescInsertSchema
-  .partial()
-  .extend({
-    id: idSchema,
-  });
+export const orgDescUpdateSchema = orgDescInsertSchema.partial();
 
-export type OrganizationDescSelect = z.infer<
-  typeof organizationDescSelectSchema
->;
-export type OrganizationDescInsert = z.infer<
-  typeof organizationDescInsertSchema
->;
-export type OrganizationDescUpdate = z.infer<
-  typeof organizationDescUpdateSchema
->;
+export type OrgDescSelect = z.infer<typeof orgDescSelectSchema>;
+export type OrgDescInsert = z.infer<typeof orgDescInsertSchema>;
+export type OrgDescUpdate = z.infer<typeof orgDescUpdateSchema>;
+
+export const orgInsertWithDescSchema = orgInsertSchema.extend({
+  descriptions: z.array(orgDescInsertSchema).optional(),
+});
+
+export type OrgInsertWithDesc = z.infer<typeof orgInsertWithDescSchema>;

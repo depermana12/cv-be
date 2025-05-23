@@ -4,7 +4,7 @@ const idSchema = z.number().int().positive();
 
 export const locationSelectSchema = z.object({
   id: idSchema,
-  personalId: z.number().int(),
+  cvId: z.number().int(),
   address: z
     .string()
     .max(255, { message: "Must be fewer than 255 characters" }),
@@ -16,12 +16,10 @@ export const locationSelectSchema = z.object({
 
 export const locationInsertSchema = locationSelectSchema.omit({
   id: true,
-  personalId: true,
+  cvId: true,
 });
 
-export const locationUpdateSchema = locationInsertSchema
-  .extend({ id: idSchema })
-  .partial();
+export const locationUpdateSchema = locationInsertSchema.partial();
 
 export type LocationSelect = z.infer<typeof locationSelectSchema>;
 export type LocationCreate = z.infer<typeof locationInsertSchema>;

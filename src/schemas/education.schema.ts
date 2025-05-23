@@ -4,7 +4,7 @@ const idSchema = z.number().int().positive();
 
 export const educationSelectSchema = z.object({
   id: idSchema,
-  personalId: idSchema,
+  cvId: idSchema,
   institution: z
     .string()
     .max(100, { message: "Must be 100 characters or fewer" }),
@@ -23,14 +23,12 @@ export const educationSelectSchema = z.object({
 });
 
 export const educationInsertSchema = educationSelectSchema.omit({
-  personalId: true,
   id: true,
-});
-export const educationUpdateSchema = educationInsertSchema.partial().extend({
-  id: idSchema,
+  cvId: true,
 });
 
-// Inferred types
+export const educationUpdateSchema = educationInsertSchema.partial();
+
 export type EducationSelect = z.infer<typeof educationSelectSchema>;
 export type EducationInsert = z.infer<typeof educationInsertSchema>;
 export type EducationUpdate = z.infer<typeof educationUpdateSchema>;

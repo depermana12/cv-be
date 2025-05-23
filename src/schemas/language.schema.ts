@@ -4,18 +4,17 @@ const idSchema = z.number().int().positive();
 
 export const languageSelectSchema = z.object({
   id: idSchema,
-  personalId: idSchema,
+  cvId: idSchema,
   language: z.string().max(100, { message: "Must be 100 characters or fewer" }),
   fluency: z.string().max(25, { message: "Must be 25 characters or fewer" }),
 });
 
 export const languageInsertSchema = languageSelectSchema.omit({
-  personalId: true,
   id: true,
+  cvId: true,
 });
-export const languageUpdateSchema = languageInsertSchema
-  .partial()
-  .extend({ id: idSchema });
+
+export const languageUpdateSchema = languageInsertSchema.partial();
 
 export type LanguageSelect = z.infer<typeof languageSelectSchema>;
 export type LanguageInsert = z.infer<typeof languageInsertSchema>;

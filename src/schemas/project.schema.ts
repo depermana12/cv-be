@@ -4,7 +4,7 @@ const idSchema = z.number().int().positive();
 
 export const projectSelectSchema = z.object({
   id: idSchema,
-  personalId: idSchema,
+  cvId: idSchema,
   name: z.string().max(100, { message: "Must be 100 characters or fewer" }),
   startDate: z.coerce.date({ invalid_type_error: "Invalid start date" }),
   endDate: z.coerce.date({ invalid_type_error: "Invalid end date" }),
@@ -13,14 +13,10 @@ export const projectSelectSchema = z.object({
 
 export const projectInsertSchema = projectSelectSchema.omit({
   id: true,
-  personalId: true,
+  cvId: true,
 });
 
-export const projectUpdateSchema = projectInsertSchema
-  .extend({
-    id: idSchema,
-  })
-  .partial();
+export const projectUpdateSchema = projectInsertSchema.partial();
 
 export type ProjectSelect = z.infer<typeof projectSelectSchema>;
 export type ProjectInsert = z.infer<typeof projectInsertSchema>;
@@ -37,11 +33,7 @@ export const projectDescInsertSchema = projectDescSelectSchema.omit({
   projectId: true,
 });
 
-export const projectDescUpdateSchema = projectDescInsertSchema
-  .extend({
-    id: idSchema,
-  })
-  .partial();
+export const projectDescUpdateSchema = projectDescInsertSchema.partial();
 
 export type ProjectDescSelect = z.infer<typeof projectDescSelectSchema>;
 export type ProjectDescInsert = z.infer<typeof projectDescInsertSchema>;
@@ -61,12 +53,19 @@ export const projectTechInsertSchema = projectTechSelectSchema.omit({
   projectId: true,
 });
 
-export const projectTechUpdateSchema = projectTechInsertSchema
-  .extend({
-    id: idSchema,
-  })
-  .partial();
+export const projectTechUpdateSchema = projectTechInsertSchema.partial();
 
 export type ProjectTechSelect = z.infer<typeof projectTechSelectSchema>;
 export type ProjectTechInsert = z.infer<typeof projectTechInsertSchema>;
 export type ProjectTechUpdate = z.infer<typeof projectTechUpdateSchema>;
+
+export const projectInsertWithDescSchema = projectInsertSchema.extend({
+  descriptions: z.array(projectDescInsertSchema).optional(),
+});
+
+export const projectInsertWithTechSchema = projectInsertSchema.extend({
+  technologies: z.array(projectTechInsertSchema).optional(),
+});
+
+export type ProjectInsertWithDesc = z.infer<typeof projectInsertWithDescSchema>;
+export type ProjectInsertWithTech = z.infer<typeof projectInsertWithTechSchema>;

@@ -1,5 +1,11 @@
 import { z } from "zod";
 
+/**
+ *  This schema is used to validate the user data registration.
+ *  please do not confuse if in auth schema there is no registration,
+ *  this schema is used for user registration.
+ */
+
 export const userSchema = z.object({
   id: z.number(),
   username: z
@@ -11,41 +17,18 @@ export const userSchema = z.object({
     .string()
     .min(8, { message: "Password must be at least 8 characters" })
     .max(255),
+  isEmailVerified: z.boolean().optional(),
   createdAt: z.date().optional(),
 });
 
 export const userInsertSchema = userSchema.omit({
   id: true,
+  isEmailVerified: true,
   createdAt: true,
 });
-export const userUpdateSchema = userSchema.partial().omit({ id: true });
 
-export const userLoginSchema = z.object({
-  email: z.string().email({ message: "Invalid email address" }),
-  password: z
-    .string()
-    .min(8, { message: "Password must be at least 8 characters" }),
-});
+export const userUpdateSchema = userSchema.partial();
 
-export const userInputEmail = z.object({
-  email: z.string().email({ message: "You will receive an email" }),
-});
-
-export const userInputResetPassword = z
-  .object({
-    password: z
-      .string()
-      .min(8, { message: "Password required minimal 8 characters" }),
-    confirmPassword: z
-      .string()
-      .min(8, { message: "Please confirm your password" }),
-  })
-  .superRefine((val, ctx) => {
-    if (val.password !== val.confirmPassword) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "Confirm password is not the same as password",
-        path: ["confirmPassword"],
-      });
-    }
-  });
+export type UserSelect = z.infer<typeof userSchema>;
+export type UserInsert = z.infer<typeof userInsertSchema>;
+export type UserUpdate = z.infer<typeof userUpdateSchema>;
