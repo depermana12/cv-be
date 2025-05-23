@@ -2,13 +2,19 @@ import { eq } from "drizzle-orm";
 
 import { CvChildRepository } from "./cvChild.repo";
 import { projectTechnologies } from "../db/schema/project.db";
-import type { ProjectTechStackInsert } from "../db/types/project.type";
+import type {
+  ProjectTechStackInsert,
+  ProjectTechStackSelect,
+  ProjectTechStackUpdate,
+} from "../db/types/project.type";
 import { getDb } from "../db";
 
 const db = await getDb();
 export class ProjectTechStack extends CvChildRepository<
   typeof projectTechnologies,
-  ProjectTechStackInsert
+  ProjectTechStackInsert,
+  ProjectTechStackSelect,
+  ProjectTechStackUpdate
 > {
   constructor() {
     super(projectTechnologies, db);
@@ -49,18 +55,12 @@ export class ProjectTechStack extends CvChildRepository<
     return this.getById(inserted[0].id);
   }
 
-  async update(
-    projectTechId: number,
-    newProjectTech: Partial<ProjectTechStackInsert>,
-  ) {
+  async updateTech(id: number, tech: Omit<ProjectTechStackUpdate, "id">) {
+    const { category, technology } = tech;
     await this.db
       .update(this.table)
-      .set(newProjectTech)
-      .where(eq(this.table.id, projectTechId));
-    const updatedTech = await this.getById(projectTechId);
-    if (!updatedTech) {
-      throw new Error(`ProjectTech with ID ${projectTechId} not found`);
-    }
-    return updatedTech;
+      .set({ category, technology })
+      .where(eq(this.table.id, id));
+    return this.getById(id);
   }
 }

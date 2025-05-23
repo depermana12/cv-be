@@ -1,12 +1,18 @@
 import { CvChildRepository } from "./cvChild.repo";
 import { skills } from "../db/schema/skill.db";
-import type { SkillInsert } from "../db/types/skill.type";
+import type {
+  SkillInsert,
+  SkillSelect,
+  SkillUpdate,
+} from "../db/types/skill.type";
 import { getDb } from "../db";
 
 const db = await getDb();
 export class SkillRepository extends CvChildRepository<
   typeof skills,
-  SkillInsert
+  SkillInsert,
+  SkillSelect,
+  SkillUpdate
 > {
   constructor() {
     super(skills, db);

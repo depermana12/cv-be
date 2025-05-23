@@ -36,25 +36,32 @@ export abstract class CvChildRepository<
       )
       .limit(1);
 
-    if (!row.length)
-      throw new DataBaseError(`Record ID ${id} not found in CV ${cvId}`);
+    const result = row.at(0);
+    if (!result)
+      throw new DataBaseError(
+        `[CvChildRepository] Record ID ${id} not found in CV ${cvId}`,
+      );
 
-    return row[0] as TSelect;
+    return result as TSelect;
   }
 
-  async updateInCv(cvId: number, id: number, data: TUpdate): Promise<TSelect> {
+  async updateInCv(cvId: number, id: number, data: TUpdate): Promise<boolean> {
     const isExist = await this.existsInCv(cvId, id);
     if (!isExist)
-      throw new DataBaseError(`Record ID ${id} not found in CV ${cvId}`);
+      throw new DataBaseError(
+        `[CvChildRepository] Record ID ${id} not found in CV ${cvId}`,
+      );
 
     return this.update(id, data);
   }
 
-  async deleteByIdInCv(cvId: number, id: number): Promise<void> {
+  async deleteByIdInCv(cvId: number, id: number): Promise<boolean> {
     const isExist = await this.existsInCv(cvId, id);
     if (!isExist)
-      throw new DataBaseError(`Record ID ${id} not found in CV ${cvId}`);
+      throw new DataBaseError(
+        `[CvChildRepository] Record ID ${id} not found in CV ${cvId}`,
+      );
 
-    await this.delete(id);
+    return this.delete(id);
   }
 }

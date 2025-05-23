@@ -5,51 +5,120 @@ import { organizations, organizationDesc } from "../db/schema/organization.db";
 import type {
   OrganizationInsert,
   OrganizationDescInsert,
+  OrganizationSelect,
+  OrganizationUpdate,
 } from "../db/types/organization.type";
 import { getDb } from "../db";
 
 const db = await getDb();
 export class OrganizationRepository extends CvChildRepository<
   typeof organizations,
-  OrganizationInsert
+  OrganizationInsert,
+  OrganizationSelect,
+  OrganizationUpdate
 > {
   constructor() {
     super(organizations, db);
   }
-  async getDescription(descId: number) {
-    const rows = await this.db
-      .select()
-      .from(organizationDesc)
-      .where(eq(organizationDesc.organizationId, descId));
-    return rows[0] ?? null;
+
+  async getByIdWithDescriptions(id: number) {
+    return this.db.query.organizations.findFirst({
+      where: eq(organizations.id, id),
+      with: {
+        descriptions: true,
+      },
+    });
   }
-  async addDescription(
+
+  async getAllByIdWithDescriptions(cvId: number) {
+    return this.db.query.organizations.findMany({
+      where: eq(organizations.cvId, cvId),
+      with: {
+        descriptions: true,
+      },
+    });
+  }
+
+  async createOrganizationWithDescriptions(
+    organizationData: OrganizationInsert,
+    descriptions: OrganizationDescInsert[],
+  ) {
+    return this.db.transaction(async (tx) => {
+      const [organization] = await tx
+        .insert(organizations)
+        .values(organizationData)
+        .$returningId();
+
+      if (descriptions.length > 0) {
+        await tx.insert(organizationDesc).values(
+          descriptions.map((desc) => ({
+            ...desc,
+            organizationId: organization.id,
+          })),
+        );
+      }
+      return organization.id;
+    });
+  }
+
+  async deleteOrgWithDescriptions(id: number) {
+    return this.db.transaction(async (tx) => {
+      await tx
+        .delete(organizationDesc)
+        .where(eq(organizationDesc.organizationId, id));
+      const [result] = await tx
+        .delete(organizations)
+        .where(eq(organizations.id, id));
+
+      return result.affectedRows > 0;
+    });
+  }
+
+  async createDescription(
     organizationId: number,
     description: OrganizationDescInsert,
   ) {
-    const insertedDetail = await this.db
+    const [desc] = await this.db
       .insert(organizationDesc)
       .values({ ...description, organizationId })
       .$returningId();
 
-    // TODO: should return description or whole org by id?
-    return this.getById(insertedDetail[0].id);
+    return desc.id;
+  }
+
+  async getDescriptionById(descId: number) {
+    const [result] = await this.db
+      .select()
+      .from(organizationDesc)
+      .where(eq(organizationDesc.organizationId, descId));
+
+    return result ?? null;
+  }
+
+  async getAllDescriptions(organizationId: number) {
+    return this.db
+      .select()
+      .from(organizationDesc)
+      .where(eq(organizationDesc.organizationId, organizationId));
   }
 
   async updateDescription(
     descId: number,
     newDescription: Partial<OrganizationDescInsert>,
   ) {
-    await this.db
+    const [result] = await this.db
       .update(organizationDesc)
       .set(newDescription)
       .where(eq(organizationDesc.id, descId));
-    return this.getDescription(descId);
+
+    return result.affectedRows > 0;
   }
-  async deleteProjectCascade(id: number) {
-    await this.db
+
+  async deleteDescription(descId: number) {
+    const [result] = await this.db
       .delete(organizationDesc)
-      .where(eq(organizationDesc.organizationId, id));
-    await this.db.delete(organizations).where(eq(organizations.id, id));
+      .where(eq(organizationDesc.id, descId));
+
+    return result.affectedRows > 0;
   }
 }
