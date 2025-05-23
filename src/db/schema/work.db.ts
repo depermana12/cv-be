@@ -37,3 +37,10 @@ export const workRelations = relations(works, ({ one, many }) => ({
   }),
   descriptions: many(workDescriptions),
 }));
+
+export const workDescRelations = relations(workDescriptions, ({ one }) => ({
+  work: one(works, {
+    fields: [workDescriptions.workId],
+    references: [works.id],
+  }),
+}));

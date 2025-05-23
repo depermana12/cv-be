@@ -37,7 +37,10 @@ export const cv = mysqlTable("cvs", {
 });
 
 export const cvRelations = relations(cv, ({ one, many }) => ({
-  user: one(users),
+  user: one(users, {
+    fields: [cv.userId],
+    references: [users.id],
+  }),
   profile: one(profile),
   location: one(location),
   socials: many(socials),
