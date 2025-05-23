@@ -1,24 +1,35 @@
-import { eq, type InferSelectModel } from "drizzle-orm";
 import { MySqlTable, type TableConfig } from "drizzle-orm/mysql-core";
+import { eq, type InferSelectModel } from "drizzle-orm";
 import { DataBaseError } from "../errors/database.error";
-import { QueryBuilder } from "../lib/query-builder";
-import type { QueryOptions } from "../lib/query-builder";
 import type { MySql2Database } from "drizzle-orm/mysql2";
 import { type schema } from "../db";
+
+/**
+ * Base CRUD repository interface.
+ * @template TSelect - The type of data to select.
+ * @template TInsert - The type of data to insert.
+ * @template TUpdate - The type of data to update.
+ */
 export interface BaseCrudRepository<
   TSelect,
   TInsert,
   TUpdate = Partial<TInsert>,
 > {
   getAll(): Promise<TSelect[]>;
-  findMany(options: QueryOptions): Promise<TSelect[]>;
   getById(id: number): Promise<TSelect | null>;
   create(data: TInsert): Promise<{ id: number }>;
-  update(id: number, data: TUpdate): Promise<TSelect>;
-  delete(id: number): Promise<void>;
-  exists(id: number | string): Promise<boolean>;
+  update(id: number, data: TUpdate): Promise<boolean>;
+  delete(id: number): Promise<boolean>;
+  exists(id: number): Promise<boolean>;
 }
 
+/**
+ * Base repository class for CRUD operations.
+ * @template TTable - The table type.
+ * @template TInsert - The type of data to insert.
+ * @template TSelect - The type of data to select.
+ * @template TUpdate - The type of data to update.
+ */
 export class BaseRepository<
   TTable extends MySqlTable<TableConfig>,
   TInsert,
@@ -31,34 +42,49 @@ export class BaseRepository<
     protected readonly db: MySql2Database<typeof schema>,
   ) {}
 
-  async findMany(options: QueryOptions = {}): Promise<TSelect[]> {
-    const qb = new QueryBuilder(
-      this.table,
-      this.db.select().from(this.table) as any,
-    );
-    const query = qb.build(options).getQuery();
-    return (await query.execute()) as TSelect[];
-  }
+  /**
+   * Get all entries from the database.
+   * @returns An array of entries.
+   */
   async getAll(): Promise<TSelect[]> {
     return (await this.db.select().from(this.table)) as TSelect[];
   }
 
-  async getById(id: number): Promise<TSelect | null> {
-    const rows = (await this.db
+  /**
+   * Find an entry in the database by its ID.
+   * @param id - The ID of the entry to find.
+   * @returns The entry if found, or null if not found.
+   */
+  private async findId(id: number): Promise<TSelect[]> {
+    return (await this.db
       .select()
       .from(this.table)
       .where(eq((this.table as any).id, id))
       .limit(1)) as TSelect[];
-    return rows[0] ?? null;
   }
 
+  /**
+   * Get an entry from the database by its ID.
+   * @param id - The ID of the entry to retrieve.
+   * @returns The entry if found, or null if not found.
+   */
+  async getById(id: number): Promise<TSelect | null> {
+    const result = await this.findId(id);
+    return (result[0] as TSelect) ?? null;
+  }
+
+  /**
+   * Create a new entry in the database.
+   * @param data - The data to insert into the database.
+   * @returns The ID of the newly created entry.
+   */
   async create(data: TInsert): Promise<{ id: number }> {
-    const inserted = await this.db
+    const result = await this.db
       .insert(this.table)
       .values(data as any)
       .$returningId();
 
-    const id = (inserted as Array<{ id: number }>)[0]?.id;
+    const id = (result as Array<{ insertId: number }>)[0].insertId;
 
     if (!id) {
       throw new DataBaseError("Insert did not return an ID.");
@@ -67,27 +93,39 @@ export class BaseRepository<
     return { id };
   }
 
-  async update(id: number, data: TUpdate): Promise<TSelect> {
-    await this.db
+  /**
+   * Update an entry in the database by its ID.
+   * @param id - The ID of the entry to update.
+   * @param data - The data to update the entry with.
+   * @returns A boolean indicating whether the update was successful.
+   */
+  async update(id: number, data: TUpdate): Promise<boolean> {
+    const result = await this.db
       .update(this.table)
       .set(data)
       .where(eq((this.table as any).id, id));
-    const result = await this.getById(id);
-    if (!result) {
-      throw new DataBaseError("failed to retrieve the updated record.");
-    }
-    return result;
+    return result[0].affectedRows > 0;
   }
 
-  async delete(id: number): Promise<void> {
-    await this.db.delete(this.table).where(eq((this.table as any).id, id));
-  }
-  async exists(id: number | string): Promise<boolean> {
+  /**
+   * Delete an entry from the database by its ID.
+   * @param id - The ID of the entry to delete.
+   * @returns A boolean indicating whether the deletion was successful.
+   */
+  async delete(id: number): Promise<boolean> {
     const result = await this.db
-      .select()
-      .from(this.table)
-      .where(eq((this.table as any).id, id))
-      .limit(1);
+      .delete(this.table)
+      .where(eq((this.table as any).id, id));
+    return result[0].affectedRows > 0;
+  }
+
+  /**
+   * Check if an entry exists in the database by its ID.
+   * @param id - The ID of the entry to check.
+   * @returns A boolean indicating whether the entry exists.
+   */
+  async exists(id: number): Promise<boolean> {
+    const result = await this.findId(id);
     return result.length > 0;
   }
 }
