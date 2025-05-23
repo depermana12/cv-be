@@ -14,7 +14,8 @@ export const profile = mysqlTable("profile", {
   cvId: int("cv_id")
     .notNull()
     .references(() => cv.id),
-  fullName: varchar("full_name", { length: 100 }),
+  firstName: varchar("first_name", { length: 255 }),
+  lastName: varchar("last_name", { length: 255 }),
   bio: varchar("bio", { length: 255 }),
   image: varchar("image", { length: 255 }),
   summary: text("summary"),
