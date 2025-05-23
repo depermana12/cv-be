@@ -1,7 +1,5 @@
-import type { softSkills } from "../schema";
+import type { softSkills } from "../schema/soft-skill.db";
 
 export type SoftSkillSelect = typeof softSkills.$inferSelect;
-export type SoftSkillInsert = Omit<
-  typeof softSkills.$inferInsert,
-  "personalId"
->;
+export type SoftSkillInsert = typeof softSkills.$inferInsert;
+export type SoftSkillUpdate = Partial<Omit<SoftSkillInsert, "id" | "cvId">>;
