@@ -9,7 +9,7 @@ import {
 import { cv } from "./cv.db";
 import { relations } from "drizzle-orm";
 
-export const profile = mysqlTable("personal", {
+export const profile = mysqlTable("profile", {
   id: int("id").primaryKey().autoincrement(),
   cvId: int("cv_id")
     .notNull()
