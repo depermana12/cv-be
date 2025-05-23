@@ -1,7 +1,7 @@
 {
   "version": "5",
   "dialect": "mysql",
-  "id": "303f17cf-4663-4fa0-b63b-0315f71c9821",
+  "id": "26fef5e4-1001-43ed-a084-b3264dfa9cfa",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "course_descriptions": {
@@ -66,8 +66,8 @@
           "notNull": true,
           "autoincrement": true
         },
-        "personal_id": {
-          "name": "personal_id",
+        "cv_id": {
+          "name": "cv_id",
           "type": "int",
           "primaryKey": false,
           "notNull": true,
@@ -104,12 +104,12 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "courses_personal_id_personal_id_fk": {
-          "name": "courses_personal_id_personal_id_fk",
+        "courses_cv_id_cvs_id_fk": {
+          "name": "courses_cv_id_cvs_id_fk",
           "tableFrom": "courses",
-          "tableTo": "personal",
+          "tableTo": "cvs",
           "columnsFrom": [
-            "personal_id"
+            "cv_id"
           ],
           "columnsTo": [
             "id"
@@ -129,6 +129,141 @@
       "uniqueConstraints": {},
       "checkConstraint": {}
     },
+    "cvs": {
+      "name": "cvs",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "title": {
+          "name": "title",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "theme": {
+          "name": "theme",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false,
+          "default": "'default'"
+        },
+        "is_public": {
+          "name": "is_public",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false,
+          "default": false
+        },
+        "slug": {
+          "name": "slug",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "views": {
+          "name": "views",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false,
+          "default": 0
+        },
+        "downloads": {
+          "name": "downloads",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false,
+          "default": 0
+        },
+        "language": {
+          "name": "language",
+          "type": "varchar(3)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false,
+          "default": "'id'"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false,
+          "default": "(now())"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false,
+          "onUpdate": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "cvs_user_id_users_id_fk": {
+          "name": "cvs_user_id_users_id_fk",
+          "tableFrom": "cvs",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "cvs_id": {
+          "name": "cvs_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {
+        "cvs_title_unique": {
+          "name": "cvs_title_unique",
+          "columns": [
+            "title"
+          ]
+        },
+        "cvs_slug_unique": {
+          "name": "cvs_slug_unique",
+          "columns": [
+            "slug"
+          ]
+        }
+      },
+      "checkConstraint": {}
+    },
     "educations": {
       "name": "educations",
       "columns": {
@@ -139,8 +274,8 @@
           "notNull": true,
           "autoincrement": true
         },
-        "personal_id": {
-          "name": "personal_id",
+        "cv_id": {
+          "name": "cv_id",
           "type": "int",
           "primaryKey": false,
           "notNull": true,
@@ -198,12 +333,12 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "educations_personal_id_personal_id_fk": {
-          "name": "educations_personal_id_personal_id_fk",
+        "educations_cv_id_cvs_id_fk": {
+          "name": "educations_cv_id_cvs_id_fk",
           "tableFrom": "educations",
-          "tableTo": "personal",
+          "tableTo": "cvs",
           "columnsFrom": [
-            "personal_id"
+            "cv_id"
           ],
           "columnsTo": [
             "id"
@@ -223,6 +358,166 @@
       "uniqueConstraints": {},
       "checkConstraint": {}
     },
+    "job_applications": {
+      "name": "job_applications",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "cv_id": {
+          "name": "cv_id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "job_portal": {
+          "name": "job_portal",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "job_url": {
+          "name": "job_url",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "company_name": {
+          "name": "company_name",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "job_title": {
+          "name": "job_title",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "position": {
+          "name": "position",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "location": {
+          "name": "location",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "status": {
+          "name": "status",
+          "type": "enum('applied','interview','offer','rejected','accepted','ghosted')",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false,
+          "default": "'applied'"
+        },
+        "notes": {
+          "name": "notes",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "applied_at": {
+          "name": "applied_at",
+          "type": "datetime",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false,
+          "default": "(now())"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false,
+          "onUpdate": true
+        }
+      },
+      "indexes": {
+        "idx_user_id": {
+          "name": "idx_user_id",
+          "columns": [
+            "user_id"
+          ],
+          "isUnique": false
+        },
+        "idx_cv_id": {
+          "name": "idx_cv_id",
+          "columns": [
+            "cv_id"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "job_applications_user_id_users_id_fk": {
+          "name": "job_applications_user_id_users_id_fk",
+          "tableFrom": "job_applications",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "job_applications_cv_id_cvs_id_fk": {
+          "name": "job_applications_cv_id_cvs_id_fk",
+          "tableFrom": "job_applications",
+          "tableTo": "cvs",
+          "columnsFrom": [
+            "cv_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "job_applications_id": {
+          "name": "job_applications_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
     "languages": {
       "name": "languages",
       "columns": {
@@ -233,8 +528,8 @@
           "notNull": true,
           "autoincrement": true
         },
-        "personal_id": {
-          "name": "personal_id",
+        "cv_id": {
+          "name": "cv_id",
           "type": "int",
           "primaryKey": false,
           "notNull": true,
@@ -257,12 +552,12 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "languages_personal_id_personal_id_fk": {
-          "name": "languages_personal_id_personal_id_fk",
+        "languages_cv_id_cvs_id_fk": {
+          "name": "languages_cv_id_cvs_id_fk",
           "tableFrom": "languages",
-          "tableTo": "personal",
+          "tableTo": "cvs",
           "columnsFrom": [
-            "personal_id"
+            "cv_id"
           ],
           "columnsTo": [
             "id"
@@ -292,8 +587,8 @@
           "notNull": true,
           "autoincrement": true
         },
-        "personal_id": {
-          "name": "personal_id",
+        "cv_id": {
+          "name": "cv_id",
           "type": "int",
           "primaryKey": false,
           "notNull": true,
@@ -337,12 +632,12 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "location_personal_id_personal_id_fk": {
-          "name": "location_personal_id_personal_id_fk",
+        "location_cv_id_cvs_id_fk": {
+          "name": "location_cv_id_cvs_id_fk",
           "tableFrom": "location",
-          "tableTo": "personal",
+          "tableTo": "cvs",
           "columnsFrom": [
-            "personal_id"
+            "cv_id"
           ],
           "columnsTo": [
             "id"
@@ -424,8 +719,8 @@
           "notNull": true,
           "autoincrement": true
         },
-        "personal_id": {
-          "name": "personal_id",
+        "cv_id": {
+          "name": "cv_id",
           "type": "int",
           "primaryKey": false,
           "notNull": true,
@@ -462,12 +757,12 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "organizations_personal_id_personal_id_fk": {
-          "name": "organizations_personal_id_personal_id_fk",
+        "organizations_cv_id_cvs_id_fk": {
+          "name": "organizations_cv_id_cvs_id_fk",
           "tableFrom": "organizations",
-          "tableTo": "personal",
+          "tableTo": "cvs",
           "columnsFrom": [
-            "personal_id"
+            "cv_id"
           ],
           "columnsTo": [
             "id"
@@ -487,8 +782,8 @@
       "uniqueConstraints": {},
       "checkConstraint": {}
     },
-    "personal": {
-      "name": "personal",
+    "profile": {
+      "name": "profile",
       "columns": {
         "id": {
           "name": "id",
@@ -497,16 +792,23 @@
           "notNull": true,
           "autoincrement": true
         },
-        "user_id": {
-          "name": "user_id",
+        "cv_id": {
+          "name": "cv_id",
           "type": "int",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
-        "full_name": {
-          "name": "full_name",
-          "type": "varchar(100)",
+        "first_name": {
+          "name": "first_name",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "last_name": {
+          "name": "last_name",
+          "type": "varchar(255)",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
@@ -552,24 +854,16 @@
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false,
-          "default": "(now())"
         }
       },
       "indexes": {},
       "foreignKeys": {
-        "personal_user_id_users_id_fk": {
-          "name": "personal_user_id_users_id_fk",
-          "tableFrom": "personal",
-          "tableTo": "users",
+        "profile_cv_id_cvs_id_fk": {
+          "name": "profile_cv_id_cvs_id_fk",
+          "tableFrom": "profile",
+          "tableTo": "cvs",
           "columnsFrom": [
-            "user_id"
+            "cv_id"
           ],
           "columnsTo": [
             "id"
@@ -579,8 +873,8 @@
         }
       },
       "compositePrimaryKeys": {
-        "personal_id": {
-          "name": "personal_id",
+        "profile_id": {
+          "name": "profile_id",
           "columns": [
             "id"
           ]
@@ -710,8 +1004,8 @@
           "notNull": true,
           "autoincrement": true
         },
-        "personal_id": {
-          "name": "personal_id",
+        "cv_id": {
+          "name": "cv_id",
           "type": "int",
           "primaryKey": false,
           "notNull": true,
@@ -748,12 +1042,12 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "projects_personal_id_personal_id_fk": {
-          "name": "projects_personal_id_personal_id_fk",
+        "projects_cv_id_cvs_id_fk": {
+          "name": "projects_cv_id_cvs_id_fk",
           "tableFrom": "projects",
-          "tableTo": "personal",
+          "tableTo": "cvs",
           "columnsFrom": [
-            "personal_id"
+            "cv_id"
           ],
           "columnsTo": [
             "id"
@@ -783,8 +1077,8 @@
           "notNull": true,
           "autoincrement": true
         },
-        "personal_id": {
-          "name": "personal_id",
+        "cv_id": {
+          "name": "cv_id",
           "type": "int",
           "primaryKey": false,
           "notNull": true,
@@ -807,12 +1101,12 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "skills_personal_id_personal_id_fk": {
-          "name": "skills_personal_id_personal_id_fk",
+        "skills_cv_id_cvs_id_fk": {
+          "name": "skills_cv_id_cvs_id_fk",
           "tableFrom": "skills",
-          "tableTo": "personal",
+          "tableTo": "cvs",
           "columnsFrom": [
-            "personal_id"
+            "cv_id"
           ],
           "columnsTo": [
             "id"
@@ -842,8 +1136,8 @@
           "notNull": true,
           "autoincrement": true
         },
-        "personal_id": {
-          "name": "personal_id",
+        "cv_id": {
+          "name": "cv_id",
           "type": "int",
           "primaryKey": false,
           "notNull": true,
@@ -873,12 +1167,12 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "socials_personal_id_personal_id_fk": {
-          "name": "socials_personal_id_personal_id_fk",
+        "socials_cv_id_cvs_id_fk": {
+          "name": "socials_cv_id_cvs_id_fk",
           "tableFrom": "socials",
-          "tableTo": "personal",
+          "tableTo": "cvs",
           "columnsFrom": [
-            "personal_id"
+            "cv_id"
           ],
           "columnsTo": [
             "id"
@@ -908,8 +1202,8 @@
           "notNull": true,
           "autoincrement": true
         },
-        "personal_id": {
-          "name": "personal_id",
+        "cv_id": {
+          "name": "cv_id",
           "type": "int",
           "primaryKey": false,
           "notNull": true,
@@ -932,12 +1226,12 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "soft_skills_personal_id_personal_id_fk": {
-          "name": "soft_skills_personal_id_personal_id_fk",
+        "soft_skills_cv_id_cvs_id_fk": {
+          "name": "soft_skills_cv_id_cvs_id_fk",
           "tableFrom": "soft_skills",
-          "tableTo": "personal",
+          "tableTo": "cvs",
           "columnsFrom": [
-            "personal_id"
+            "cv_id"
           ],
           "columnsTo": [
             "id"
@@ -987,6 +1281,14 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
+        },
+        "is_email_verified": {
+          "name": "is_email_verified",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false,
+          "default": false
         },
         "created_at": {
           "name": "created_at",
@@ -1085,8 +1387,8 @@
           "notNull": true,
           "autoincrement": true
         },
-        "personal_id": {
-          "name": "personal_id",
+        "cv_id": {
+          "name": "cv_id",
           "type": "int",
           "primaryKey": false,
           "notNull": true,
@@ -1138,12 +1440,12 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "works_personal_id_personal_id_fk": {
-          "name": "works_personal_id_personal_id_fk",
+        "works_cv_id_cvs_id_fk": {
+          "name": "works_cv_id_cvs_id_fk",
           "tableFrom": "works",
-          "tableTo": "personal",
+          "tableTo": "cvs",
           "columnsFrom": [
-            "personal_id"
+            "cv_id"
           ],
           "columnsTo": [
             "id"
