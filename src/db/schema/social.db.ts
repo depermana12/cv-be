@@ -1,20 +1,20 @@
 import { mysqlTable, int, varchar } from "drizzle-orm/mysql-core";
 import { relations } from "drizzle-orm";
-import { personal } from "./personal.db";
+import { cv } from "./cv.db";
 
 export const socials = mysqlTable("socials", {
   id: int("id").primaryKey().autoincrement(),
-  personalId: int("personal_id")
+  cvId: int("cv_id")
     .notNull()
-    .references(() => personal.id),
+    .references(() => cv.id),
   social: varchar("social", { length: 50 }),
   username: varchar("username", { length: 100 }),
   url: varchar("url", { length: 255 }),
 });
 
 export const socialRelations = relations(socials, ({ one }) => ({
-  personal: one(personal, {
-    fields: [socials.personalId],
-    references: [personal.id],
+  cv: one(cv, {
+    fields: [socials.cvId],
+    references: [cv.id],
   }),
 }));

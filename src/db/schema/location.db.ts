@@ -1,12 +1,12 @@
 import { int, mysqlTable, varchar } from "drizzle-orm/mysql-core";
-import { personal } from "./personal.db";
 import { relations } from "drizzle-orm";
+import { cv } from "./cv.db";
 
 export const location = mysqlTable("location", {
   id: int("id").primaryKey().autoincrement(),
-  personalId: int("personal_id")
+  cvId: int("cv_id")
     .notNull()
-    .references(() => personal.id),
+    .references(() => cv.id),
   address: varchar("address", { length: 255 }),
   postalCode: varchar("postal_code", { length: 5 }),
   city: varchar("city", { length: 100 }),
@@ -15,8 +15,8 @@ export const location = mysqlTable("location", {
 });
 
 export const locationRelations = relations(location, ({ one }) => ({
-  personal: one(personal, {
-    fields: [location.personalId],
-    references: [personal.id],
+  cv: one(cv, {
+    fields: [location.cvId],
+    references: [cv.id],
   }),
 }));

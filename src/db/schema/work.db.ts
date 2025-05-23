@@ -7,14 +7,13 @@ import {
   date,
   boolean,
 } from "drizzle-orm/mysql-core";
-
-import { personal } from "./personal.db";
+import { cv } from "./cv.db";
 
 export const works = mysqlTable("works", {
   id: int("id").primaryKey().autoincrement(),
-  personalId: int("personal_id")
+  cvId: int("cv_id")
     .notNull()
-    .references(() => personal.id),
+    .references(() => cv.id),
   company: varchar("company", { length: 100 }).notNull(),
   position: varchar("position", { length: 100 }).notNull(),
   startDate: date("start_date"),
@@ -32,9 +31,9 @@ export const workDescriptions = mysqlTable("work_descriptions", {
 });
 
 export const workRelations = relations(works, ({ one, many }) => ({
-  personal: one(personal, {
-    fields: [works.personalId],
-    references: [personal.id],
+  cv: one(cv, {
+    fields: [works.cvId],
+    references: [cv.id],
   }),
   descriptions: many(workDescriptions),
 }));

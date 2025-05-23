@@ -1,6 +1,6 @@
 import { relations } from "drizzle-orm";
 import { mysqlTable, int, varchar, timestamp } from "drizzle-orm/mysql-core";
-import { personal } from "./personal.db";
+import { cv } from "./cv.db";
 
 export const users = mysqlTable("users", {
   id: int("id").primaryKey().autoincrement(),
@@ -11,5 +11,5 @@ export const users = mysqlTable("users", {
 });
 
 export const userRelations = relations(users, ({ many }) => ({
-  personals: many(personal),
+  cvs: many(cv),
 }));
