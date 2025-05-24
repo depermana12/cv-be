@@ -15,6 +15,7 @@ import * as project from "./schema/project.db";
 import * as skill from "./schema/skill.db";
 import * as softSkill from "./schema/soft-skill.db";
 import * as course from "./schema/course.db";
+import * as jobApplication from "./schema/jobApplication.db";
 
 export const schema = {
   ...user,
@@ -30,6 +31,7 @@ export const schema = {
   ...skill,
   ...softSkill,
   ...course,
+  ...jobApplication,
 };
 
 const getDatabaseUrl = () => {
