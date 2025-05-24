@@ -10,6 +10,7 @@ import {
 } from "drizzle-orm/mysql-core";
 import { users } from "./user.db";
 import { cv } from "./cv.db";
+import { relations } from "drizzle-orm";
 
 export const jobApplications = mysqlTable(
   "job_applications",
@@ -39,4 +40,18 @@ export const jobApplications = mysqlTable(
     updatedAt: timestamp("updated_at").onUpdateNow().onUpdateNow(),
   },
   (t) => [index("idx_user_id").on(t.userId), index("idx_cv_id").on(t.cvId)],
+);
+
+export const jobApplicationRelations = relations(
+  jobApplications,
+  ({ one }) => ({
+    user: one(users, {
+      fields: [jobApplications.userId],
+      references: [users.id],
+    }),
+    cv: one(cv, {
+      fields: [jobApplications.cvId],
+      references: [cv.id],
+    }),
+  }),
 );

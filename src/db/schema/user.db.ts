@@ -7,6 +7,7 @@ import {
   boolean,
 } from "drizzle-orm/mysql-core";
 import { cv } from "./cv.db";
+import { jobApplications } from "./jobApplication.db";
 
 export const users = mysqlTable("users", {
   id: int("id").primaryKey().autoincrement(),
@@ -19,4 +20,5 @@ export const users = mysqlTable("users", {
 
 export const userRelations = relations(users, ({ many }) => ({
   cvs: many(cv),
+  jobApplications: many(jobApplications),
 }));
