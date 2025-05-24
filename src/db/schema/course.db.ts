@@ -6,7 +6,7 @@ export const courses = mysqlTable("courses", {
   id: int("id").autoincrement().primaryKey(),
   cvId: int("cv_id")
     .notNull()
-    .references(() => cv.id),
+    .references(() => cv.id, { onDelete: "cascade" }),
   provider: varchar("provider", { length: 100 }).notNull(),
   courseName: varchar("course_name", { length: 200 }),
   startDate: date("start_date"),
@@ -17,7 +17,7 @@ export const courseDescriptions = mysqlTable("course_descriptions", {
   id: int("id").primaryKey().autoincrement(),
   courseId: int("course_id")
     .notNull()
-    .references(() => courses.id),
+    .references(() => courses.id, { onDelete: "cascade" }),
   description: text("description"),
 });
 

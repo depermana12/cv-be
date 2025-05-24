@@ -12,7 +12,7 @@ export const educations = mysqlTable("educations", {
   id: int("id").primaryKey().autoincrement(),
   cvId: int("cv_id")
     .notNull()
-    .references(() => cv.id),
+    .references(() => cv.id, { onDelete: "cascade" }),
   institution: varchar("institution", { length: 100 }).notNull(),
   degree: varchar("degree", { length: 100 }).notNull(),
   fieldOfStudy: varchar("field_of_study", { length: 100 }),

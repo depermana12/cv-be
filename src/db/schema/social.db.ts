@@ -6,7 +6,7 @@ export const socials = mysqlTable("socials", {
   id: int("id").primaryKey().autoincrement(),
   cvId: int("cv_id")
     .notNull()
-    .references(() => cv.id),
+    .references(() => cv.id, { onDelete: "cascade" }),
   social: varchar("social", { length: 50 }),
   username: varchar("username", { length: 100 }),
   url: varchar("url", { length: 255 }),

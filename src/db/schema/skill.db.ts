@@ -6,7 +6,7 @@ export const skills = mysqlTable("skills", {
   id: int("id").primaryKey().autoincrement(),
   cvId: int("cv_id")
     .notNull()
-    .references(() => cv.id),
+    .references(() => cv.id, { onDelete: "cascade" }),
   category: varchar("category", { length: 50 }).notNull(),
   name: varchar("name", { length: 100 }).notNull(),
 });

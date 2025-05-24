@@ -7,7 +7,7 @@ export const languages = mysqlTable("languages", {
   id: int("id").primaryKey().autoincrement(),
   cvId: int("cv_id")
     .notNull()
-    .references(() => cv.id),
+    .references(() => cv.id, { onDelete: "cascade" }),
   language: varchar("language", { length: 100 }).notNull(),
   fluency: varchar("fluency", { length: 25 }).notNull(),
 });

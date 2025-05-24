@@ -13,7 +13,7 @@ export const works = mysqlTable("works", {
   id: int("id").primaryKey().autoincrement(),
   cvId: int("cv_id")
     .notNull()
-    .references(() => cv.id),
+    .references(() => cv.id, { onDelete: "cascade" }),
   company: varchar("company", { length: 100 }).notNull(),
   position: varchar("position", { length: 100 }).notNull(),
   startDate: date("start_date"),
@@ -26,7 +26,7 @@ export const workDescriptions = mysqlTable("work_descriptions", {
   id: int("id").primaryKey().autoincrement(),
   workId: int("work_id")
     .notNull()
-    .references(() => works.id),
+    .references(() => works.id, { onDelete: "cascade" }),
   description: text("description"),
 });
 

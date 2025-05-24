@@ -17,7 +17,7 @@ export const projectDescription = mysqlTable("project_descriptions", {
   id: int("id").primaryKey().autoincrement(),
   projectId: int("project_id")
     .notNull()
-    .references(() => projects.id),
+    .references(() => projects.id, { onDelete: "cascade" }),
   description: text("description"),
 });
 
@@ -25,7 +25,7 @@ export const projectTechnologies = mysqlTable("project_technologies", {
   id: int("id").primaryKey().autoincrement(),
   projectId: int("project_id")
     .notNull()
-    .references(() => projects.id),
+    .references(() => projects.id, { onDelete: "cascade" }),
   technology: varchar("technology", { length: 100 }).notNull(),
   category: varchar("category", { length: 100 }).notNull(),
 });

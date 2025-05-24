@@ -6,7 +6,7 @@ export const location = mysqlTable("location", {
   id: int("id").primaryKey().autoincrement(),
   cvId: int("cv_id")
     .notNull()
-    .references(() => cv.id),
+    .references(() => cv.id, { onDelete: "cascade" }),
   address: varchar("address", { length: 255 }),
   postalCode: varchar("postal_code", { length: 5 }),
   city: varchar("city", { length: 100 }),
