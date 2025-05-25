@@ -29,6 +29,9 @@ export interface BaseCrudRepository<
  * @template TInsert - The type of data to insert.
  * @template TSelect - The type of data to select.
  * @template TUpdate - The type of data to update.
+ * @implements {BaseCrudRepository<TSelect, TInsert, TUpdate>}
+ * @extends {BaseCrudRepository<TSelect, TInsert, TUpdate>}
+ *
  */
 export class BaseRepository<
   TTable extends MySqlTable<TableConfig>,
