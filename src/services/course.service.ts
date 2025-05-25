@@ -203,7 +203,7 @@ export class CourseService extends CvChildService<
     cvId: number,
     options?: CourseQueryOptions,
   ): Promise<(CourseSelect & { descriptions: CourseDescSelect[] })[]> {
-    return this.repo.getAllByIdWithDescriptions(cvId);
+    return this.repo.getAllByIdWithDescriptions(cvId, options);
   }
 
   async deleteCourseWithDescriptions(
