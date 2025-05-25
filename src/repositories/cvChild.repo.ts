@@ -20,6 +20,24 @@ export abstract class CvChildRepository<
     return record.length > 0;
   }
 
+  async createForCv(cvId: number, data: TInsert): Promise<{ id: number }> {
+    const result = await this.db
+      .insert(this.table)
+      .values({
+        ...(data as any),
+        cvId,
+      })
+      .$returningId();
+
+    const id = (result as Array<{ insertId: number }>)[0].insertId;
+    if (!id)
+      throw new DataBaseError(
+        `[CvChildRepository] Failed to create record in CV ${cvId}`,
+      );
+
+    return { id };
+  }
+
   async getAllByIdInCv(cvId: number): Promise<TSelect[]> {
     return this.db
       .select()
