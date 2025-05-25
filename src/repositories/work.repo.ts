@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { and, asc, desc, eq, like, sql } from "drizzle-orm";
 
 import { CvChildRepository } from "./cvChild.repo";
 import { works, workDescriptions } from "../db/schema/work.db";
@@ -8,6 +8,9 @@ import type {
   WorkSelect,
   WorkDescUpdate,
   WorkUpdate,
+  WorkDescSelect,
+  WorkQueryOptions,
+  WorkWithDescriptions,
 } from "../db/types/work.type";
 import { getDb } from "../db";
 
@@ -24,28 +27,49 @@ export class WorkRepository extends CvChildRepository<
 
   // probably not working since i setup schema relations not in spreaded
   // i already setup spreaded schema drizzle queries in 14/05/25
-  async getByIdWithDescriptions(id: number) {
-    return this.db.query.works.findFirst({
+  async getByIdWithDescriptions(
+    id: number,
+  ): Promise<WorkWithDescriptions | null> {
+    const result = await this.db.query.works.findFirst({
       where: eq(works.id, id),
       with: {
         descriptions: true,
       },
     });
+    return result ?? null;
   }
 
-  async getAllByIdWithDescriptions(cvId: number) {
+  async getAllByIdWithDescriptions(
+    cvId: number,
+    options?: WorkQueryOptions,
+  ): Promise<WorkWithDescriptions[]> {
+    const whereClause = [eq(works.cvId, cvId)];
+
+    if (options?.search) {
+      whereClause.push(
+        like(sql`lower(${works.company})`, `%${options.search.toLowerCase()}%`),
+      );
+    }
+
     return this.db.query.works.findMany({
-      where: eq(works.cvId, cvId),
+      where: and(...whereClause),
       with: {
         descriptions: true,
       },
+      orderBy: options?.sortBy
+        ? [
+            options.sortOrder === "asc"
+              ? asc(works[options.sortBy])
+              : desc(works[options.sortBy]),
+          ]
+        : [],
     });
   }
 
   async createWorkWithDescriptions(
     workData: WorkInsert,
     descriptions: WorkDescInsert[],
-  ) {
+  ): Promise<{ id: number }> {
     return this.db.transaction(async (tx) => {
       const [work] = await tx.insert(works).values(workData).$returningId();
 
@@ -54,7 +78,7 @@ export class WorkRepository extends CvChildRepository<
           .insert(workDescriptions)
           .values(descriptions.map((desc) => ({ ...desc, workId: work.id })));
       }
-      return work.id;
+      return { id: work.id };
     });
   }
 
@@ -66,16 +90,19 @@ export class WorkRepository extends CvChildRepository<
     });
   }
 
-  async createDescription(workId: number, description: WorkDescInsert) {
+  async createDescription(
+    workId: number,
+    description: WorkDescInsert,
+  ): Promise<{ id: number }> {
     const [desc] = await this.db
       .insert(workDescriptions)
       .values({ ...description, workId })
       .$returningId();
 
-    return desc.id;
+    return { id: desc.id };
   }
 
-  async getDescriptionById(descId: number) {
+  async getDescriptionById(descId: number): Promise<WorkDescSelect | null> {
     const [result] = await this.db
       .select()
       .from(workDescriptions)
@@ -84,14 +111,17 @@ export class WorkRepository extends CvChildRepository<
     return result ?? null;
   }
 
-  async getAllDescriptions(workId: number) {
+  async getAllDescriptions(workId: number): Promise<WorkDescSelect[]> {
     return this.db
       .select()
       .from(workDescriptions)
       .where(eq(workDescriptions.workId, workId));
   }
 
-  async updateDescription(descId: number, newDescription: WorkDescUpdate) {
+  async updateDescription(
+    descId: number,
+    newDescription: WorkDescUpdate,
+  ): Promise<boolean> {
     const [result] = await this.db
       .update(workDescriptions)
       .set(newDescription)
@@ -100,7 +130,7 @@ export class WorkRepository extends CvChildRepository<
     return result.affectedRows > 0;
   }
 
-  async deleteDescription(descId: number) {
+  async deleteDescription(descId: number): Promise<boolean> {
     const [result] = await this.db
       .delete(workDescriptions)
       .where(eq(workDescriptions.id, descId));
