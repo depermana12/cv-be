@@ -1,55 +1,69 @@
-import {
-  personalService,
-  educationService,
-  workExpService,
-  orgExpService,
-  projectService,
-  skillService,
-  softSkillService,
-  courseService,
-} from "./index.service";
+import type {
+  CvInsert,
+  CvQueryOptions,
+  CvSelect,
+  CvUpdate,
+  PaginatedCvResponse,
+} from "../db/types/cv.type";
+import { NotFoundError } from "../errors/not-found.error";
+import { cvRepository } from "./instance.repo";
 
-export class CVService {
-  async getCV() {
-    const personal = await personalService.getAll();
-    const education = await educationService.getAll();
-    const works = await workExpService.getAll();
-    const projects = await projectService.getAll();
-    const organization = await orgExpService.getAll();
-    const skills = await skillService.getAll();
-    const softSkills = await softSkillService.getAll();
-    const courses = await courseService.getAll();
+export class CvService {
+  constructor(private readonly repo = cvRepository) {}
 
-    return {
-      personal,
-      education,
-      works,
-      projects,
-      organization,
-      skills,
-      softSkills,
-      courses,
-    };
+  private async assertCvOwnedByUser(
+    cvId: number,
+    userId: number,
+  ): Promise<CvSelect> {
+    const cv = await this.repo.getCvByIdAndUserId(cvId, userId);
+    if (!cv) {
+      throw new NotFoundError(
+        `[Service] CV with ID ${cvId} not found for user ${userId}`,
+      );
+    }
+    return cv;
   }
-  async getSummary() {
-    const [education, works, organization, projects, skills, courses] =
-      await Promise.all([
-        (await educationService.getAll()).length,
-        (await workExpService.getAll()).length,
-        (await orgExpService.getAll()).length,
-        (await projectService.getAll()).length,
-        (await skillService.getAll()).length,
-        (await courseService.getAll()).length,
-      ]);
-    return {
-      educationCount: education,
-      workCount: works,
-      organizationCount: organization,
-      projectCount: projects,
-      skillCount: skills,
-      courseCount: courses,
-    };
+
+  async createCv(
+    cvData: Omit<CvInsert, "userId">,
+    userId: number,
+  ): Promise<CvSelect> {
+    const { id } = await this.repo.createCv({ ...cvData, userId });
+
+    return this.getCvById(id, userId);
   }
-  async exportCV() {}
-  async importCV() {}
+
+  async getCvById(cvId: number, userId: number): Promise<CvSelect> {
+    return this.assertCvOwnedByUser(cvId, userId);
+  }
+
+  async getAllCvs(
+    userId: number,
+    options?: CvQueryOptions,
+  ): Promise<PaginatedCvResponse> {
+    return this.repo.getAllCvByUserId(userId, options);
+  }
+
+  async updateCv(
+    cvId: number,
+    userId: number,
+    newCvData: CvUpdate,
+  ): Promise<CvSelect> {
+    const cv = await this.assertCvOwnedByUser(cvId, userId);
+    const updated = await this.repo.updateCvByIdAndUserId(
+      cv.id,
+      userId,
+      newCvData,
+    );
+    if (!updated) {
+      throw new NotFoundError(
+        `[Service] CV with ID ${cvId} not found for user ${userId}`,
+      );
+    }
+    return this.getCvById(cvId, userId);
+  }
+
+  async deleteCv(cvId: number, userId: number): Promise<boolean> {
+    return this.repo.deleteCvByIdAndUserId(cvId, userId);
+  }
 }
