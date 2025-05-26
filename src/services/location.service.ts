@@ -1,12 +1,48 @@
-import { BaseCrudService } from "./base.service";
-import { locationRepository } from "./instance.repo";
-import type { LocationSelect, LocationInsert } from "../db/types/location.type";
-
-export class LocationService extends BaseCrudService<
+import { LocationRepository } from "../repositories/location.repo";
+import { CvChildService } from "./cvChild.service";
+import type {
   LocationSelect,
-  LocationInsert
+  LocationInsert,
+  LocationUpdate,
+  LocationQueryOptions,
+} from "../db/types/location.type";
+
+export class LocationService extends CvChildService<
+  LocationSelect,
+  LocationInsert,
+  LocationUpdate
 > {
-  constructor(private readonly repo = locationRepository) {
+  constructor(private readonly repo = new LocationRepository()) {
     super(repo);
+  }
+
+  async createLocation(
+    cvId: number,
+    locationData: Omit<LocationInsert, "cvId">,
+  ): Promise<LocationSelect> {
+    return this.createForCv(cvId, { ...locationData, cvId });
+  }
+
+  async getLocation(cvId: number, locationId: number): Promise<LocationSelect> {
+    return this.findByCvId(cvId, locationId);
+  }
+
+  async getAllLocations(
+    cvId: number,
+    options?: LocationQueryOptions,
+  ): Promise<LocationSelect[]> {
+    return this.repo.getAllLocations(cvId, options);
+  }
+
+  async updateLocation(
+    cvId: number,
+    locationId: number,
+    newLocationData: LocationUpdate,
+  ): Promise<LocationSelect> {
+    return this.updateForCv(cvId, locationId, newLocationData);
+  }
+
+  async deleteLocation(cvId: number, locationId: number): Promise<boolean> {
+    return this.deleteFromCv(cvId, locationId);
   }
 }
