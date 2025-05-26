@@ -4,8 +4,11 @@ import type {
   EducationSelect,
   EducationInsert,
   EducationUpdate,
+  EducationQueryOptions,
 } from "../db/types/education.type";
 import { getDb } from "../db";
+
+import { eq, like, and, desc, asc, sql } from "drizzle-orm";
 
 const db = await getDb();
 export class EducationRepository extends CvChildRepository<
@@ -16,5 +19,31 @@ export class EducationRepository extends CvChildRepository<
 > {
   constructor() {
     super(educations, db);
+  }
+  async getAllEducations(
+    cvId: number,
+    options?: EducationQueryOptions,
+  ): Promise<EducationSelect[]> {
+    const whereClause = [eq(educations.cvId, cvId)];
+
+    if (options?.search) {
+      whereClause.push(
+        like(
+          sql`lower(${educations.institution})`,
+          `%${options.search.toLowerCase()}%`,
+        ),
+      );
+    }
+
+    return this.db.query.educations.findMany({
+      where: and(...whereClause),
+      orderBy: options?.sortBy
+        ? [
+            options.sortOrder === "desc"
+              ? desc(educations[options.sortBy])
+              : asc(educations[options.sortBy]),
+          ]
+        : [],
+    });
   }
 }
