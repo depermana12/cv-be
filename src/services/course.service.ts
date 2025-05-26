@@ -21,19 +21,23 @@ export class CourseService extends CvChildService<
     super(repo);
   }
 
+  // ---------------------
+  // Course Core CRUD operations
+  // ---------------------
+
   async createCourse(
     cvId: number,
-    courseData: CourseInsert,
+    courseData: Omit<CourseInsert, "cvId">,
   ): Promise<CourseSelect> {
-    return this.createOwnedByCv(cvId, courseData);
+    return this.createForCv(cvId, { ...courseData, cvId });
   }
 
   async getCourse(cvId: number, courseId: number): Promise<CourseSelect> {
-    return this.getOwnedByCv(cvId, courseId);
+    return this.findByCvId(cvId, courseId);
   }
 
   async getAllCourses(cvId: number): Promise<CourseSelect[]> {
-    return this.getAllOwnedByCv(cvId);
+    return this.findAllByCvId(cvId);
   }
 
   async updateCourse(
@@ -41,11 +45,11 @@ export class CourseService extends CvChildService<
     courseId: number,
     newCourseData: CourseUpdate,
   ): Promise<CourseSelect> {
-    return this.updateOwnedByCv(cvId, courseId, newCourseData);
+    return this.updateForCv(cvId, courseId, newCourseData);
   }
 
   async deleteCourse(cvId: number, courseId: number): Promise<boolean> {
-    return this.deleteOwnedByCv(cvId, courseId);
+    return this.deleteFromCv(cvId, courseId);
   }
 
   /**
@@ -59,15 +63,14 @@ export class CourseService extends CvChildService<
     cvId: number,
     courseId: number,
   ): Promise<CourseSelect> {
-    return this.getOwnedByCv(cvId, courseId);
+    return this.findByCvId(cvId, courseId);
   }
 
-  /**
-   * All below are description related methods for courses.
-   * whether single CRUD operations or bulk operations.
-   */
+  // ---------------------
+  // Course Description CRUD operations
+  // ---------------------
 
-  async createDescriptionForCourse(
+  async addCourseDescription(
     cvId: number,
     courseId: number,
     descriptionData: CourseDescInsert,
@@ -81,7 +84,7 @@ export class CourseService extends CvChildService<
 
     if (!description) {
       throw new BadRequestError(
-        `cannot create description for ${courseId} bad request`,
+        `[Service] Failed to create description for course ${courseId}`,
       );
     }
     return this.getCourseDescription(cvId, description.id);
@@ -91,19 +94,17 @@ export class CourseService extends CvChildService<
     cvId: number,
     descriptionId: number,
   ): Promise<CourseDescSelect> {
+    await this.assertCourseOwnedByCv(cvId, descriptionId);
     const description = await this.repo.getDescriptionById(descriptionId);
     if (!description) {
       throw new NotFoundError(
-        `cannot get: description ${descriptionId} not found`,
+        `[Service] Description ${descriptionId} not found for CV: ${cvId}`,
       );
     }
-
-    await this.assertCourseOwnedByCv(cvId, description.courseId);
-
     return description;
   }
 
-  async getCourseDescriptions(
+  async getAllCourseDescriptions(
     cvId: number,
     courseId: number,
   ): Promise<CourseDescSelect[]> {
@@ -131,7 +132,7 @@ export class CourseService extends CvChildService<
     );
     if (!updatedDescription) {
       throw new BadRequestError(
-        `failed to update description: ${descriptionId}`,
+        `[Service] Failed to update description with id: ${descriptionId} for CV: ${cvId}`,
       );
     }
     return this.getCourseDescription(cvId, descriptionId);
@@ -151,11 +152,15 @@ export class CourseService extends CvChildService<
     const deletedDescription = await this.repo.deleteDescription(descriptionId);
     if (!deletedDescription) {
       throw new BadRequestError(
-        `cannot delete: description ${descriptionId} not found`,
+        `[Service] Failed to delete description with id: ${descriptionId} for CV: ${cvId}`,
       );
     }
     return deletedDescription;
   }
+
+  // ---------------------
+  // Bulk operations for courses and their descriptions
+  // ---------------------
 
   /**
    * Bulk operations: creates a course along with its descriptions.
@@ -166,25 +171,28 @@ export class CourseService extends CvChildService<
    */
   async createCourseWithDescriptions(
     cvId: number,
-    courseData: CourseInsert,
+    courseData: Omit<CourseInsert, "cvId">,
     descriptions: CourseDescInsert[],
   ): Promise<CourseSelect & { descriptions: CourseDescSelect[] }> {
-    if (courseData.cvId !== cvId) {
-      throw new BadRequestError(
-        `cvId: ${cvId} mismatch with courseData.cvId: ${courseData.cvId}`,
-      );
-    }
-
     const { id } = await this.repo.createCourseWithDescriptions(
-      courseData,
+      { ...courseData, cvId },
       descriptions,
     );
 
+    return this.getCourseWithDescriptions(cvId, id);
+  }
+
+  async getCourseWithDescriptions(
+    cvId: number,
+    courseId: number,
+  ): Promise<CourseSelect & { descriptions: CourseDescSelect[] }> {
+    const course = await this.assertCourseOwnedByCv(cvId, courseId);
+
     const courseWithDescriptions =
-      await this.repo.getCourseByIdWithDescriptions(id);
+      await this.repo.getCourseByIdWithDescriptions(course.id);
     if (!courseWithDescriptions) {
       throw new NotFoundError(
-        `Cannot find course with id ${id} after creation`,
+        `[Service] Course ${course.id} found but failed to retrieve with descriptions.`,
       );
     }
     return courseWithDescriptions;
@@ -203,7 +211,7 @@ export class CourseService extends CvChildService<
     cvId: number,
     options?: CourseQueryOptions,
   ): Promise<(CourseSelect & { descriptions: CourseDescSelect[] })[]> {
-    return this.repo.getAllByIdWithDescriptions(cvId, options);
+    return this.repo.getAllCoursesWithDescriptions(cvId, options);
   }
 
   async deleteCourseWithDescriptions(
@@ -213,7 +221,9 @@ export class CourseService extends CvChildService<
     await this.assertCourseOwnedByCv(cvId, courseId);
     const deleted = await this.repo.deleteCourseWithDescriptions(courseId);
     if (!deleted) {
-      throw new BadRequestError(`cannot delete: course ${courseId} not found`);
+      throw new BadRequestError(
+        `[Service] Failed to delete course with id: ${courseId} for CV: ${cvId}`,
+      );
     }
     return deleted;
   }

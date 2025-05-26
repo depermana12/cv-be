@@ -36,7 +36,7 @@ export class CourseRepository extends CvChildRepository<
     return result ?? null;
   }
 
-  async getAllByIdWithDescriptions(
+  async getAllCoursesWithDescriptions(
     cvId: number,
     options?: CourseQueryOptions,
   ): Promise<CourseWithDescriptions[]> {
