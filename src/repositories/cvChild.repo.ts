@@ -1,14 +1,22 @@
 import type { MySqlTable, TableConfig } from "drizzle-orm/mysql-core";
-import { BaseRepository } from "./base.repo";
+import type { MySql2Database } from "drizzle-orm/mysql2";
+
 import { and, eq, type InferSelectModel } from "drizzle-orm";
 import { DataBaseError } from "../errors/database.error";
+import type { schema } from "../db";
+import { getDb } from "../db/index";
 
+export const dbInstance = await getDb();
 export abstract class CvChildRepository<
   TTable extends MySqlTable<TableConfig>,
   TInsert,
   TSelect = InferSelectModel<TTable>,
   TUpdate = Partial<TInsert>,
-> extends BaseRepository<TTable, TInsert, TSelect, TUpdate> {
+> {
+  constructor(
+    protected readonly table: TTable,
+    protected readonly db: MySql2Database<typeof schema> = dbInstance,
+  ) {}
   async existsInCv(cvId: number, id: number): Promise<boolean> {
     const record = await this.db
       .select()
@@ -64,22 +72,23 @@ export abstract class CvChildRepository<
   }
 
   async updateInCv(cvId: number, id: number, data: TUpdate): Promise<boolean> {
-    const isExist = await this.existsInCv(cvId, id);
-    if (!isExist)
-      throw new DataBaseError(
-        `[CvChildRepository] Record ID ${id} not found in CV ${cvId}`,
+    const [result] = await this.db
+      .update(this.table)
+      .set(data)
+      .where(
+        and(eq((this.table as any).id, id), eq((this.table as any).cvId, cvId)),
       );
 
-    return this.update(id, data);
+    return result.affectedRows > 0;
   }
 
   async deleteByIdInCv(cvId: number, id: number): Promise<boolean> {
-    const isExist = await this.existsInCv(cvId, id);
-    if (!isExist)
-      throw new DataBaseError(
-        `[CvChildRepository] Record ID ${id} not found in CV ${cvId}`,
+    const [result] = await this.db
+      .delete(this.table)
+      .where(
+        and(eq((this.table as any).id, id), eq((this.table as any).cvId, cvId)),
       );
 
-    return this.delete(id);
+    return result.affectedRows > 0;
   }
 }
