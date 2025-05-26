@@ -14,3 +14,13 @@ export type OrganizationDescInsert = typeof organizationDesc.$inferInsert;
 export type OrganizationDescUpdate = Partial<
   Omit<OrganizationDescInsert, "id" | "organizationId">
 >;
+
+export type OrganizationWithDescriptions = OrganizationSelect & {
+  descriptions: OrganizationDescSelect[];
+};
+
+export type OrganizationQueryOptions = {
+  search?: string;
+  sortBy?: keyof OrganizationSelect;
+  sortOrder?: "asc" | "desc";
+};

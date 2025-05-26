@@ -1,14 +1,18 @@
-import { eq } from "drizzle-orm";
+import { and, asc, desc, eq, like, sql } from "drizzle-orm";
 
 import { CvChildRepository } from "./cvChild.repo";
-import { organizations, organizationDesc } from "../db/schema/organization.db";
 import type {
   OrganizationInsert,
-  OrganizationDescInsert,
   OrganizationSelect,
   OrganizationUpdate,
+  OrganizationDescInsert,
+  OrganizationDescSelect,
+  OrganizationWithDescriptions,
+  OrganizationQueryOptions,
+  OrganizationDescUpdate,
 } from "../db/types/organization.type";
 import { getDb } from "../db";
+import { organizationDesc, organizations } from "../db/schema/organization.db";
 
 const db = await getDb();
 export class OrganizationRepository extends CvChildRepository<
@@ -21,28 +25,52 @@ export class OrganizationRepository extends CvChildRepository<
     super(organizations, db);
   }
 
-  async getByIdWithDescriptions(id: number) {
-    return this.db.query.organizations.findFirst({
+  async getOrgWithDescriptions(
+    id: number,
+  ): Promise<OrganizationWithDescriptions | null> {
+    const result = await this.db.query.organizations.findFirst({
       where: eq(organizations.id, id),
       with: {
         descriptions: true,
       },
     });
+    return result ?? null;
   }
 
-  async getAllByIdWithDescriptions(cvId: number) {
+  async getAllByIdWithDescriptions(
+    cvId: number,
+    options?: OrganizationQueryOptions,
+  ): Promise<OrganizationWithDescriptions[]> {
+    const whereClause = [eq(organizations.cvId, cvId)];
+
+    if (options?.search) {
+      whereClause.push(
+        like(
+          sql`lower(${organizations.organization})`,
+          `%${options.search.toLowerCase()}%`,
+        ),
+      );
+    }
+
     return this.db.query.organizations.findMany({
-      where: eq(organizations.cvId, cvId),
+      where: and(...whereClause),
       with: {
         descriptions: true,
       },
+      orderBy: options?.sortBy
+        ? [
+            options.sortOrder === "asc"
+              ? asc(organizations[options.sortBy])
+              : desc(organizations[options.sortBy]),
+          ]
+        : [],
     });
   }
 
   async createOrganizationWithDescriptions(
     organizationData: OrganizationInsert,
     descriptions: OrganizationDescInsert[],
-  ) {
+  ): Promise<{ id: number }> {
     return this.db.transaction(async (tx) => {
       const [organization] = await tx
         .insert(organizations)
@@ -57,11 +85,11 @@ export class OrganizationRepository extends CvChildRepository<
           })),
         );
       }
-      return organization.id;
+      return { id: organization.id };
     });
   }
 
-  async deleteOrgWithDescriptions(id: number) {
+  async deleteOrgWithDescriptions(id: number): Promise<boolean> {
     return this.db.transaction(async (tx) => {
       await tx
         .delete(organizationDesc)
@@ -77,25 +105,29 @@ export class OrganizationRepository extends CvChildRepository<
   async createDescription(
     organizationId: number,
     description: OrganizationDescInsert,
-  ) {
+  ): Promise<{ id: number }> {
     const [desc] = await this.db
       .insert(organizationDesc)
       .values({ ...description, organizationId })
       .$returningId();
 
-    return desc.id;
+    return { id: desc.id };
   }
 
-  async getDescriptionById(descId: number) {
+  async getDescriptionById(
+    descId: number,
+  ): Promise<OrganizationDescSelect | null> {
     const [result] = await this.db
       .select()
       .from(organizationDesc)
-      .where(eq(organizationDesc.organizationId, descId));
+      .where(eq(organizationDesc.id, descId));
 
     return result ?? null;
   }
 
-  async getAllDescriptions(organizationId: number) {
+  async getAllDescriptions(
+    organizationId: number,
+  ): Promise<OrganizationDescSelect[]> {
     return this.db
       .select()
       .from(organizationDesc)
@@ -104,8 +136,8 @@ export class OrganizationRepository extends CvChildRepository<
 
   async updateDescription(
     descId: number,
-    newDescription: Partial<OrganizationDescInsert>,
-  ) {
+    newDescription: OrganizationDescUpdate,
+  ): Promise<boolean> {
     const [result] = await this.db
       .update(organizationDesc)
       .set(newDescription)
@@ -114,7 +146,7 @@ export class OrganizationRepository extends CvChildRepository<
     return result.affectedRows > 0;
   }
 
-  async deleteDescription(descId: number) {
+  async deleteDescription(descId: number): Promise<boolean> {
     const [result] = await this.db
       .delete(organizationDesc)
       .where(eq(organizationDesc.id, descId));
