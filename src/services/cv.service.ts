@@ -1,3 +1,4 @@
+import type { CvRepository } from "../repositories/cv.repo";
 import type {
   CvInsert,
   CvQueryOptions,
@@ -6,16 +7,15 @@ import type {
   PaginatedCvResponse,
 } from "../db/types/cv.type";
 import { NotFoundError } from "../errors/not-found.error";
-import { cvRepository } from "./instance.repo";
 
 export class CvService {
-  constructor(private readonly repo = cvRepository) {}
+  constructor(private readonly cvRepository: CvRepository) {}
 
   private async assertCvOwnedByUser(
     cvId: number,
     userId: number,
   ): Promise<CvSelect> {
-    const cv = await this.repo.getCvByIdAndUserId(cvId, userId);
+    const cv = await this.cvRepository.getCvByIdAndUserId(cvId, userId);
     if (!cv) {
       throw new NotFoundError(
         `[Service] CV with ID ${cvId} not found for user ${userId}`,
@@ -28,7 +28,7 @@ export class CvService {
     cvData: Omit<CvInsert, "userId">,
     userId: number,
   ): Promise<CvSelect> {
-    const { id } = await this.repo.createCv({ ...cvData, userId });
+    const { id } = await this.cvRepository.createCv({ ...cvData, userId });
 
     return this.getCvById(id, userId);
   }
@@ -41,7 +41,12 @@ export class CvService {
     userId: number,
     options?: CvQueryOptions,
   ): Promise<PaginatedCvResponse> {
-    return this.repo.getAllCvByUserId(userId, options);
+    return this.cvRepository.getAllCvByUserId(userId, options);
+  }
+
+  async getUserCvCount(userId: number): Promise<number> {
+    const userCv = await this.cvRepository.getUserCvCount(userId);
+    return userCv ?? 0;
   }
 
   async updateCv(
@@ -50,7 +55,7 @@ export class CvService {
     newCvData: CvUpdate,
   ): Promise<CvSelect> {
     const cv = await this.assertCvOwnedByUser(cvId, userId);
-    const updated = await this.repo.updateCvByIdAndUserId(
+    const updated = await this.cvRepository.updateCvByIdAndUserId(
       cv.id,
       userId,
       newCvData,
@@ -64,6 +69,6 @@ export class CvService {
   }
 
   async deleteCv(cvId: number, userId: number): Promise<boolean> {
-    return this.repo.deleteCvByIdAndUserId(cvId, userId);
+    return this.cvRepository.deleteCvByIdAndUserId(cvId, userId);
   }
 }

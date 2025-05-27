@@ -68,6 +68,10 @@ export class CvRepository {
     };
   }
 
+  async getUserCvCount(userId: number): Promise<number> {
+    return this.db.$count(cv, eq(cv.userId, userId));
+  }
+
   async updateCvByIdAndUserId(
     cvId: number,
     userId: number,
