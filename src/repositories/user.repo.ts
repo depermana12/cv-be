@@ -1,60 +1,112 @@
-import type { UserInsert, UserSelect, UserUpdate } from "../db/types/user.type";
-import { users } from "../db/schema/user.db";
-
-import { eq } from "drizzle-orm";
-import { DataBaseError } from "../errors/database.error";
 import type { MySql2Database } from "drizzle-orm/mysql2";
+import { eq, sql } from "drizzle-orm";
+import { users } from "../db/schema/user.db";
 import type { schema } from "../db";
+import type { UserInsert, UserSelect, UserUpdate } from "../db/types/user.type";
 
 export class UserRepository {
-  constructor(
-    private readonly db: MySql2Database<typeof schema>,
-    private readonly table = users,
-  ) {
-    this.table = users;
-  }
-  async getAll(): Promise<UserSelect[]> {
-    return this.db.select().from(this.table);
-  }
-  async getById(id: number): Promise<UserSelect | null> {
-    const rows = await this.db
+  private readonly table = users;
+  constructor(private readonly db: MySql2Database<typeof schema>) {}
+
+  async userExistsById(id: number): Promise<boolean> {
+    const [rows] = await this.db
       .select()
       .from(this.table)
-      .where(eq(this.table.id, id));
-    return rows[0] ?? null;
-  }
-  async getByEmail(email: string): Promise<UserSelect | null> {
-    const rows = await this.db
-      .select()
-      .from(this.table)
-      .where(eq(this.table.email, email));
-    return rows[0] ?? null;
+      .where(eq(this.table.id, id))
+      .limit(1);
+
+    return !!rows;
   }
 
-  async create(data: UserInsert): Promise<Omit<UserSelect, "password">> {
-    const [insertedRow] = await this.db
+  async isUsernameExists(username: string): Promise<boolean> {
+    const [rows] = await this.db
+      .select()
+      .from(this.table)
+      .where(eq(sql`lower(${this.table.username})`, username))
+      .limit(1);
+
+    return !!rows;
+  }
+
+  async createUser(user: UserInsert): Promise<{ id: number }> {
+    const [createdRow] = await this.db
       .insert(this.table)
-      .values(data)
+      .values(user)
       .$returningId();
 
-    if (!insertedRow.id) {
-      throw new DataBaseError("Insert did not return an created ID.");
-    }
-
-    const createdUser = await this.getById(insertedRow.id);
-    if (!createdUser) {
-      throw new DataBaseError("Failed to retrieve created user record.");
-    }
-    const { password, ...rest } = createdUser;
-    return { ...rest };
+    return { id: createdRow.id };
   }
-  async updatePassword(id: number, newPw: string): Promise<void> {
-    await this.db
+
+  async getById(id: number): Promise<Omit<UserSelect, "password"> | null> {
+    const [rows] = await this.db
+      .select()
+      .from(this.table)
+      .where(eq(this.table.id, id))
+      .limit(1);
+
+    if (!rows) return null;
+
+    const { password, ...userWithoutPassword } = rows;
+    return userWithoutPassword ?? null;
+  }
+
+  async getByEmail(email: string): Promise<UserSelect | null> {
+    const [rows] = await this.db
+      .select()
+      .from(this.table)
+      .where(eq(sql`lower(${this.table.email})`, email))
+      .limit(1);
+
+    return rows ?? null;
+  }
+
+  async getByEmailSafe(
+    email: string,
+  ): Promise<Omit<UserSelect, "password"> | null> {
+    const [rows] = await this.db
+      .select()
+      .from(this.table)
+      .where(eq(sql`lower(${this.table.email})`, email))
+      .limit(1);
+
+    if (!rows) return null;
+
+    const { password, ...userWithoutPassword } = rows;
+    return userWithoutPassword ?? null;
+  }
+
+  async updateUser(id: number, newUserData: UserUpdate): Promise<boolean> {
+    const [updatedRow] = await this.db
+      .update(this.table)
+      .set(newUserData)
+      .where(eq(this.table.id, id));
+
+    return updatedRow.affectedRows > 0;
+  }
+
+  async verifyUserEmail(id: number): Promise<boolean> {
+    const [updatedRow] = await this.db
+      .update(this.table)
+      .set({ isEmailVerified: true })
+      .where(eq(this.table.id, id));
+
+    return updatedRow.affectedRows > 0;
+  }
+
+  async updateUserPassword(id: number, newPw: string): Promise<boolean> {
+    const [updatedRow] = await this.db
       .update(this.table)
       .set({ password: newPw })
       .where(eq(this.table.id, id));
+
+    return updatedRow.affectedRows > 0;
   }
-  async delete(id: number): Promise<void> {
-    await this.db.delete(this.table).where(eq(this.table.id, id));
+
+  async deleteUser(id: number): Promise<boolean> {
+    const [deletedRow] = await this.db
+      .delete(this.table)
+      .where(eq(this.table.id, id));
+
+    return deletedRow.affectedRows > 0;
   }
 }

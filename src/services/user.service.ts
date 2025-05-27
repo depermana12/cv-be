@@ -1,103 +1,124 @@
-import { decode, sign, verify } from "hono/jwt";
-
-import type { UserInsert, UserSelect, UserUpdate } from "../db/types/user.type";
-import { UserRepository } from "../repositories/user.repo";
 import { ValidationError } from "../errors/validation.error";
 import { NotFoundError } from "../errors/not-found.error";
-import type { UserPayload } from "../lib/types";
-import { config } from "../middlewares/auth";
+import { UserRepository } from "../repositories/user.repo";
 
-//no more global instances, explicitly pass dependencies
-// No default! Must be provided
+import type { TokenService } from "./token.service";
+import type { AuthUserSafe } from "../db/types/auth.type";
+import type { UpdateUserProfileSafe } from "../db/types/user.type";
+import type { CvService } from "./cv.service";
+
 export class UserService {
-  constructor(private readonly repo: UserRepository) {}
+  constructor(
+    private readonly userRepository: UserRepository,
+    private readonly cvService: CvService,
+  ) {}
 
-  async getById(id: number): Promise<Omit<UserSelect, "password">> {
-    const user = await this.repo.getById(id);
+  async getUserByIdSafe(id: number): Promise<AuthUserSafe> {
+    const user = await this.userRepository.getById(id);
     if (!user) {
       throw new NotFoundError("user record not found");
     }
-    const { password, ...rest } = user;
-    return { ...rest };
+    return user;
   }
 
-  async getByEmail(email: string): Promise<Omit<UserSelect, "password">> {
-    const user = await this.repo.getByEmail(email);
+  async getUserByEmail(email: string): Promise<AuthUserSafe> {
+    const user = await this.userRepository.getByEmail(email.toLowerCase());
     if (!user) {
       throw new NotFoundError("user record not found");
     }
-    const { password, ...rest } = user;
-    return { ...rest };
+    const { password, ...userObjWithoutPassword } = user;
+
+    return userObjWithoutPassword;
   }
 
-  async createToken(payload: UserPayload) {
-    return sign(payload, config.jwtSecret);
-  }
-
-  async createResetPasswordToken(payload: UserPayload) {
-    const now = Math.floor(Date.now() / 1000);
-    return this.createToken({
-      id: payload.id,
-      email: payload.email,
-      exp: now + 60 * 10, // 10 minutes
-      iat: now,
-    });
-  }
-  async validateDecodeResetToken(token: string) {
-    const decoded = await verify(token, process.env.SECRET!);
-    if (!decoded.exp) throw new ValidationError("invalid reset token");
-
-    const now = Math.floor(Date.now() / 1000);
-    if (now > decoded.exp) throw new ValidationError("reset token expired");
-
-    return decoded as UserPayload;
-  }
-
-  async signUp(
-    userRegistration: UserInsert,
-  ): Promise<Omit<UserSelect, "password"> & { token: string }> {
-    const emailExist = await this.repo.getByEmail(userRegistration.email);
-    if (emailExist) {
-      throw new ValidationError("email already registered");
-    }
-    const hashedPassword = await Bun.password.hash(userRegistration.password);
-    const createdUser = await this.repo.create({
-      ...userRegistration,
-      password: hashedPassword,
-    });
-
-    const token = await this.createToken({
-      id: createdUser.id.toString(),
-      email: createdUser.email,
-    });
-    return { ...createdUser, token };
-  }
-
-  async signIn(
-    loginInput: Omit<UserInsert, "username">,
-  ): Promise<Omit<UserSelect, "password"> & { token: string }> {
-    const user = await this.repo.getByEmail(loginInput.email);
-    if (
-      !user ||
-      !(await Bun.password.verify(loginInput.password, user.password))
-    ) {
-      throw new ValidationError("invalid email or password");
-    }
-    const { password, ...rest } = user;
-    const token = await this.createToken({
-      id: user.id.toString(),
-      email: user.email,
-    });
-
-    return { ...rest, token };
-  }
-
-  async updatePassword(id: number, newPassword: string): Promise<void> {
-    const user = await this.repo.getById(id);
+  async getUserByEmailSafe(email: string): Promise<AuthUserSafe> {
+    const user = await this.userRepository.getByEmailSafe(email.toLowerCase());
     if (!user) {
-      throw new NotFoundError("failed to update password, user not found");
+      throw new NotFoundError("user record not found");
     }
-    const hashedPassword = await Bun.password.hash(newPassword);
-    await this.repo.updatePassword(id, hashedPassword);
+
+    return user;
+  }
+
+  async updateUserProfile(
+    id: number,
+    newUserData: UpdateUserProfileSafe,
+  ): Promise<AuthUserSafe> {
+    if (newUserData.username) {
+      const existingUser = await this.isUsernameExists(
+        newUserData.username.toLowerCase(),
+      );
+      if (existingUser) {
+        throw new ValidationError("username already taken");
+      }
+    }
+
+    const updatedUser = await this.userRepository.updateUser(id, newUserData);
+    if (!updatedUser) {
+      throw new NotFoundError("user record not found");
+    }
+
+    return this.getUserByIdSafe(id);
+  }
+
+  //----------------------------------
+  // Utility methods
+  //----------------------------------
+
+  /**
+   * Converts a milliseconds timestamp to the age of the user account in days.
+   * @param createdAt - The date when the user account was created. If null, returns 0.
+   * @returns The age of the user account in days.
+   */
+  private calculateAccountAge(createdAt: Date | null): number {
+    if (!createdAt) {
+      return 0;
+    }
+    const now = new Date();
+    const accountInMilliseconds = now.getTime() - new Date(createdAt).getTime();
+    const accountAgeInDays = Math.floor(
+      accountInMilliseconds / (1000 * 60 * 60 * 24),
+    );
+    return accountAgeInDays;
+  }
+
+  private async getUserCvCount(id: number): Promise<number> {
+    const user = await this.getUserByIdSafe(id);
+    return this.cvService.getUserCvCount(user.id);
+  }
+
+  // TODO: Implement this method to return the count of job applications for the user.
+  private async getUserJobApplicationsCount(id: number) {}
+
+  async isUserEmailVerified(id: number): Promise<{ verified: boolean }> {
+    const user = await this.getUserByIdSafe(id);
+    return { verified: user.isEmailVerified || false };
+  }
+
+  async isUsernameExists(username: string): Promise<boolean> {
+    const user = await this.userRepository.isUsernameExists(
+      username.toLowerCase(),
+    );
+    return !!user;
+  }
+
+  async getUserStats(id: number): Promise<{
+    user: AuthUserSafe;
+    accountAge: number;
+    isEmailVerified: boolean;
+    cvCreated: number;
+    totalJobApplications?: number;
+  }> {
+    const user = await this.getUserByIdSafe(id);
+    const accountAge = this.calculateAccountAge(user.createdAt);
+    const isEmailVerified = await this.isUserEmailVerified(id);
+    const cvCount = await this.getUserCvCount(id);
+
+    return {
+      user,
+      accountAge,
+      isEmailVerified: isEmailVerified.verified,
+      cvCreated: cvCount,
+    };
   }
 }
