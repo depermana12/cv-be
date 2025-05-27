@@ -1,5 +1,4 @@
 import { CvChildService } from "./cvChild.service";
-import { courseRepository } from "./instance.repo";
 import type {
   CourseDescInsert,
   CourseDescSelect,
@@ -11,14 +10,15 @@ import type {
 } from "../db/types/course.type";
 import { NotFoundError } from "../errors/not-found.error";
 import { BadRequestError } from "../errors/bad-request.error";
+import { CourseRepository } from "../repositories/course.repo";
 
 export class CourseService extends CvChildService<
   CourseSelect,
   CourseInsert,
   CourseUpdate
 > {
-  constructor(private readonly repo = courseRepository) {
-    super(repo);
+  constructor(private readonly courseRepository: CourseRepository) {
+    super(courseRepository);
   }
 
   // ---------------------
@@ -77,7 +77,7 @@ export class CourseService extends CvChildService<
   ): Promise<CourseDescSelect> {
     await this.assertCourseOwnedByCv(cvId, courseId);
 
-    const description = await this.repo.createDescription(
+    const description = await this.courseRepository.createDescription(
       courseId,
       descriptionData,
     );
@@ -95,7 +95,9 @@ export class CourseService extends CvChildService<
     descriptionId: number,
   ): Promise<CourseDescSelect> {
     await this.assertCourseOwnedByCv(cvId, descriptionId);
-    const description = await this.repo.getDescriptionById(descriptionId);
+    const description = await this.courseRepository.getDescriptionById(
+      descriptionId,
+    );
     if (!description) {
       throw new NotFoundError(
         `[Service] Description ${descriptionId} not found for CV: ${cvId}`,
@@ -109,7 +111,9 @@ export class CourseService extends CvChildService<
     courseId: number,
   ): Promise<CourseDescSelect[]> {
     await this.assertCourseOwnedByCv(cvId, courseId);
-    const descriptions = await this.repo.getAllDescriptions(courseId);
+    const descriptions = await this.courseRepository.getAllDescriptions(
+      courseId,
+    );
 
     return descriptions;
   }
@@ -119,14 +123,16 @@ export class CourseService extends CvChildService<
     descriptionId: number,
     newDescriptionData: CourseDescUpdate,
   ): Promise<CourseDescSelect> {
-    const description = await this.repo.getDescriptionById(descriptionId);
+    const description = await this.courseRepository.getDescriptionById(
+      descriptionId,
+    );
     if (!description) {
       throw new NotFoundError(`Description ${descriptionId} not found`);
     }
 
     await this.assertCourseOwnedByCv(cvId, description.courseId);
 
-    const updatedDescription = await this.repo.updateDescription(
+    const updatedDescription = await this.courseRepository.updateDescription(
       descriptionId,
       newDescriptionData,
     );
@@ -142,14 +148,18 @@ export class CourseService extends CvChildService<
     cvId: number,
     descriptionId: number,
   ): Promise<boolean> {
-    const description = await this.repo.getDescriptionById(descriptionId);
+    const description = await this.courseRepository.getDescriptionById(
+      descriptionId,
+    );
     if (!description) {
       throw new NotFoundError(`Description ${descriptionId} not found`);
     }
 
     await this.assertCourseOwnedByCv(cvId, description.courseId);
 
-    const deletedDescription = await this.repo.deleteDescription(descriptionId);
+    const deletedDescription = await this.courseRepository.deleteDescription(
+      descriptionId,
+    );
     if (!deletedDescription) {
       throw new BadRequestError(
         `[Service] Failed to delete description with id: ${descriptionId} for CV: ${cvId}`,
@@ -174,7 +184,7 @@ export class CourseService extends CvChildService<
     courseData: Omit<CourseInsert, "cvId">,
     descriptions: CourseDescInsert[],
   ): Promise<CourseSelect & { descriptions: CourseDescSelect[] }> {
-    const { id } = await this.repo.createCourseWithDescriptions(
+    const { id } = await this.courseRepository.createCourseWithDescriptions(
       { ...courseData, cvId },
       descriptions,
     );
@@ -189,7 +199,7 @@ export class CourseService extends CvChildService<
     const course = await this.assertCourseOwnedByCv(cvId, courseId);
 
     const courseWithDescriptions =
-      await this.repo.getCourseByIdWithDescriptions(course.id);
+      await this.courseRepository.getCourseByIdWithDescriptions(course.id);
     if (!courseWithDescriptions) {
       throw new NotFoundError(
         `[Service] Course ${course.id} found but failed to retrieve with descriptions.`,
@@ -211,7 +221,7 @@ export class CourseService extends CvChildService<
     cvId: number,
     options?: CourseQueryOptions,
   ): Promise<(CourseSelect & { descriptions: CourseDescSelect[] })[]> {
-    return this.repo.getAllCoursesWithDescriptions(cvId, options);
+    return this.courseRepository.getAllCoursesWithDescriptions(cvId, options);
   }
 
   async deleteCourseWithDescriptions(
@@ -219,7 +229,9 @@ export class CourseService extends CvChildService<
     courseId: number,
   ): Promise<boolean> {
     await this.assertCourseOwnedByCv(cvId, courseId);
-    const deleted = await this.repo.deleteCourseWithDescriptions(courseId);
+    const deleted = await this.courseRepository.deleteCourseWithDescriptions(
+      courseId,
+    );
     if (!deleted) {
       throw new BadRequestError(
         `[Service] Failed to delete course with id: ${courseId} for CV: ${cvId}`,
