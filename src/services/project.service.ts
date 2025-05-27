@@ -23,8 +23,8 @@ export class ProjectService extends CvChildService<
   ProjectInsert,
   ProjectUpdate
 > {
-  constructor(private readonly repo = new ProjectRepository()) {
-    super(repo);
+  constructor(private readonly projectRepository: ProjectRepository) {
+    super(projectRepository);
   }
 
   // ---------------------
@@ -46,7 +46,7 @@ export class ProjectService extends CvChildService<
     cvId: number,
     options?: ProjectQueryOptions,
   ): Promise<ProjectSelect[]> {
-    return this.repo.getAllProjects(cvId, options);
+    return this.projectRepository.getAllProjects(cvId, options);
   }
 
   async updateProject(
@@ -85,7 +85,7 @@ export class ProjectService extends CvChildService<
     descriptionData: ProjectDescInsert,
   ): Promise<ProjectDescInsert> {
     const project = await this.assertProjectOwnedByCv(cvId, projectId);
-    const description = await this.repo.createDescription(
+    const description = await this.projectRepository.createDescription(
       project.id,
       descriptionData,
     );
@@ -101,7 +101,9 @@ export class ProjectService extends CvChildService<
     cvId: number,
     descriptionId: number,
   ): Promise<ProjectDescSelect> {
-    const description = await this.repo.getDescriptionById(descriptionId);
+    const description = await this.projectRepository.getDescriptionById(
+      descriptionId,
+    );
     if (!description) {
       throw new NotFoundError(
         `[Service] description not found with id: ${descriptionId} in CV: ${cvId}`,
@@ -116,7 +118,7 @@ export class ProjectService extends CvChildService<
     projectId: number,
   ): Promise<ProjectDescSelect[]> {
     const project = await this.assertProjectOwnedByCv(cvId, projectId);
-    return this.repo.getAllDescriptions(project.id);
+    return this.projectRepository.getAllDescriptions(project.id);
   }
 
   async updateProjectDescription(
@@ -130,7 +132,7 @@ export class ProjectService extends CvChildService<
         `[Service] description not found with id: ${descriptionId} in CV: ${cvId}`,
       );
     }
-    const updatedDescription = await this.repo.updateDescription(
+    const updatedDescription = await this.projectRepository.updateDescription(
       description.id,
       newDescriptionData,
     );
@@ -153,7 +155,9 @@ export class ProjectService extends CvChildService<
       );
     }
 
-    const deleted = await this.repo.deleteDescription(description.id);
+    const deleted = await this.projectRepository.deleteDescription(
+      description.id,
+    );
     if (!deleted) {
       throw new NotFoundError(
         `[Service] failed to delete description with id: ${descriptionId} in CV: ${cvId}`,
@@ -172,7 +176,7 @@ export class ProjectService extends CvChildService<
     technologyData: ProjectTechStackInsert,
   ): Promise<ProjectTechStackInsert> {
     const project = await this.assertProjectOwnedByCv(cvId, projectId);
-    const technology = await this.repo.addOneTechnology(
+    const technology = await this.projectRepository.addOneTechnology(
       project.id,
       technologyData,
     );
@@ -188,7 +192,10 @@ export class ProjectService extends CvChildService<
     cvId: number,
     technologyId: number,
   ): Promise<ProjectTechStackSelect> {
-    const technology = await this.repo.getTechnologyById(cvId, technologyId);
+    const technology = await this.projectRepository.getTechnologyById(
+      cvId,
+      technologyId,
+    );
     if (!technology) {
       throw new NotFoundError(
         `[Service] technology not found with id: ${technologyId} in CV: ${cvId}`,
@@ -202,7 +209,7 @@ export class ProjectService extends CvChildService<
     projectId: number,
   ): Promise<ProjectTechStackSelect[]> {
     const project = await this.assertProjectOwnedByCv(cvId, projectId);
-    return this.repo.getAllTechnologies(project.id);
+    return this.projectRepository.getAllTechnologies(project.id);
   }
 
   async updateProjectTechnology(
@@ -214,7 +221,7 @@ export class ProjectService extends CvChildService<
 
     await this.assertProjectOwnedByCv(cvId, technology.projectId);
 
-    const updatedTechnology = await this.repo.updateOneTechnology(
+    const updatedTechnology = await this.projectRepository.updateOneTechnology(
       technology.projectId,
       technologyId,
       newTechnologyData,
@@ -234,7 +241,9 @@ export class ProjectService extends CvChildService<
     const technology = await this.getProjectTechnology(cvId, technologyId);
     await this.assertProjectOwnedByCv(cvId, technology.projectId);
 
-    const deleted = await this.repo.deleteTechnology(technology.id);
+    const deleted = await this.projectRepository.deleteTechnology(
+      technology.id,
+    );
     if (!deleted) {
       throw new NotFoundError(
         `[Service] failed to delete technology with id: ${technologyId} in CV: ${cvId}`,
@@ -255,14 +264,13 @@ export class ProjectService extends CvChildService<
     projectData: Omit<ProjectInsert, "cvId">,
     descriptionData: ProjectDescInsert[],
   ): Promise<ProjectWithDescriptions> {
-    const { id } = await this.repo.createProjectWithDescriptions(
+    const { id } = await this.projectRepository.createProjectWithDescriptions(
       { ...projectData, cvId },
       descriptionData,
     );
 
-    const projectWithDescriptions = await this.repo.getProjectWithDescriptions(
-      id,
-    );
+    const projectWithDescriptions =
+      await this.projectRepository.getProjectWithDescriptions(id);
     if (!projectWithDescriptions) {
       throw new NotFoundError(
         `[Service] project with id ${id} not found after creation`,
@@ -284,7 +292,7 @@ export class ProjectService extends CvChildService<
     cvId: number,
     options?: ProjectQueryOptions,
   ): Promise<ProjectWithDescriptions[]> {
-    return this.repo.getAllProjectsWithDescriptions(cvId, options);
+    return this.projectRepository.getAllProjectsWithDescriptions(cvId, options);
   }
 
   async deleteProjectWithDescriptions(
@@ -292,7 +300,9 @@ export class ProjectService extends CvChildService<
     projectId: number,
   ): Promise<boolean> {
     const project = await this.assertProjectOwnedByCv(cvId, projectId);
-    const deleted = await this.repo.deleteProjectWithDescriptions(project.id);
+    const deleted = await this.projectRepository.deleteProjectWithDescriptions(
+      project.id,
+    );
     if (!deleted) {
       throw new BadRequestError(
         `[Service] failed to delete project with id: ${projectId} in CV: ${cvId}`,
@@ -316,15 +326,14 @@ export class ProjectService extends CvChildService<
   ): Promise<ProjectWithDescriptionsAndTechStack> {
     const { project, descriptions, technologies } = insertData;
 
-    const { id } = await this.repo.createProjectFull(
+    const { id } = await this.projectRepository.createProjectFull(
       { ...project, cvId },
       descriptions,
       technologies,
     );
 
-    const projectWithDescAndTechStack = await this.repo.getProjectFullByCvId(
-      id,
-    );
+    const projectWithDescAndTechStack =
+      await this.projectRepository.getProjectFullByCvId(id);
     if (!projectWithDescAndTechStack) {
       throw new NotFoundError(
         `[Service] project with id ${id} not found after creation`,
@@ -342,7 +351,9 @@ export class ProjectService extends CvChildService<
   async getProjectFullByCvId(
     projectId: number,
   ): Promise<ProjectWithDescriptionsAndTechStack> {
-    const project = await this.repo.getProjectFullByCvId(projectId);
+    const project = await this.projectRepository.getProjectFullByCvId(
+      projectId,
+    );
     if (!project) {
       throw new NotFoundError(
         `[Service] project with id ${projectId} not found`,
@@ -362,7 +373,7 @@ export class ProjectService extends CvChildService<
     cvId: number,
     options?: ProjectQueryOptions,
   ): Promise<ProjectWithDescriptionsAndTechStack[]> {
-    return this.repo.getAllProjectsFullByCvId(cvId, options);
+    return this.projectRepository.getAllProjectsFullByCvId(cvId, options);
   }
 
   /**
@@ -382,7 +393,7 @@ export class ProjectService extends CvChildService<
     updateData: ProjectWithDescAndTechStackUpdate,
   ): Promise<ProjectWithDescriptionsAndTechStack> {
     const project = await this.assertProjectOwnedByCv(cvId, projectId);
-    const updatedProject = await this.repo.updateProjectFull(
+    const updatedProject = await this.projectRepository.updateProjectFull(
       project.id,
       updateData,
     );
@@ -403,7 +414,7 @@ export class ProjectService extends CvChildService<
    */
   async deleteProjectFull(cvId: number, projectId: number): Promise<boolean> {
     const project = await this.assertProjectOwnedByCv(cvId, projectId);
-    const deleted = await this.repo.deleteProjectFull(project.id);
+    const deleted = await this.projectRepository.deleteProjectFull(project.id);
     if (!deleted) {
       throw new BadRequestError(
         `[Service] failed to delete project with id: ${projectId} in CV: ${cvId}`,
