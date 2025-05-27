@@ -12,8 +12,8 @@ export class ProfileService extends CvChildService<
   ProfileInsert,
   ProfileUpdate
 > {
-  constructor(private readonly repo = new ProfileRepository()) {
-    super(repo);
+  constructor(private readonly profileRepository: ProfileRepository) {
+    super(profileRepository);
   }
 
   async createProfile(
@@ -31,7 +31,7 @@ export class ProfileService extends CvChildService<
     cvId: number,
     options?: ProfileQueryOptions,
   ): Promise<ProfileSelect[]> {
-    return this.repo.getAllProfiles(cvId, options);
+    return this.profileRepository.getAllProfiles(cvId, options);
   }
 
   async updateProfile(
