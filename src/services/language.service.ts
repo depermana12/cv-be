@@ -13,8 +13,8 @@ export class LanguageService extends CvChildService<
   LanguageInsert,
   LanguageUpdate
 > {
-  constructor(private readonly repo = new LanguageRepository()) {
-    super(repo);
+  constructor(private readonly languageRepository: LanguageRepository) {
+    super(languageRepository);
   }
 
   async createLanguage(
@@ -32,7 +32,7 @@ export class LanguageService extends CvChildService<
     cvId: number,
     options?: LanguageQueryOptions,
   ): Promise<LanguageSelect[]> {
-    return this.repo.getAllLanguages(cvId, options);
+    return this.languageRepository.getAllLanguages(cvId, options);
   }
 
   async updateLanguage(
