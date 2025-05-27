@@ -18,8 +18,8 @@ export class OrganizationService extends CvChildService<
   OrganizationInsert,
   OrganizationUpdate
 > {
-  constructor(private readonly repo = new OrganizationRepository()) {
-    super(repo);
+  constructor(private readonly orgRepository: OrganizationRepository) {
+    super(orgRepository);
   }
 
   // ---------------------
@@ -84,7 +84,7 @@ export class OrganizationService extends CvChildService<
   ): Promise<OrganizationDescInsert> {
     await this.assertOrgOwnedByCv(cvId, organizationId);
 
-    const description = await this.repo.createDescription(
+    const description = await this.orgRepository.createDescription(
       organizationId,
       descriptionData,
     );
@@ -102,7 +102,9 @@ export class OrganizationService extends CvChildService<
     cvId: number,
     organizationId: number,
   ): Promise<OrganizationDescSelect> {
-    const description = await this.repo.getDescriptionById(organizationId);
+    const description = await this.orgRepository.getDescriptionById(
+      organizationId,
+    );
     if (!description) {
       throw new NotFoundError(
         `[Service] Description ${organizationId} not found for CV: ${cvId}`,
@@ -117,7 +119,9 @@ export class OrganizationService extends CvChildService<
     organizationId: number,
   ): Promise<OrganizationDescSelect[]> {
     await this.assertOrgOwnedByCv(cvId, organizationId);
-    const descriptions = await this.repo.getAllDescriptions(organizationId);
+    const descriptions = await this.orgRepository.getAllDescriptions(
+      organizationId,
+    );
 
     return descriptions;
   }
@@ -127,7 +131,9 @@ export class OrganizationService extends CvChildService<
     descriptionId: number,
     newDescriptionData: OrganizationDescUpdate,
   ): Promise<OrganizationDescSelect> {
-    const description = await this.repo.getDescriptionById(descriptionId);
+    const description = await this.orgRepository.getDescriptionById(
+      descriptionId,
+    );
     if (!description) {
       throw new NotFoundError(
         `[Service] Description with id ${descriptionId} not found`,
@@ -136,7 +142,7 @@ export class OrganizationService extends CvChildService<
 
     await this.assertOrgOwnedByCv(cvId, descriptionId);
 
-    const updatedDescription = await this.repo.updateDescription(
+    const updatedDescription = await this.orgRepository.updateDescription(
       descriptionId,
       newDescriptionData,
     );
@@ -152,7 +158,9 @@ export class OrganizationService extends CvChildService<
     cvId: number,
     descriptionId: number,
   ): Promise<boolean> {
-    const description = await this.repo.getDescriptionById(descriptionId);
+    const description = await this.orgRepository.getDescriptionById(
+      descriptionId,
+    );
     if (!description) {
       throw new NotFoundError(
         `[Service] Description with id ${descriptionId} not found`,
@@ -161,7 +169,7 @@ export class OrganizationService extends CvChildService<
 
     await this.assertOrgOwnedByCv(cvId, description.organizationId);
 
-    const deleted = await this.repo.deleteDescription(descriptionId);
+    const deleted = await this.orgRepository.deleteDescription(descriptionId);
     if (!deleted) {
       throw new BadRequestError(
         `[Service] Failed to delete description with id: ${descriptionId} for CV: ${cvId}`,
@@ -186,7 +194,7 @@ export class OrganizationService extends CvChildService<
     organizationData: Omit<OrganizationInsert, "cvId">,
     descriptionData: OrganizationDescInsert[],
   ): Promise<OrganizationSelect & { descriptions: OrganizationDescInsert[] }> {
-    const { id } = await this.repo.createOrganizationWithDescriptions(
+    const { id } = await this.orgRepository.createOrganizationWithDescriptions(
       { ...organizationData, cvId },
       descriptionData,
     );
@@ -200,7 +208,7 @@ export class OrganizationService extends CvChildService<
   ): Promise<OrganizationWithDescriptions> {
     const organization = await this.assertOrgOwnedByCv(cvId, organizationId);
 
-    const orgWithDescriptions = await this.repo.getOrgWithDescriptions(
+    const orgWithDescriptions = await this.orgRepository.getOrgWithDescriptions(
       organization.id,
     );
     if (!orgWithDescriptions) {
@@ -224,7 +232,7 @@ export class OrganizationService extends CvChildService<
     cvId: number,
     options?: OrganizationQueryOptions,
   ): Promise<OrganizationWithDescriptions[]> {
-    return this.repo.getAllByIdWithDescriptions(cvId, options);
+    return this.orgRepository.getAllByIdWithDescriptions(cvId, options);
   }
 
   async deleteOrgWithDescriptions(
@@ -232,7 +240,9 @@ export class OrganizationService extends CvChildService<
     organizationId: number,
   ): Promise<boolean> {
     await this.assertOrgOwnedByCv(cvId, organizationId);
-    const deleted = await this.repo.deleteOrgWithDescriptions(organizationId);
+    const deleted = await this.orgRepository.deleteOrgWithDescriptions(
+      organizationId,
+    );
     if (!deleted) {
       throw new BadRequestError(
         `[Service] Failed to delete organization with id: ${organizationId} for CV: ${cvId}`,
