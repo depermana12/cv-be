@@ -13,12 +13,12 @@ export class SkillService extends CvChildService<
   SkillInsert,
   SkillUpdate
 > {
-  constructor(private readonly repo = new SkillRepository()) {
-    super(repo);
+  constructor(private readonly skillRepository: SkillRepository) {
+    super(skillRepository);
   }
 
   async getUniqueCategories() {
-    return this.repo.getCategories();
+    return this.skillRepository.getCategories();
   }
 
   async createSkill(
@@ -36,7 +36,7 @@ export class SkillService extends CvChildService<
     cvId: number,
     options?: SkillQueryOptions,
   ): Promise<SkillSelect[]> {
-    return this.repo.getAllSkills(cvId, options);
+    return this.skillRepository.getAllSkills(cvId, options);
   }
 
   async updateSkill(
