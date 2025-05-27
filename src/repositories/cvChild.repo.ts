@@ -4,9 +4,7 @@ import type { MySql2Database } from "drizzle-orm/mysql2";
 import { and, eq, type InferSelectModel } from "drizzle-orm";
 import { DataBaseError } from "../errors/database.error";
 import type { schema } from "../db";
-import { getDb } from "../db/index";
 
-export const dbInstance = await getDb();
 export abstract class CvChildRepository<
   TTable extends MySqlTable<TableConfig>,
   TInsert,
@@ -15,7 +13,7 @@ export abstract class CvChildRepository<
 > {
   constructor(
     protected readonly table: TTable,
-    protected readonly db: MySql2Database<typeof schema> = dbInstance,
+    protected readonly db: MySql2Database<typeof schema>,
   ) {}
   async existsInCv(cvId: number, id: number): Promise<boolean> {
     const record = await this.db
