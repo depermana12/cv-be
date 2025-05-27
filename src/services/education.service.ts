@@ -1,5 +1,5 @@
 import { CvChildService } from "./cvChild.service";
-import { educationRepository } from "./instance.repo";
+import type { EducationRepository } from "../repositories/education.repo";
 import type {
   EducationInsert,
   EducationQueryOptions,
@@ -12,8 +12,8 @@ export class EducationService extends CvChildService<
   EducationInsert,
   EducationUpdate
 > {
-  constructor(private readonly repo = educationRepository) {
-    super(repo);
+  constructor(private readonly educationRepository: EducationRepository) {
+    super(educationRepository);
   }
 
   async createEducation(
@@ -44,13 +44,13 @@ export class EducationService extends CvChildService<
     cvId: number,
     options?: EducationQueryOptions,
   ): Promise<EducationSelect[]> {
-    return this.repo.getAllEducations(cvId, options);
+    return this.educationRepository.getAllEducations(cvId, options);
   }
 
   async updateEducation(
     cvId: number,
     educationId: number,
-    newEducationData: EducationUpdate,
+    newEducationData: Omit<EducationUpdate, "cvId">,
   ): Promise<EducationSelect> {
     return this.updateForCv(cvId, educationId, newEducationData);
   }
