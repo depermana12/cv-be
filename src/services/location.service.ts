@@ -12,8 +12,8 @@ export class LocationService extends CvChildService<
   LocationInsert,
   LocationUpdate
 > {
-  constructor(private readonly repo = new LocationRepository()) {
-    super(repo);
+  constructor(private readonly locationRepository: LocationRepository) {
+    super(locationRepository);
   }
 
   async createLocation(
@@ -31,7 +31,7 @@ export class LocationService extends CvChildService<
     cvId: number,
     options?: LocationQueryOptions,
   ): Promise<LocationSelect[]> {
-    return this.repo.getAllLocations(cvId, options);
+    return this.locationRepository.getAllLocations(cvId, options);
   }
 
   async updateLocation(
