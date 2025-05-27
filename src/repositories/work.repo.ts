@@ -27,7 +27,7 @@ export class WorkRepository extends CvChildRepository<
 
   // probably not working since i setup schema relations not in spreaded
   // i already setup spreaded schema drizzle queries in 14/05/25
-  async getByIdWithDescriptions(
+  async getWorkWithDescriptions(
     id: number,
   ): Promise<WorkWithDescriptions | null> {
     const result = await this.db.query.works.findFirst({
@@ -39,7 +39,31 @@ export class WorkRepository extends CvChildRepository<
     return result ?? null;
   }
 
-  async getAllByIdWithDescriptions(
+  async getAllWorks(
+    cvId: number,
+    options?: WorkQueryOptions,
+  ): Promise<WorkSelect[]> {
+    const whereClause = [eq(works.cvId, cvId)];
+
+    if (options?.search) {
+      whereClause.push(
+        like(sql`lower(${works.company})`, `%${options.search.toLowerCase()}%`),
+      );
+    }
+
+    return this.db.query.works.findMany({
+      where: and(...whereClause),
+      orderBy: options?.sortBy
+        ? [
+            options.sortOrder === "asc"
+              ? asc(works[options.sortBy])
+              : desc(works[options.sortBy]),
+          ]
+        : [],
+    });
+  }
+
+  async getAllWorksWithDescriptions(
     cvId: number,
     options?: WorkQueryOptions,
   ): Promise<WorkWithDescriptions[]> {

@@ -1,5 +1,4 @@
 import { CvChildService } from "./cvChild.service";
-import { workRepository } from "./instance.repo";
 import type {
   WorkDescInsert,
   WorkDescSelect,
@@ -10,26 +9,33 @@ import type {
 } from "../db/types/work.type";
 import { BadRequestError } from "../errors/bad-request.error";
 import { NotFoundError } from "../errors/not-found.error";
+import { WorkRepository } from "../repositories/work.repo";
 
 export class WorkService extends CvChildService<
   WorkSelect,
   WorkInsert,
   WorkUpdate
 > {
-  constructor(private readonly repo = workRepository) {
-    super(repo);
+  constructor(private readonly workRepository: WorkRepository) {
+    super(workRepository);
   }
 
-  async createWork(cvId: number, courseData: WorkInsert): Promise<WorkSelect> {
-    return this.createOwnedByCv(cvId, courseData);
+  async createWork(
+    cvId: number,
+    workData: Omit<WorkInsert, "cvId">,
+  ): Promise<WorkSelect> {
+    return this.createForCv(cvId, { ...workData, cvId });
   }
 
   async getWork(cvId: number, workId: number): Promise<WorkSelect> {
-    return this.getOwnedByCv(cvId, workId);
+    return this.findByCvId(cvId, workId);
   }
 
-  async getAllWorks(cvId: number): Promise<WorkSelect[]> {
-    return this.getAllOwnedByCv(cvId);
+  async getAllWorks(
+    cvId: number,
+    options?: WorkQueryOptions,
+  ): Promise<WorkSelect[]> {
+    return this.workRepository.getAllWorks(cvId, options);
   }
 
   async updateWork(
@@ -37,11 +43,11 @@ export class WorkService extends CvChildService<
     workId: number,
     newWorkData: WorkUpdate,
   ): Promise<WorkSelect> {
-    return this.updateOwnedByCv(cvId, workId, newWorkData);
+    return this.updateForCv(cvId, workId, newWorkData);
   }
 
   async deleteWork(cvId: number, workId: number): Promise<boolean> {
-    return this.deleteOwnedByCv(cvId, workId);
+    return this.deleteFromCv(cvId, workId);
   }
 
   /**
@@ -55,7 +61,7 @@ export class WorkService extends CvChildService<
     cvId: number,
     workId: number,
   ): Promise<WorkSelect> {
-    return this.getOwnedByCv(cvId, workId);
+    return this.findByCvId(cvId, workId);
   }
 
   /**
@@ -69,7 +75,7 @@ export class WorkService extends CvChildService<
     descriptionData: WorkDescInsert,
   ): Promise<WorkDescSelect> {
     const work = await this.assertWorkOwnedByCv(cvId, workId);
-    const description = await this.repo.createDescription(
+    const description = await this.workRepository.createDescription(
       work.id,
       descriptionData,
     );
@@ -85,7 +91,9 @@ export class WorkService extends CvChildService<
     cvId: number,
     descriptionId: number,
   ): Promise<WorkDescSelect> {
-    const description = await this.repo.getDescriptionById(descriptionId);
+    const description = await this.workRepository.getDescriptionById(
+      descriptionId,
+    );
     if (!description) {
       throw new NotFoundError(
         `cannot get: description with id ${descriptionId} not found`,
@@ -100,7 +108,7 @@ export class WorkService extends CvChildService<
     workId: number,
   ): Promise<WorkDescSelect[]> {
     await this.assertWorkOwnedByCv(cvId, workId);
-    return this.repo.getAllDescriptions(workId);
+    return this.workRepository.getAllDescriptions(workId);
   }
 
   async updateWorkDescription(
@@ -108,14 +116,16 @@ export class WorkService extends CvChildService<
     descriptionId: number,
     newDescriptionData: WorkDescInsert,
   ): Promise<WorkDescSelect> {
-    const description = await this.repo.getDescriptionById(descriptionId);
+    const description = await this.workRepository.getDescriptionById(
+      descriptionId,
+    );
     if (!description) {
       throw new NotFoundError(
         `cannot update: description with id ${descriptionId} not found`,
       );
     }
     await this.assertWorkOwnedByCv(cvId, description.workId);
-    const updatedDescription = await this.repo.updateDescription(
+    const updatedDescription = await this.workRepository.updateDescription(
       descriptionId,
       newDescriptionData,
     );
@@ -131,14 +141,18 @@ export class WorkService extends CvChildService<
     cvId: number,
     descriptionId: number,
   ): Promise<boolean> {
-    const description = await this.repo.getDescriptionById(descriptionId);
+    const description = await this.workRepository.getDescriptionById(
+      descriptionId,
+    );
     if (!description) {
       throw new NotFoundError(
         `cannot delete: description with id ${descriptionId} not found`,
       );
     }
     await this.assertWorkOwnedByCv(cvId, description.workId);
-    const deletedDescription = await this.repo.deleteDescription(descriptionId);
+    const deletedDescription = await this.workRepository.deleteDescription(
+      descriptionId,
+    );
     if (!deletedDescription) {
       throw new BadRequestError(
         `cannot delete description with id ${descriptionId}`,
@@ -156,19 +170,16 @@ export class WorkService extends CvChildService<
    */
   async createWorkWithDescriptions(
     cvId: number,
-    workData: WorkInsert,
+    workData: Omit<WorkInsert, "cvId">,
     descriptions: WorkDescInsert[],
   ): Promise<WorkSelect & { descriptions: WorkDescSelect[] }> {
-    if (workData.cvId !== cvId) {
-      throw new BadRequestError("Work cvId does not match provided cvId");
-    }
-
-    const { id } = await this.repo.createWorkWithDescriptions(
-      workData,
+    const { id } = await this.workRepository.createWorkWithDescriptions(
+      { ...workData, cvId },
       descriptions,
     );
 
-    const workWithDescriptions = await this.repo.getByIdWithDescriptions(id);
+    const workWithDescriptions =
+      await this.workRepository.getWorkWithDescriptions(id);
     if (!workWithDescriptions) {
       throw new NotFoundError(`Work with id ${id} not found`);
     }
@@ -189,7 +200,7 @@ export class WorkService extends CvChildService<
     cvId: number,
     options?: WorkQueryOptions,
   ): Promise<(WorkSelect & { descriptions: WorkDescSelect[] })[]> {
-    return this.repo.getAllByIdWithDescriptions(cvId, options);
+    return this.workRepository.getAllWorksWithDescriptions(cvId, options);
   }
 
   async deleteWorkWithDescriptions(
@@ -197,7 +208,9 @@ export class WorkService extends CvChildService<
     workId: number,
   ): Promise<boolean> {
     await this.assertWorkOwnedByCv(cvId, workId);
-    const deleted = await this.repo.deleteWorkWithDescriptions(workId);
+    const deleted = await this.workRepository.deleteWorkWithDescriptions(
+      workId,
+    );
     if (!deleted) {
       throw new BadRequestError(`cannot delete work with id ${workId}`);
     }
