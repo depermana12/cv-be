@@ -12,8 +12,8 @@ export class SoftSkillService extends CvChildService<
   SoftSkillInsert,
   SoftSkillUpdate
 > {
-  constructor(private readonly repo = new SoftSkillRepository()) {
-    super(repo);
+  constructor(private readonly softSkillRepository: SoftSkillRepository) {
+    super(softSkillRepository);
   }
 
   async createSoftSkill(
@@ -34,7 +34,7 @@ export class SoftSkillService extends CvChildService<
     cvId: number,
     options?: SoftSkillQueryOptions,
   ): Promise<SoftSkillSelect[]> {
-    return this.repo.getAllSoftSkills(cvId, options);
+    return this.softSkillRepository.getAllSoftSkills(cvId, options);
   }
 
   async updateSoftSkill(
