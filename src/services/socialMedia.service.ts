@@ -12,8 +12,8 @@ export class SocialMediaService extends CvChildService<
   SocialInsert,
   SocialUpdate
 > {
-  constructor(private readonly repo = new SocialMediaRepository()) {
-    super(repo);
+  constructor(private readonly socialMediaRepository: SocialMediaRepository) {
+    super(socialMediaRepository);
   }
 
   async createSocialMedia(
@@ -31,7 +31,7 @@ export class SocialMediaService extends CvChildService<
     cvId: number,
     options?: SocialQueryOptions,
   ): Promise<SocialSelect[]> {
-    return this.repo.getAllSocialMedia(cvId, options);
+    return this.socialMediaRepository.getAllSocialMedia(cvId, options);
   }
 
   async updateSocialMedia(
