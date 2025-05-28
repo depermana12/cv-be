@@ -1,5 +1,5 @@
 import "dotenv/config";
-import { drizzle } from "drizzle-orm/mysql2";
+import { drizzle, MySql2Database } from "drizzle-orm/mysql2";
 import mysql from "mysql2/promise";
 
 import * as user from "./schema/user.db";
@@ -49,53 +49,37 @@ const getDatabaseUrl = () => {
   return process.env.DATABASE_URL;
 };
 
-export const getDb = async () => {
-  const client = await mysql.createConnection({
-    uri: process.env.DATABASE_URL,
-  });
-  return drizzle(client, {
-    schema,
-    mode: "default",
-  });
-
-  // const globalAny = global as typeof globalThis & {
-  //   __drizzleDbInstance?: ReturnType<typeof drizzle>;
-  //   __drizzlePool?: mysql.Pool;
-  // };
-
-  // if (!globalAny.__drizzleDbInstance) {
-  //   const connectionUrl = getDatabaseUrl();
-  //   const pool = mysql.createPool({
-  //     uri: connectionUrl,
-  //     connectionLimit: 10,
-  //     waitForConnections: true,
-  //     idleTimeout: 60000,
-  //     enableKeepAlive: true,
-  //     keepAliveInitialDelay: 0,
-  //   });
-
-  //   globalAny.__drizzlePool = pool;
-  //   globalAny.__drizzleDbInstance = drizzle(pool, { schema, mode: "default" });
-  // }
-
-  // return globalAny.__drizzleDbInstance;
+/**
+ * Singleton pool drizzle mysql with globalThis store
+ * extending global object to add __drizzleDbInstance and __drizzlePool
+ * This allows to reuse single database connection and db instance after the first call
+ */
+const globalAny = global as typeof globalThis & {
+  __drizzleDbInstance?: MySql2Database<typeof schema>;
+  __drizzlePool?: mysql.Pool;
 };
 
-// // Cleanup function
-// if (process.env.NODE_ENV === "development") {
-//   process.on("beforeExit", async () => {
-//     const globalAny = global as typeof globalThis & {
-//       __drizzlePool?: mysql.Pool;
-//     };
+export const getDb = async () => {
+  if (!globalAny.__drizzleDbInstance) {
+    const connectionUrl = getDatabaseUrl();
 
-//     if (globalAny.__drizzlePool) {
-//       await globalAny.__drizzlePool.end();
-//       console.log("Database pool closed");
-//     }
-//   });
-// }
+    const pool = mysql.createPool({
+      uri: connectionUrl,
+      connectionLimit: 10,
+      waitForConnections: true,
+      idleTimeout: 60000,
+      enableKeepAlive: true,
+      keepAliveInitialDelay: 0,
+    });
 
-// export const db = drizzle(process.env.DATABASE_URL!, {
-//   schema,
-//   mode: "default",
-// });
+    const db = drizzle(pool, {
+      schema,
+      mode: "default",
+    });
+
+    globalAny.__drizzlePool = pool;
+    globalAny.__drizzleDbInstance = db;
+  }
+
+  return globalAny.__drizzleDbInstance;
+};
