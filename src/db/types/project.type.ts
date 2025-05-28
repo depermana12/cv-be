@@ -16,35 +16,35 @@ export type ProjectDescUpdate = Partial<
   Omit<typeof projectDescription.$inferInsert, "id" | "projectId">
 >;
 
-export type ProjectTechStackSelect = typeof projectTechnologies.$inferSelect;
-export type ProjectTechStackInsert = typeof projectTechnologies.$inferInsert;
-export type ProjectTechStackUpdate = Partial<
+export type ProjectTechSelect = typeof projectTechnologies.$inferSelect;
+export type ProjectTechInsert = typeof projectTechnologies.$inferInsert;
+export type ProjectTechUpdate = Partial<
   Omit<typeof projectTechnologies.$inferInsert, "id" | "projectId">
 >;
 
-export type ProjectWithDescriptionsAndTechStackSelect = ProjectSelect & {
+export type ProjectWithDescriptionsAndTechSelect = ProjectSelect & {
   descriptions: ProjectDescSelect[];
-  technologies: ProjectTechStackSelect[];
+  technologies: ProjectTechSelect[];
 };
 
-export type ProjectWithDescAndTechStackInsert = {
+export type ProjectWithDescAndTechInsert = {
   project: Omit<ProjectInsert, "cvId">;
   descriptions: ProjectDescInsert[];
-  technologies: ProjectTechStackInsert[];
+  technologies: ProjectTechInsert[];
 };
 
-export type ProjectWithDescAndTechStackUpdate = {
+export type ProjectWithDescAndTechUpdate = {
   project?: Partial<Omit<ProjectUpdate, "cvId">>;
   descriptions?: ProjectDescUpdate[];
-  technologies?: ProjectTechStackUpdate[];
+  technologies?: ProjectTechUpdate[];
 };
 
 export type ProjectWithDescriptions = ProjectSelect & {
   descriptions: ProjectDescSelect[];
 };
 
-export type ProjectWithTechStack = ProjectSelect & {
-  technologies: ProjectTechStackSelect[];
+export type ProjectWithTech = ProjectSelect & {
+  technologies: ProjectTechSelect[];
 };
 
 export type ProjectQueryOptions = {
@@ -53,6 +53,6 @@ export type ProjectQueryOptions = {
   sortOrder?: "asc" | "desc";
 };
 
-export type ProjectWithDescriptionsAndTechStack = ProjectWithDescriptions & {
-  technologies: ProjectTechStackSelect[];
+export type ProjectWithDescriptionsAndTech = ProjectWithDescriptions & {
+  technologies: ProjectTechSelect[];
 };

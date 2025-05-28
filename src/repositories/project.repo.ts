@@ -9,15 +9,15 @@ import {
 import type {
   ProjectInsert,
   ProjectDescInsert,
-  ProjectTechStackInsert,
+  ProjectTechInsert,
   ProjectSelect,
   ProjectUpdate,
   ProjectDescSelect,
   ProjectQueryOptions,
-  ProjectWithDescriptionsAndTechStack,
-  ProjectWithDescAndTechStackInsert,
-  ProjectTechStackSelect,
-  ProjectWithDescAndTechStackUpdate,
+  ProjectWithDescriptionsAndTech,
+  ProjectWithDescAndTechInsert,
+  ProjectTechSelect,
+  ProjectWithDescAndTechUpdate,
 } from "../db/types/project.type";
 import { getDb } from "../db";
 
@@ -93,7 +93,7 @@ export class ProjectRepository extends CvChildRepository<
 
   async getProjectFullByCvId(
     projectId: number,
-  ): Promise<ProjectWithDescriptionsAndTechStack | null> {
+  ): Promise<ProjectWithDescriptionsAndTech | null> {
     const project = await this.db.query.projects.findFirst({
       where: eq(projects.id, projectId),
       with: {
@@ -110,7 +110,7 @@ export class ProjectRepository extends CvChildRepository<
   async getAllProjectsFullByCvId(
     cvId: number,
     options?: ProjectQueryOptions,
-  ): Promise<ProjectWithDescriptionsAndTechStack[]> {
+  ): Promise<ProjectWithDescriptionsAndTech[]> {
     const whereClause = [eq(projects.cvId, cvId)];
 
     if (options?.search) {
@@ -191,7 +191,7 @@ export class ProjectRepository extends CvChildRepository<
 
   async addTechnologies(
     projectId: number,
-    technologies: ProjectTechStackInsert[],
+    technologies: ProjectTechInsert[],
   ): Promise<{ id: number }> {
     const [result] = await this.db
       .insert(projectTechnologies)
@@ -203,7 +203,7 @@ export class ProjectRepository extends CvChildRepository<
 
   async addOneTechnology(
     projectId: number,
-    technology: ProjectTechStackInsert,
+    technology: ProjectTechInsert,
   ): Promise<{ id: number }> {
     const [result] = await this.db
       .insert(projectTechnologies)
@@ -213,9 +213,7 @@ export class ProjectRepository extends CvChildRepository<
     return { id: result.id };
   }
 
-  async getAllTechnologies(
-    projectId: number,
-  ): Promise<ProjectTechStackSelect[]> {
+  async getAllTechnologies(projectId: number): Promise<ProjectTechSelect[]> {
     return this.db
       .select()
       .from(projectTechnologies)
@@ -225,7 +223,7 @@ export class ProjectRepository extends CvChildRepository<
   async getTechnologyById(
     projectId: number,
     techId: number,
-  ): Promise<ProjectTechStackSelect | null> {
+  ): Promise<ProjectTechSelect | null> {
     const [result] = await this.db
       .select()
       .from(projectTechnologies)
@@ -241,7 +239,7 @@ export class ProjectRepository extends CvChildRepository<
   async updateOneTechnology(
     projectId: number,
     techId: number,
-    newTechnology: ProjectTechStackInsert,
+    newTechnology: ProjectTechInsert,
   ): Promise<boolean> {
     const [result] = await this.db
       .update(projectTechnologies)
@@ -258,7 +256,7 @@ export class ProjectRepository extends CvChildRepository<
 
   async updateManyTechnologies(
     projectId: number,
-    technologies: ProjectTechStackInsert[],
+    technologies: ProjectTechInsert[],
   ) {
     await this.db.transaction(async (tx) => {
       await tx
@@ -309,7 +307,7 @@ export class ProjectRepository extends CvChildRepository<
   async createProjectFull(
     projectData: ProjectInsert,
     descriptions: ProjectDescInsert[],
-    technologies: ProjectTechStackInsert[],
+    technologies: ProjectTechInsert[],
   ): Promise<{ id: number }> {
     return this.db.transaction(async (tx) => {
       const [project] = await tx
@@ -339,7 +337,7 @@ export class ProjectRepository extends CvChildRepository<
 
   async updateProjectFull(
     projectId: number,
-    projectData: ProjectWithDescAndTechStackUpdate,
+    projectData: ProjectWithDescAndTechUpdate,
   ): Promise<boolean> {
     return this.db.transaction(async (tx) => {
       const { project, descriptions, technologies } = projectData;

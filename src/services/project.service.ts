@@ -7,23 +7,27 @@ import type {
   ProjectInsert,
   ProjectQueryOptions,
   ProjectSelect,
-  ProjectTechStackInsert,
-  ProjectTechStackSelect,
+  ProjectTechInsert,
+  ProjectTechSelect,
   ProjectUpdate,
-  ProjectWithDescAndTechStackInsert,
-  ProjectWithDescAndTechStackUpdate,
+  ProjectWithDescAndTechInsert,
+  ProjectWithDescAndTechUpdate,
   ProjectWithDescriptions,
-  ProjectWithDescriptionsAndTechStack,
+  ProjectWithDescriptionsAndTech,
 } from "../db/types/project.type";
 import { NotFoundError } from "../errors/not-found.error";
 import { BadRequestError } from "../errors/bad-request.error";
+import { ProjectTechService } from "./project-tech.service";
 
 export class ProjectService extends CvChildService<
   ProjectSelect,
   ProjectInsert,
   ProjectUpdate
 > {
-  constructor(private readonly projectRepository: ProjectRepository) {
+  constructor(
+    private readonly projectRepository: ProjectRepository,
+    private readonly projectTechService: ProjectTechService,
+  ) {
     super(projectRepository);
   }
 
@@ -173,80 +177,62 @@ export class ProjectService extends CvChildService<
   async addProjectTechnology(
     cvId: number,
     projectId: number,
-    technologyData: ProjectTechStackInsert,
-  ): Promise<ProjectTechStackInsert> {
-    const project = await this.assertProjectOwnedByCv(cvId, projectId);
-    const technology = await this.projectRepository.addOneTechnology(
-      project.id,
-      technologyData,
-    );
-    if (!technology) {
-      throw new NotFoundError(
-        `[Service] failed to create technology for project: ${projectId} in CV: ${cvId}`,
-      );
-    }
-    return this.getProjectTechnology(cvId, technology.id);
+    technologyData: ProjectTechInsert,
+  ): Promise<ProjectTechSelect> {
+    await this.assertProjectOwnedByCv(cvId, projectId);
+    return this.projectTechService.addTechnology(projectId, technologyData);
   }
 
   async getProjectTechnology(
     cvId: number,
+    projectId: number,
     technologyId: number,
-  ): Promise<ProjectTechStackSelect> {
-    const technology = await this.projectRepository.getTechnologyById(
-      cvId,
-      technologyId,
-    );
-    if (!technology) {
-      throw new NotFoundError(
-        `[Service] technology not found with id: ${technologyId} in CV: ${cvId}`,
-      );
-    }
-    return technology;
+  ): Promise<ProjectTechSelect> {
+    await this.assertProjectOwnedByCv(cvId, projectId);
+    return this.projectTechService.getTechnologyById(projectId, technologyId);
   }
 
   async getAllProjectTechnologies(
     cvId: number,
     projectId: number,
-  ): Promise<ProjectTechStackSelect[]> {
-    const project = await this.assertProjectOwnedByCv(cvId, projectId);
-    return this.projectRepository.getAllTechnologies(project.id);
+  ): Promise<ProjectTechSelect[]> {
+    await this.assertProjectOwnedByCv(cvId, projectId);
+    return this.projectTechService.getAllTechnologies(projectId);
   }
 
   async updateProjectTechnology(
     cvId: number,
+    projectId: number,
     technologyId: number,
-    newTechnologyData: ProjectTechStackInsert,
-  ): Promise<ProjectTechStackSelect> {
-    const technology = await this.getProjectTechnology(cvId, technologyId);
-
-    await this.assertProjectOwnedByCv(cvId, technology.projectId);
-
-    const updatedTechnology = await this.projectRepository.updateOneTechnology(
-      technology.projectId,
+    newTechnologyData: ProjectTechInsert,
+  ): Promise<ProjectTechSelect> {
+    await this.assertProjectOwnedByCv(cvId, projectId);
+    const updated = await this.projectTechService.updateTechnology(
+      projectId,
       technologyId,
       newTechnologyData,
     );
-    if (!updatedTechnology) {
+    if (!updated) {
       throw new NotFoundError(
-        `[Service] failed to update technology with id: ${technologyId} in CV: ${cvId}`,
+        `[Service] failed to update technology with id: ${technologyId} in project: ${projectId}`,
       );
     }
-    return this.getProjectTechnology(cvId, technologyId);
+    return updated;
   }
 
   async deleteProjectTechnology(
     cvId: number,
+    projectId: number,
     technologyId: number,
   ): Promise<boolean> {
-    const technology = await this.getProjectTechnology(cvId, technologyId);
-    await this.assertProjectOwnedByCv(cvId, technology.projectId);
-
-    const deleted = await this.projectRepository.deleteTechnology(
-      technology.id,
+    await this.assertProjectOwnedByCv(cvId, projectId);
+    const deleted = await this.projectTechService.deleteTechnology(
+      projectId,
+      technologyId,
     );
     if (!deleted) {
       throw new NotFoundError(
-        `[Service] failed to delete technology with id: ${technologyId} in CV: ${cvId}`,
+        `[Service] failed to delete technology with id: ${technologyId} in project: ${projectId}`,
       );
     }
     return deleted;
@@ -322,8 +308,8 @@ export class ProjectService extends CvChildService<
    */
   async createProjectFull(
     cvId: number,
-    insertData: ProjectWithDescAndTechStackInsert,
-  ): Promise<ProjectWithDescriptionsAndTechStack> {
+    insertData: ProjectWithDescAndTechInsert,
+  ): Promise<ProjectWithDescriptionsAndTech> {
     const { project, descriptions, technologies } = insertData;
 
     const { id } = await this.projectRepository.createProjectFull(
@@ -350,7 +336,7 @@ export class ProjectService extends CvChildService<
    */
   async getProjectFullByCvId(
     projectId: number,
-  ): Promise<ProjectWithDescriptionsAndTechStack> {
+  ): Promise<ProjectWithDescriptionsAndTech> {
     const project = await this.projectRepository.getProjectFullByCvId(
       projectId,
     );
@@ -372,7 +358,7 @@ export class ProjectService extends CvChildService<
   async getAllProjectsFullByCvId(
     cvId: number,
     options?: ProjectQueryOptions,
-  ): Promise<ProjectWithDescriptionsAndTechStack[]> {
+  ): Promise<ProjectWithDescriptionsAndTech[]> {
     return this.projectRepository.getAllProjectsFullByCvId(cvId, options);
   }
 
@@ -390,8 +376,8 @@ export class ProjectService extends CvChildService<
   async updateProjectFull(
     cvId: number,
     projectId: number,
-    updateData: ProjectWithDescAndTechStackUpdate,
-  ): Promise<ProjectWithDescriptionsAndTechStack> {
+    updateData: ProjectWithDescAndTechUpdate,
+  ): Promise<ProjectWithDescriptionsAndTech> {
     const project = await this.assertProjectOwnedByCv(cvId, projectId);
     const updatedProject = await this.projectRepository.updateProjectFull(
       project.id,

@@ -1,66 +1,138 @@
-import { eq } from "drizzle-orm";
-
 import { CvChildRepository } from "./cvChild.repo";
 import { projectTechnologies } from "../db/schema/project.db";
 import type {
-  ProjectTechStackInsert,
-  ProjectTechStackSelect,
-  ProjectTechStackUpdate,
+  ProjectTechInsert,
+  ProjectTechSelect,
+  ProjectTechUpdate,
 } from "../db/types/project.type";
 import { getDb } from "../db";
+import { and, asc, desc, eq, like, sql } from "drizzle-orm";
+import type { ProjectTechQueryOptions } from "../db/types/project-tech.type";
 
 const db = await getDb();
-export class ProjectTechStack extends CvChildRepository<
+export class ProjectTechRepository extends CvChildRepository<
   typeof projectTechnologies,
-  ProjectTechStackInsert,
-  ProjectTechStackSelect,
-  ProjectTechStackUpdate
+  ProjectTechInsert,
+  ProjectTechSelect,
+  ProjectTechUpdate
 > {
   constructor() {
     super(projectTechnologies, db);
   }
 
-  async getByProjectId(projectId: number) {
-    const rows = await this.db
-      .select()
-      .from(this.table)
-      .where(eq(this.table.projectId, projectId));
-    return rows[0] ?? null;
-  }
-
-  async getByProjectIdGrouped() {
-    const techs = await this.getAll();
-
-    const grouped = techs.reduce((acc: Record<string, string[]>, tech) => {
-      const key = tech.category;
-      if (!acc[key]) acc[key] = [];
-      acc[key].push(tech.technology);
-      return acc;
-    }, {});
-
-    return grouped;
-  }
-
-  async addTech(
+  async addTechnology(
     projectId: number,
-    tech: Omit<ProjectTechStackInsert, "projectId">,
-  ) {
-    // Ensure all required fields are present
-    const { category, technology } = tech;
-    const inserted = await this.db
-      .insert(this.table)
-      .values({ category, technology, projectId })
+    technology: ProjectTechInsert,
+  ): Promise<{ id: number }> {
+    const [result] = await this.db
+      .insert(projectTechnologies)
+      .values({ ...technology, projectId })
       .$returningId();
-
-    return this.getById(inserted[0].id);
+    return { id: result.id };
   }
 
-  async updateTech(id: number, tech: Omit<ProjectTechStackUpdate, "id">) {
-    const { category, technology } = tech;
-    await this.db
-      .update(this.table)
-      .set({ category, technology })
-      .where(eq(this.table.id, id));
-    return this.getById(id);
+  async addTechnologies(
+    projectId: number,
+    technologies: ProjectTechInsert[],
+  ): Promise<{ id: number }[]> {
+    if (technologies.length === 0) return [];
+    const results = await this.db
+      .insert(projectTechnologies)
+      .values(technologies.map((tech) => ({ ...tech, projectId })))
+      .$returningId();
+    return results.map((r) => ({ id: r.id }));
+  }
+
+  async getAllTechnologies(
+    projectId: number,
+    options?: ProjectTechQueryOptions,
+  ): Promise<ProjectTechSelect[]> {
+    const whereClause = [eq(projectTechnologies.projectId, projectId)];
+
+    if (options?.search) {
+      const searchTerm = `%${options.search.toLowerCase()}%`;
+      whereClause.push(
+        like(sql`lower(${projectTechnologies.technology})`, searchTerm),
+      );
+    }
+
+    return this.db.query.projectTechnologies.findMany({
+      where: and(...whereClause),
+      orderBy: options?.sortBy
+        ? [
+            options.sortOrder === "asc"
+              ? asc(projectTechnologies[options.sortBy])
+              : desc(projectTechnologies[options.sortBy]),
+          ]
+        : [],
+    });
+  }
+
+  async getTechnologyById(
+    projectId: number,
+    techId: number,
+  ): Promise<ProjectTechSelect | null> {
+    const [result] = await this.db
+      .select()
+      .from(projectTechnologies)
+      .where(
+        and(
+          eq(projectTechnologies.projectId, projectId),
+          eq(projectTechnologies.id, techId),
+        ),
+      );
+    return result ?? null;
+  }
+
+  async updateTechnology(
+    projectId: number,
+    techId: number,
+    newTechnology: ProjectTechUpdate,
+  ): Promise<boolean> {
+    const [result] = await this.db
+      .update(projectTechnologies)
+      .set(newTechnology)
+      .where(
+        and(
+          eq(projectTechnologies.projectId, projectId),
+          eq(projectTechnologies.id, techId),
+        ),
+      );
+    return result.affectedRows > 0;
+  }
+
+  async updateManyTechnologies(
+    projectId: number,
+    technologies: ProjectTechInsert[],
+  ): Promise<void> {
+    await this.db.transaction(async (tx) => {
+      await tx
+        .delete(projectTechnologies)
+        .where(eq(projectTechnologies.projectId, projectId));
+      if (technologies.length > 0) {
+        await tx
+          .insert(projectTechnologies)
+          .values(technologies.map((tech) => ({ ...tech, projectId })));
+      }
+    });
+  }
+
+  async deleteTechnology(projectId: number, techId: number): Promise<boolean> {
+    const [result] = await this.db
+      .delete(projectTechnologies)
+      .where(
+        and(
+          eq(projectTechnologies.projectId, projectId),
+          eq(projectTechnologies.id, techId),
+        ),
+      );
+    return result.affectedRows > 0;
+  }
+
+  async deleteAllTechnologies(projectId: number): Promise<boolean> {
+    const [result] = await this.db
+      .delete(projectTechnologies)
+      .where(eq(projectTechnologies.projectId, projectId));
+    return result.affectedRows > 0;
   }
 }
