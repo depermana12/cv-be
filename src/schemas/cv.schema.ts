@@ -51,17 +51,33 @@ export const cvInsertSchema = cvSelectSchema
     updatedAt: true,
   })
   .extend({
-    title: z
-      .string()
-      .min(3, {
-        message: "Title is required and must be at least 3 characters",
-      }),
+    title: z.string().min(3, {
+      message: "Title is required and must be at least 3 characters",
+    }),
     isPublic: z.boolean().default(false),
     language: z.string().length(2).or(z.literal("id")).default("id"),
   });
 
 export const cvUpdateSchema = cvInsertSchema.extend({ id: idSchema }).partial();
 
+export const cvQueryOptionsSchema = z.object({
+  search: z.string().optional(),
+  sortBy: z.enum(["title", "createdAt", "updatedAt"]).optional(),
+  sortOrder: z.enum(["asc", "desc"]).default("asc").optional(),
+  limit: z.coerce.number().min(1).default(10).optional(),
+  offset: z.coerce.number().min(0).default(0).optional(),
+});
+
+export const paginatedCvResponseSchema = z.object({
+  data: z.array(cvSelectSchema),
+  total: z.coerce.number().min(0).default(0),
+  limit: z.coerce.number().min(1).default(10),
+  offset: z.coerce.number().min(0).default(0),
+});
+
 export type CvSelect = z.infer<typeof cvSelectSchema>;
 export type CvInsert = z.infer<typeof cvInsertSchema>;
 export type CvUpdate = z.infer<typeof cvUpdateSchema>;
+
+export type CvQueryOptions = z.infer<typeof cvQueryOptionsSchema>;
+export type PaginatedCvResponse = z.infer<typeof paginatedCvResponseSchema>;

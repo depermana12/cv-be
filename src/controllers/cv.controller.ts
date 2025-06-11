@@ -1,31 +1,100 @@
-import { Hono } from "hono";
+import { CvService } from "../services/cv.service";
+import { createHonoBindings } from "../lib/create-hono";
+import { zValidator } from "../utils/validator";
+import {
+  cvInsertSchema,
+  cvUpdateSchema,
+  cvQueryOptionsSchema,
+} from "../schemas/cv.schema";
+import { CvRepository } from "../repositories/cv.repo";
+import { getDb } from "../db";
 
-import { CVService } from "../services/cv.service";
+const db = await getDb();
+const cvService = new CvService(new CvRepository(db));
 
-const cvService = new CVService();
+export const cvRoutes = createHonoBindings()
+  .get("/", zValidator("query", cvQueryOptionsSchema), async (c) => {
+    const { id } = c.get("jwtPayload");
+    const options = c.req.valid("query");
 
-// TODO: add validation check
-export const cvRoutes = new Hono()
-  .get("/", async (c) => {
-    const cv = await cvService.getCV();
+    const cvs = await cvService.getAllCvs(Number(id), options);
+
     return c.json(
       {
         success: true,
-        message: "retrieved aggregrated records successfully",
+        message: `retrieved ${cvs.data.length} records successfully`,
+        data: cvs.data,
+        pagination: {
+          total: cvs.total,
+          limit: cvs.limit,
+          offset: cvs.offset,
+        },
+      },
+      200,
+    );
+  })
+  .post("/", zValidator("json", cvInsertSchema), async (c) => {
+    const validatedBody = c.req.valid("json");
+    const { id } = c.get("jwtPayload");
+
+    const newCv = await cvService.createCv(validatedBody, Number(id));
+
+    return c.json(
+      {
+        success: true,
+        message: `new record created`,
+        data: newCv,
+      },
+      201,
+    );
+  })
+
+  .get("/:id", async (c) => {
+    const { id: userId } = c.get("jwtPayload");
+    const cvId = Number(c.req.param("id"));
+
+    const cv = await cvService.getCvById(cvId, Number(userId));
+
+    return c.json(
+      {
+        success: true,
+        message: `record ID: ${cvId} retrieved successfully`,
         data: cv,
       },
       200,
     );
   })
-  .get("/summary", async (c) => {
-    const summary = await cvService.getSummary();
+
+  .patch("/:id", zValidator("json", cvUpdateSchema), async (c) => {
+    const { id: userId } = c.get("jwtPayload");
+    const cvId = Number(c.req.param("id"));
+    const validatedBody = c.req.valid("json");
+
+    const updatedCv = await cvService.updateCv(
+      cvId,
+      Number(userId),
+      validatedBody,
+    );
+
     return c.json(
       {
         success: true,
-        message: "retrieved summarize records successfully",
-        data: summary,
+        message: `record ID: ${cvId} updated successfully`,
+        data: updatedCv,
       },
       200,
     );
+  })
+
+  .delete("/:id", async (c) => {
+    const { id: userId } = c.get("jwtPayload");
+    const cvId = Number(c.req.param("id"));
+
+    const deleted = await cvService.deleteCv(cvId, Number(userId));
+
+    return c.json({
+      success: true,
+      message: `record id: ${cvId} deleted successfully`,
+      data: deleted ? "Record deleted" : "Record not found",
+    });
   });
-// TODO: add import export

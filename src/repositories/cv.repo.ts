@@ -53,12 +53,12 @@ export class CvRepository {
               ? desc(cv[options.sortBy])
               : asc(cv[options.sortBy]),
           ]
-        : [],
+        : [desc(cv.createdAt)],
       limit: options?.limit ?? 10,
       offset: options?.offset ?? 0,
     });
 
-    const count = await this.db.$count(cv, ...whereClause);
+    const count = await this.db.$count(cv, and(...whereClause));
 
     return {
       data,
