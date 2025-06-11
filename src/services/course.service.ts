@@ -73,7 +73,7 @@ export class CourseService extends CvChildService<
   async addCourseDescription(
     cvId: number,
     courseId: number,
-    descriptionData: CourseDescInsert,
+    descriptionData: Omit<CourseDescInsert, "courseId">,
   ): Promise<CourseDescSelect> {
     await this.assertCourseOwnedByCv(cvId, courseId);
 
@@ -182,7 +182,7 @@ export class CourseService extends CvChildService<
   async createCourseWithDescriptions(
     cvId: number,
     courseData: Omit<CourseInsert, "cvId">,
-    descriptions: CourseDescInsert[],
+    descriptions: Omit<CourseDescInsert, "courseId">[],
   ): Promise<CourseSelect & { descriptions: CourseDescSelect[] }> {
     const { id } = await this.courseRepository.createCourseWithDescriptions(
       { ...courseData, cvId },

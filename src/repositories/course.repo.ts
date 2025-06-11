@@ -76,7 +76,7 @@ export class CourseRepository extends CvChildRepository<
 
   async createCourseWithDescriptions(
     courseData: CourseInsert,
-    descriptions: CourseDescInsert[],
+    descriptions: Omit<CourseDescInsert, "courseId">[],
   ): Promise<{ id: number }> {
     return this.db.transaction(async (tx) => {
       const [course] = await tx
@@ -108,7 +108,7 @@ export class CourseRepository extends CvChildRepository<
 
   async createDescription(
     courseId: number,
-    description: CourseDescInsert,
+    description: Omit<CourseDescInsert, "courseId">,
   ): Promise<{ id: number }> {
     const [desc] = await this.db
       .insert(courseDescriptions)

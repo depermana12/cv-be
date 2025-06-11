@@ -79,6 +79,12 @@ export const courseDescInsertSchema = courseDescSelectSchema.omit({
 
 export const courseDescUpdateSchema = courseDescInsertSchema.partial();
 
+export const courseQueryOptionsSchema = z.object({
+  search: z.string().optional(),
+  sortBy: z.enum(["courseName", "provider", "startDate", "endDate"]).optional(),
+  sortOrder: z.enum(["asc", "desc"]).default("asc").optional(),
+});
+
 export type CourseDescSelect = z.infer<typeof courseDescSelectSchema>;
 export type CourseDescInsert = z.infer<typeof courseDescInsertSchema>;
 export type CourseDescUpdate = z.infer<typeof courseDescUpdateSchema>;
