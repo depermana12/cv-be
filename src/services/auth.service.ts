@@ -9,6 +9,7 @@ import type {
 } from "../db/types/auth.type";
 import type { UserPayload } from "../lib/types";
 import { ValidationError } from "../errors/validation.error";
+import { NotFoundError } from "../errors/not-found.error";
 
 export class AuthService {
   constructor(
@@ -86,6 +87,16 @@ export class AuthService {
     }
   }
 
+  async getByEmail(email: string): Promise<AuthUserSafe> {
+    const user = await this.userRepository.getByEmail(email.toLowerCase());
+    if (!user) {
+      throw new NotFoundError("user record not found");
+    }
+    const { password, ...userObjWithoutPassword } = user;
+
+    return userObjWithoutPassword;
+  }
+
   async isEmailVerified(id: number): Promise<{ verified: boolean }> {
     const user = await this.userRepository.getById(id);
     if (!user) {
@@ -117,6 +128,14 @@ export class AuthService {
     );
     await this.verifyUserEmail(Number(payload.id));
     return payload;
+  }
+
+  async validateRefreshToken(refreshToken: string): Promise<UserPayload> {
+    return this.tokenService.validateRefreshToken(refreshToken);
+  }
+
+  async generateAuthTokens(user: UserPayload): Promise<AuthTokens> {
+    return this.tokenService.generateAuthTokens(user);
   }
 
   async changeUserPassword(id: number, newPassword: string): Promise<void> {

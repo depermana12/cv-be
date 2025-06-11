@@ -30,6 +30,11 @@ export const userInputResetPassword = z
     }
   });
 
+export const refreshTokenSchema = z.object({
+  refreshToken: z.string().min(1, { message: "Refresh token is required" }),
+});
+
 export type UserLogin = z.infer<typeof userLoginSchema>;
 export type EmailForPasswordReset = z.infer<typeof emailForPasswordReset>;
 export type UserInputResetPassword = z.infer<typeof userInputResetPassword>;
+export type RefreshToken = z.infer<typeof refreshTokenSchema>;
