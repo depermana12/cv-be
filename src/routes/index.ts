@@ -14,6 +14,7 @@ router.route("/auth", authRoutes);
 
 // protected routes
 router.use("*", jwt());
+router.route("/users", userRoutes);
 router.route("/uploads", uploadRoutes);
 
 // main cv crud routes
