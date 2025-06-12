@@ -16,6 +16,13 @@ export const softSkillInsertSchema = softSkillSelectSchema.omit({
 
 export const softSkillUpdateSchema = softSkillInsertSchema.partial();
 
+export const softSkillQueryOptionsSchema = z.object({
+  search: z.string().optional(),
+  sortBy: z.enum(["category"]).optional(),
+  sortOrder: z.enum(["asc", "desc"]).optional(),
+});
+
 export type SoftSkillSelect = z.infer<typeof softSkillSelectSchema>;
 export type SoftSkillInsert = z.infer<typeof softSkillInsertSchema>;
 export type SoftSkillUpdate = z.infer<typeof softSkillUpdateSchema>;
+export type SoftSkillQueryOptions = z.infer<typeof softSkillQueryOptionsSchema>;
