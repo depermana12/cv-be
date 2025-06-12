@@ -1,106 +1,254 @@
-import { Hono } from "hono";
 import { zValidator } from "../utils/validator";
-
 import { OrganizationService } from "../services/organization.service";
 import {
-  organizationInsertSchema,
-  organizationUpdateSchema,
-  organizationDescInsertSchema,
-  organizationDescUpdateSchema,
+  orgInsertSchema,
+  orgUpdateSchema,
+  orgDescInsertSchema,
+  orgDescUpdateSchema,
+  orgInsertWithDescSchema,
+  orgQueryOptionsSchema,
 } from "../schemas/organization.schema";
+import { OrganizationRepository } from "../repositories/organization.repo";
+import { createHonoBindings } from "../lib/create-hono";
 
-const organization = new OrganizationService();
-export const organizationRoutes = new Hono()
-  .get("/", async (c) => {
-    const orgs = await organization.getAll();
-    return c.json({
-      success: true,
-      message: `retrieved ${orgs.length} records successfully`,
-      data: orgs,
-    });
-  })
-  .get("/:id", async (c) => {
-    const id = Number(c.req.param("id"));
-    const org = await organization.getById(id);
-    return c.json({
-      success: true,
-      message: `record ID: ${id} retrieved successfully`,
-      data: org,
-    });
-  })
-  .post("/", zValidator("json", organizationInsertSchema), async (c) => {
-    const validatedBody = c.req.valid("json");
-    const newOrg = await organization.create(validatedBody);
-    return c.json(
-      {
-        success: true,
-        message: `new record created with ID: ${newOrg.id}`,
-        data: newOrg,
-      },
-      201,
-    );
-  })
-  .patch("/:id", zValidator("json", organizationUpdateSchema), async (c) => {
-    const id = Number(c.req.param("id"));
-    const validatedBody = c.req.valid("json");
-    const updatedOrgExp = await organization.update(id, validatedBody);
-    return c.json({
-      success: true,
-      message: `record ID: ${id} updated successfully`,
-      data: updatedOrgExp,
-    });
-  })
-  .delete("/:id", async (c) => {
-    const id = Number(c.req.param("id"));
-    await organization.delete(id);
-    return c.json({
-      success: true,
-      message: `record id: ${id} deleted successfully`,
-    });
-  })
-  .post(
-    "/:id/details",
-    zValidator("json", organizationDescInsertSchema),
+const organizationRepository = new OrganizationRepository();
+const organizationService = new OrganizationService(organizationRepository);
+
+export const organizationRoutes = createHonoBindings()
+  .get(
+    "/:cvId/organizations",
+    zValidator("query", orgQueryOptionsSchema),
     async (c) => {
-      const orgExpId = Number(c.req.param("id"));
-      const validatedBody = c.req.valid("json");
+      const cvId = Number(c.req.param("cvId"));
+      const options = c.req.valid("query");
 
-      const addedDetail = await organization.addDetail(orgExpId, validatedBody);
+      const organizations = await organizationService.getAllOrganizations(cvId);
+
       return c.json({
         success: true,
-        message: `new detail created with ID: ${addedDetail.id}`,
-        data: addedDetail,
+        message: `retrieved ${organizations.length} organization records successfully`,
+        data: organizations,
       });
     },
   )
-  .patch(
-    "/:id/details/:detailId",
-    zValidator("json", organizationDescUpdateSchema),
+  // Get all organizations with descriptions for a CV
+  .get(
+    "/:cvId/organizations-with-desc",
+    zValidator("query", orgQueryOptionsSchema),
     async (c) => {
-      const id = Number(c.req.param("id"));
-      const detailId = Number(c.req.param("detailId"));
-      const validatedBody = c.req.valid("json");
+      const cvId = Number(c.req.param("cvId"));
+      const options = c.req.valid("query");
 
-      const existingDetail = await organization.getDetailById(detailId);
+      const organizationsWithDescriptions =
+        await organizationService.getAllOrgWithDescriptions(cvId, options);
 
-      if (existingDetail.organizationId !== id) {
-        return c.json(
-          {
-            success: false,
-            message: "detail does not belong to the given organization",
-          },
-          404,
-        );
-      }
-
-      const updatedDetail = await organization.updateDetails(
-        detailId,
-        validatedBody,
-      );
       return c.json({
         success: true,
-        message: `detail ID: ${detailId} updated successfully`,
-        data: updatedDetail,
+        message: `retrieved ${organizationsWithDescriptions.length} organization records with descriptions successfully`,
+        data: organizationsWithDescriptions,
       });
     },
-  );
+  )
+  .get("/:cvId/organizations/:organizationId", async (c) => {
+    const cvId = Number(c.req.param("cvId"));
+    const organizationId = Number(c.req.param("organizationId"));
+
+    const organization = await organizationService.getOrganization(
+      cvId,
+      organizationId,
+    );
+
+    return c.json({
+      success: true,
+      message: `organization record ${organizationId} retrieved successfully`,
+      data: organization,
+    });
+  })
+  .get("/:cvId/organizations-with-desc/:organizationId", async (c) => {
+    const cvId = Number(c.req.param("cvId"));
+    const organizationId = Number(c.req.param("organizationId"));
+
+    const organizationWithDescriptions =
+      await organizationService.getOrgWithDescriptions(cvId, organizationId);
+
+    return c.json({
+      success: true,
+      message: `organization record ${organizationId} with descriptions retrieved successfully`,
+      data: organizationWithDescriptions,
+    });
+  })
+  .post(
+    "/:cvId/organizations",
+    zValidator("json", orgInsertSchema),
+    async (c) => {
+      const cvId = Number(c.req.param("cvId"));
+      const organizationData = c.req.valid("json");
+
+      const newOrganization = await organizationService.createOrganization(
+        cvId,
+        organizationData,
+      );
+
+      return c.json(
+        {
+          success: true,
+          message: `organization record created with ID: ${newOrganization.id}`,
+          data: newOrganization,
+        },
+        201,
+      );
+    },
+  )
+  .post(
+    "/:cvId/organizations-with-desc",
+    zValidator("json", orgInsertWithDescSchema),
+    async (c) => {
+      const cvId = Number(c.req.param("cvId"));
+      const { descriptions = [], ...organizationData } = c.req.valid("json");
+
+      const newOrganizationWithDescriptions =
+        await organizationService.createOrgWithDescription(
+          cvId,
+          organizationData,
+          descriptions,
+        );
+
+      return c.json(
+        {
+          success: true,
+          message: `organization record with descriptions created with ID: ${newOrganizationWithDescriptions.id}`,
+          data: newOrganizationWithDescriptions,
+        },
+        201,
+      );
+    },
+  )
+  .patch(
+    "/:cvId/organizations/:organizationId",
+    zValidator("json", orgUpdateSchema),
+    async (c) => {
+      const cvId = Number(c.req.param("cvId"));
+      const organizationId = Number(c.req.param("organizationId"));
+      const updateData = c.req.valid("json");
+
+      const updatedOrganization = await organizationService.updateOrganization(
+        cvId,
+        organizationId,
+        updateData,
+      );
+
+      return c.json({
+        success: true,
+        message: `organization record ${organizationId} updated successfully`,
+        data: updatedOrganization,
+      });
+    },
+  )
+  .delete("/:cvId/organizations/:organizationId", async (c) => {
+    const cvId = Number(c.req.param("cvId"));
+    const organizationId = Number(c.req.param("organizationId"));
+
+    await organizationService.deleteOrganization(cvId, organizationId);
+
+    return c.json({
+      success: true,
+      message: `organization record ${organizationId} deleted successfully`,
+    });
+  })
+  .delete("/:cvId/organizations-with-desc/:organizationId", async (c) => {
+    const cvId = Number(c.req.param("cvId"));
+    const organizationId = Number(c.req.param("organizationId"));
+
+    await organizationService.deleteOrgWithDescriptions(cvId, organizationId);
+
+    return c.json({
+      success: true,
+      message: `organization record ${organizationId} with all descriptions deleted successfully`,
+    });
+  })
+  .get("/:cvId/organizations/:organizationId/descriptions", async (c) => {
+    const cvId = Number(c.req.param("cvId"));
+    const organizationId = Number(c.req.param("organizationId"));
+
+    const descriptions = await organizationService.getAllOrgDescriptions(
+      cvId,
+      organizationId,
+    );
+
+    return c.json({
+      success: true,
+      message: `retrieved ${descriptions.length} description records for organization ${organizationId}`,
+      data: descriptions,
+    });
+  })
+  .get("/:cvId/organizations/descriptions/:descriptionId", async (c) => {
+    const cvId = Number(c.req.param("cvId"));
+    const descriptionId = Number(c.req.param("descriptionId"));
+
+    const description = await organizationService.getOrgDescription(
+      cvId,
+      descriptionId,
+    );
+
+    return c.json({
+      success: true,
+      message: `description record ${descriptionId} retrieved successfully`,
+      data: description,
+    });
+  })
+  .post(
+    "/:cvId/organizations/:organizationId/descriptions",
+    zValidator("json", orgDescInsertSchema),
+    async (c) => {
+      const cvId = Number(c.req.param("cvId"));
+      const organizationId = Number(c.req.param("organizationId"));
+      const descriptionData = c.req.valid("json");
+
+      const newDescription = await organizationService.createOrgDescription(
+        cvId,
+        organizationId,
+        descriptionData,
+      );
+
+      return c.json(
+        {
+          success: true,
+          message: `description created with ID: ${newDescription.id} for organization ${organizationId}`,
+          data: newDescription,
+        },
+        201,
+      );
+    },
+  )
+  .patch(
+    "/:cvId/organizations/descriptions/:descriptionId",
+    zValidator("json", orgDescUpdateSchema),
+    async (c) => {
+      const cvId = Number(c.req.param("cvId"));
+      const descriptionId = Number(c.req.param("descriptionId"));
+      const updateData = c.req.valid("json");
+
+      const updatedDescription = await organizationService.updateOrgDescription(
+        cvId,
+        descriptionId,
+        updateData,
+      );
+
+      return c.json({
+        success: true,
+        message: `description record ${descriptionId} updated successfully`,
+        data: updatedDescription,
+      });
+    },
+  )
+  .delete("/:cvId/organizations/descriptions/:descriptionId", async (c) => {
+    const cvId = Number(c.req.param("cvId"));
+    const descriptionId = Number(c.req.param("descriptionId"));
+
+    await organizationService.deleteOrgDescription(cvId, descriptionId);
+
+    return c.json({
+      success: true,
+      message: `description record ${descriptionId} deleted successfully`,
+    });
+  });

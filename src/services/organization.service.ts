@@ -80,8 +80,8 @@ export class OrganizationService extends CvChildService<
   async createOrgDescription(
     cvId: number,
     organizationId: number,
-    descriptionData: OrganizationDescInsert,
-  ): Promise<OrganizationDescInsert> {
+    descriptionData: Omit<OrganizationDescInsert, "organizationId">,
+  ): Promise<OrganizationDescSelect> {
     await this.assertOrgOwnedByCv(cvId, organizationId);
 
     const description = await this.orgRepository.createDescription(
@@ -100,14 +100,14 @@ export class OrganizationService extends CvChildService<
 
   async getOrgDescription(
     cvId: number,
-    organizationId: number,
+    descriptionId: number,
   ): Promise<OrganizationDescSelect> {
     const description = await this.orgRepository.getDescriptionById(
-      organizationId,
+      descriptionId,
     );
     if (!description) {
       throw new NotFoundError(
-        `[Service] Description ${organizationId} not found for CV: ${cvId}`,
+        `[Service] Description ${descriptionId} not found for CV: ${cvId}`,
       );
     }
     await this.assertOrgOwnedByCv(cvId, description.organizationId);
@@ -140,7 +140,7 @@ export class OrganizationService extends CvChildService<
       );
     }
 
-    await this.assertOrgOwnedByCv(cvId, descriptionId);
+    await this.assertOrgOwnedByCv(cvId, description.organizationId);
 
     const updatedDescription = await this.orgRepository.updateDescription(
       descriptionId,
@@ -192,7 +192,7 @@ export class OrganizationService extends CvChildService<
   async createOrgWithDescription(
     cvId: number,
     organizationData: Omit<OrganizationInsert, "cvId">,
-    descriptionData: OrganizationDescInsert[],
+    descriptionData: Omit<OrganizationDescInsert, "organizationId">[],
   ): Promise<OrganizationSelect & { descriptions: OrganizationDescInsert[] }> {
     const { id } = await this.orgRepository.createOrganizationWithDescriptions(
       { ...organizationData, cvId },

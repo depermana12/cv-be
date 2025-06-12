@@ -37,6 +37,12 @@ export const orgDescInsertSchema = orgDescSelectSchema.omit({
 
 export const orgDescUpdateSchema = orgDescInsertSchema.partial();
 
+export const orgQueryOptionsSchema = z.object({
+  search: z.string().optional(),
+  sortBy: z.enum(["organization", "role", "startDate", "endDate"]).optional(),
+  sortOrder: z.enum(["asc", "desc"]).optional(),
+});
+
 export type OrgDescSelect = z.infer<typeof orgDescSelectSchema>;
 export type OrgDescInsert = z.infer<typeof orgDescInsertSchema>;
 export type OrgDescUpdate = z.infer<typeof orgDescUpdateSchema>;
@@ -46,3 +52,4 @@ export const orgInsertWithDescSchema = orgInsertSchema.extend({
 });
 
 export type OrgInsertWithDesc = z.infer<typeof orgInsertWithDescSchema>;
+export type OrgQueryOptions = z.infer<typeof orgQueryOptionsSchema>;
