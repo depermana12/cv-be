@@ -17,8 +17,8 @@ export class SkillService extends CvChildService<
     super(skillRepository);
   }
 
-  async getUniqueCategories() {
-    return this.skillRepository.getCategories();
+  async getUniqueCategories(cvId: number) {
+    return this.skillRepository.getCategoriesByCv(cvId);
   }
 
   async createSkill(

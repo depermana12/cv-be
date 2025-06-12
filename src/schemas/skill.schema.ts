@@ -16,6 +16,13 @@ export const skillInsertSchema = skillSelectSchema.omit({
 
 export const skillUpdateSchema = skillInsertSchema.partial();
 
+export const skillQueryOptionsSchema = z.object({
+  search: z.string().optional(),
+  sortBy: z.enum(["name", "category"]).optional(),
+  sortOrder: z.enum(["asc", "desc"]).optional(),
+});
+
 export type SkillSelect = z.infer<typeof skillSelectSchema>;
 export type SkillInsert = z.infer<typeof skillInsertSchema>;
 export type SkillUpdate = z.infer<typeof skillUpdateSchema>;
+export type SkillQueryOptions = z.infer<typeof skillQueryOptionsSchema>;
