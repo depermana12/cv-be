@@ -29,6 +29,13 @@ export const educationInsertSchema = educationSelectSchema.omit({
 
 export const educationUpdateSchema = educationInsertSchema.partial();
 
+export const educationQueryOptionsSchema = z.object({
+  search: z.string().optional(),
+  sortBy: z.enum(["institution", "degree", "startDate", "endDate"]).optional(),
+  sortOrder: z.enum(["asc", "desc"]).default("asc").optional(),
+});
+
 export type EducationSelect = z.infer<typeof educationSelectSchema>;
 export type EducationInsert = z.infer<typeof educationInsertSchema>;
 export type EducationUpdate = z.infer<typeof educationUpdateSchema>;
+export type EducationQueryOptions = z.infer<typeof educationQueryOptionsSchema>;

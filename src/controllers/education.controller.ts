@@ -1,67 +1,96 @@
-import { Hono } from "hono";
 import { zValidator } from "../utils/validator";
-
 import { EducationService } from "../services/education.service";
 import {
   educationInsertSchema,
   educationUpdateSchema,
+  educationQueryOptionsSchema,
 } from "../schemas/education.schema";
+import { EducationRepository } from "../repositories/education.repo";
+import { createHonoBindings } from "../lib/create-hono";
 
-const educationService = new EducationService();
-export const educationRoutes = new Hono()
-  .get("/", async (c) => {
-    const education = await educationService.getAll();
-    return c.json(
-      {
+const educationRepository = new EducationRepository();
+const educationService = new EducationService(educationRepository);
+
+export const educationRoutes = createHonoBindings()
+  .get(
+    "/:cvId/educations",
+    zValidator("query", educationQueryOptionsSchema),
+    async (c) => {
+      const cvId = Number(c.req.param("cvId"));
+      const options = c.req.valid("query");
+
+      const educations = await educationService.getAllEducations(cvId, options);
+
+      return c.json({
         success: true,
-        message: `retrieved ${education.length} records successfully`,
-        data: education,
-      },
-      200,
-    );
-  })
-  .get("/:id", async (c) => {
-    const id = Number(c.req.param("id"));
-    const education = await educationService.getById(id);
-    return c.json(
-      {
-        success: true,
-        message: `record ID: ${id} retrieved successfully`,
-        data: education,
-      },
-      200,
-    );
-  })
-  .post("/", zValidator("json", educationInsertSchema), async (c) => {
-    const validated = c.req.valid("json");
-    const newEducation = await educationService.create(validated);
-    return c.json(
-      {
-        success: true,
-        message: `new record created with ID: ${newEducation.id}`,
-        data: newEducation,
-      },
-      201,
-    );
-  })
-  .patch("/:id", zValidator("json", educationUpdateSchema), async (c) => {
-    const id = Number(c.req.param("id"));
-    const validated = c.req.valid("json");
-    const updatedEdu = await educationService.update(id, validated);
-    return c.json(
-      {
-        success: true,
-        message: `record ID: ${id} updated successfully`,
-        data: updatedEdu,
-      },
-      200,
-    );
-  })
-  .delete("/:id", async (c) => {
-    const id = Number(c.req.param("id"));
-    await educationService.delete(id);
+        message: `retrieved ${educations.length} education records successfully`,
+        data: educations,
+      });
+    },
+  )
+  .get("/:cvId/educations/:educationId", async (c) => {
+    const cvId = Number(c.req.param("cvId"));
+    const educationId = Number(c.req.param("educationId"));
+
+    const education = await educationService.getEducation(cvId, educationId);
+
     return c.json({
       success: true,
-      message: `record id: ${id} deleted successfully`,
+      message: `education record ${educationId} retrieved successfully`,
+      data: education,
+    });
+  })
+  .post(
+    "/:cvId/educations",
+    zValidator("json", educationInsertSchema),
+    async (c) => {
+      const cvId = Number(c.req.param("cvId"));
+      const educationData = c.req.valid("json");
+
+      const newEducation = await educationService.createEducation(
+        cvId,
+        educationData,
+      );
+
+      return c.json(
+        {
+          success: true,
+          message: `education record created with ID: ${newEducation.id}`,
+          data: newEducation,
+        },
+        201,
+      );
+    },
+  )
+  .patch(
+    "/:cvId/educations/:educationId",
+    zValidator("json", educationUpdateSchema),
+    async (c) => {
+      const cvId = Number(c.req.param("cvId"));
+      const educationId = Number(c.req.param("educationId"));
+      const updateData = c.req.valid("json");
+
+      const updatedEducation = await educationService.updateEducation(
+        cvId,
+        educationId,
+        updateData,
+      );
+
+      return c.json({
+        success: true,
+        message: `education record ${educationId} updated successfully`,
+        data: updatedEducation,
+      });
+    },
+  )
+  .delete("/:cvId/educations/:educationId", async (c) => {
+    const cvId = Number(c.req.param("cvId"));
+    const educationId = Number(c.req.param("educationId"));
+
+    await educationService.deleteEducation(cvId, educationId);
+
+    return c.json({
+      success: true,
+      message: `education record ${educationId} deleted successfully`,
     });
   });
