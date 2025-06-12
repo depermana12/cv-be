@@ -19,8 +19,15 @@ export const locationInsertSchema = locationSelectSchema.omit({
   cvId: true,
 });
 
+export const locationQueryOptionsSchema = z.object({
+  search: z.string().optional(),
+  sortBy: z.enum(["city", "state"]).optional(),
+  sortOrder: z.enum(["asc", "desc"]).optional(),
+});
+
 export const locationUpdateSchema = locationInsertSchema.partial();
 
 export type LocationSelect = z.infer<typeof locationSelectSchema>;
 export type LocationCreate = z.infer<typeof locationInsertSchema>;
 export type LocationUpdate = z.infer<typeof locationUpdateSchema>;
+export type LocationQueryOptions = z.infer<typeof locationQueryOptionsSchema>;

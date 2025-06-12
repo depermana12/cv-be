@@ -1,68 +1,96 @@
-import { Hono } from "hono";
 import { zValidator } from "../utils/validator";
 import { LocationService } from "../services/location.service";
 import {
   locationInsertSchema,
+  locationQueryOptionsSchema,
   locationUpdateSchema,
 } from "../schemas/location.schema";
+import { LocationRepository } from "../repositories/location.repo";
+import { createHonoBindings } from "../lib/create-hono";
 
-const locationService = new LocationService();
-export const locationRoutes = new Hono()
-  .get("/", async (c) => {
-    const data = await locationService.getAll();
+const locationRepository = new LocationRepository();
+const locationService = new LocationService(locationRepository);
 
-    return c.json(
-      {
-        success: true,
-        message: `retrieved ${data.length} records successfully`,
-        data: data,
-      },
-      200,
-    );
-  })
-  .get("/:id", async (c) => {
-    const id = Number(c.req.param("id"));
-    const data = await locationService.getById(id);
-    return c.json(
-      {
-        success: true,
-        message: `record ID: ${id} retrieved successfully`,
-        data: data,
-      },
-      200,
-    );
-  })
-  .post("/", zValidator("json", locationInsertSchema), async (c) => {
-    const validatedBody = c.req.valid("json");
-    const newData = await locationService.create(validatedBody);
-    return c.json(
-      {
-        success: true,
-        message: `new record created`,
-        data: newData,
-      },
-      201,
-    );
-  })
-  .patch("/:id", zValidator("json", locationUpdateSchema), async (c) => {
-    const id = Number(c.req.param("id"));
-    const validatedBody = c.req.valid("json");
+export const locationRoutes = createHonoBindings()
+  .get(
+    "/:cvId/locations",
+    zValidator("query", locationQueryOptionsSchema),
+    async (c) => {
+      const cvId = Number(c.req.param("cvId"));
+      const options = c.req.valid("query");
 
-    const dataUpdated = await locationService.update(id, validatedBody);
-    return c.json(
-      {
+      const locations = await locationService.getAllLocations(cvId, options);
+
+      return c.json({
         success: true,
-        message: `record ID: ${id} updated successfully`,
-        data: dataUpdated,
-      },
-      200,
-    );
-  })
-  .delete("/:id", async (c) => {
-    const id = Number(c.req.param("id"));
-    await locationService.delete(id);
+        message: `retrieved ${locations.length} location records successfully`,
+        data: locations,
+      });
+    },
+  )
+  .get("/:cvId/locations/:locationId", async (c) => {
+    const cvId = Number(c.req.param("cvId"));
+    const locationId = Number(c.req.param("locationId"));
+
+    const location = await locationService.getLocation(cvId, locationId);
+
     return c.json({
       success: true,
-      message: `record id: ${id} deleted successfully`,
+      message: `location record ${locationId} retrieved successfully`,
+      data: location,
+    });
+  })
+  .post(
+    "/:cvId/locations",
+    zValidator("json", locationInsertSchema),
+    async (c) => {
+      const cvId = Number(c.req.param("cvId"));
+      const locationData = c.req.valid("json");
+
+      const newLocation = await locationService.createLocation(
+        cvId,
+        locationData,
+      );
+
+      return c.json(
+        {
+          success: true,
+          message: `location record created with ID: ${newLocation.id}`,
+          data: newLocation,
+        },
+        201,
+      );
+    },
+  )
+  .patch(
+    "/:cvId/locations/:locationId",
+    zValidator("json", locationUpdateSchema),
+    async (c) => {
+      const cvId = Number(c.req.param("cvId"));
+      const locationId = Number(c.req.param("locationId"));
+      const updateData = c.req.valid("json");
+
+      const updatedLocation = await locationService.updateLocation(
+        cvId,
+        locationId,
+        updateData,
+      );
+
+      return c.json({
+        success: true,
+        message: `location record ${locationId} updated successfully`,
+        data: updatedLocation,
+      });
+    },
+  )
+  .delete("/:cvId/locations/:locationId", async (c) => {
+    const cvId = Number(c.req.param("cvId"));
+    const locationId = Number(c.req.param("locationId"));
+
+    await locationService.deleteLocation(cvId, locationId);
+
+    return c.json({
+      success: true,
+      message: `location record ${locationId} deleted successfully`,
     });
   });
