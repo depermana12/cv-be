@@ -37,6 +37,12 @@ export const workDescInsertSchema = workDescSelectSchema.omit({
 
 export const workDescUpdateSchema = workDescInsertSchema.partial();
 
+export const workQueryOptionsSchema = z.object({
+  search: z.string().optional(),
+  sortBy: z.enum(["company", "position", "startDate", "endDate"]).optional(),
+  sortOrder: z.enum(["asc", "desc"]).optional(),
+});
+
 export type WorkDescSelect = z.infer<typeof workDescSelectSchema>;
 export type WorkDescInsert = z.infer<typeof workDescInsertSchema>;
 export type WorkDescUpdate = z.infer<typeof workDescUpdateSchema>;
@@ -46,3 +52,4 @@ export const workInsertWithDescSchema = workInsertSchema.extend({
 });
 
 export type WorkInsertWithDesc = z.infer<typeof workInsertWithDescSchema>;
+export type WorkQueryOptions = z.infer<typeof workQueryOptionsSchema>;

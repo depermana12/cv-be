@@ -92,7 +92,7 @@ export class WorkRepository extends CvChildRepository<
 
   async createWorkWithDescriptions(
     workData: WorkInsert,
-    descriptions: WorkDescInsert[],
+    descriptions: Omit<WorkDescInsert, "workId">[],
   ): Promise<{ id: number }> {
     return this.db.transaction(async (tx) => {
       const [work] = await tx.insert(works).values(workData).$returningId();
@@ -116,7 +116,7 @@ export class WorkRepository extends CvChildRepository<
 
   async createDescription(
     workId: number,
-    description: WorkDescInsert,
+    description: Omit<WorkDescInsert, "workId">,
   ): Promise<{ id: number }> {
     const [desc] = await this.db
       .insert(workDescriptions)

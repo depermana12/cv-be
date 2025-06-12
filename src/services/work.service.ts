@@ -2,6 +2,7 @@ import { CvChildService } from "./cvChild.service";
 import type {
   WorkDescInsert,
   WorkDescSelect,
+  WorkDescUpdate,
   WorkInsert,
   WorkQueryOptions,
   WorkSelect,
@@ -72,7 +73,7 @@ export class WorkService extends CvChildService<
   async createDescriptionForWork(
     cvId: number,
     workId: number,
-    descriptionData: WorkDescInsert,
+    descriptionData: Omit<WorkDescInsert, "workId">,
   ): Promise<WorkDescSelect> {
     const work = await this.assertWorkOwnedByCv(cvId, workId);
     const description = await this.workRepository.createDescription(
@@ -114,7 +115,7 @@ export class WorkService extends CvChildService<
   async updateWorkDescription(
     cvId: number,
     descriptionId: number,
-    newDescriptionData: WorkDescInsert,
+    newDescriptionData: WorkDescUpdate,
   ): Promise<WorkDescSelect> {
     const description = await this.workRepository.getDescriptionById(
       descriptionId,
@@ -171,7 +172,7 @@ export class WorkService extends CvChildService<
   async createWorkWithDescriptions(
     cvId: number,
     workData: Omit<WorkInsert, "cvId">,
-    descriptions: WorkDescInsert[],
+    descriptions: Omit<WorkDescInsert, "workId">[],
   ): Promise<WorkSelect & { descriptions: WorkDescSelect[] }> {
     const { id } = await this.workRepository.createWorkWithDescriptions(
       { ...workData, cvId },
