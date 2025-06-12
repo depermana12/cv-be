@@ -14,8 +14,15 @@ export const languageInsertSchema = languageSelectSchema.omit({
   cvId: true,
 });
 
+export const languageQueryOptionsSchema = z.object({
+  search: z.string().optional(),
+  sortBy: z.enum(["language", "fluency"]).optional(),
+  sortOrder: z.enum(["asc", "desc"]).default("asc").optional(),
+});
+
 export const languageUpdateSchema = languageInsertSchema.partial();
 
 export type LanguageSelect = z.infer<typeof languageSelectSchema>;
 export type LanguageInsert = z.infer<typeof languageInsertSchema>;
 export type LanguageUpdate = z.infer<typeof languageUpdateSchema>;
+export type LanguageQueryOptions = z.infer<typeof languageQueryOptionsSchema>;

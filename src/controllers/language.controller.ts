@@ -1,60 +1,96 @@
-import { Hono } from "hono";
 import { zValidator } from "../utils/validator";
-
-import { languageService } from "../services/index.service";
+import { LanguageService } from "../services/language.service";
 import {
   languageInsertSchema,
   languageUpdateSchema,
+  languageQueryOptionsSchema,
 } from "../schemas/language.schema";
+import { LanguageRepository } from "../repositories/language.repo";
+import { createHonoBindings } from "../lib/create-hono";
 
-export const languageRoutes = new Hono()
-  .get("person/:personalId", async (c) => {
-    const personalId = Number(c.req.param("personalId"));
-    const lang = await languageService.getAllByPersonalId(personalId);
-    return c.json({
-      success: true,
-      message: `retrieved ${lang.length} records successfully`,
-      data: lang,
-    });
-  })
-  .get("/:id", async (c) => {
-    const id = Number(c.req.param("id"));
-    const lang = await languageService.getById(id);
-    return c.json({
-      success: true,
-      message: `record ID: ${id} retrieved successfully`,
-      data: lang,
-    });
-  })
-  .post("/:personalId", zValidator("json", languageInsertSchema), async (c) => {
-    const personalId = Number(c.req.param("personalId"));
-    const validateBody = c.req.valid("json");
+const languageRepository = new LanguageRepository();
+const languageService = new LanguageService(languageRepository);
 
-    const created = await languageService.create(validateBody);
-    return c.json(
-      {
+export const languageRoutes = createHonoBindings()
+  .get(
+    "/:cvId/languages",
+    zValidator("query", languageQueryOptionsSchema),
+    async (c) => {
+      const cvId = Number(c.req.param("cvId"));
+      const options = c.req.valid("query");
+
+      const languages = await languageService.getAllLanguages(cvId, options);
+
+      return c.json({
         success: true,
-        message: `new record created with ID: ${created.id}`,
-        data: created,
-      },
-      201,
-    );
-  })
-  .patch("/:id", zValidator("json", languageUpdateSchema), async (c) => {
-    const id = Number(c.req.param("id"));
-    const validatedBody = c.req.valid("json");
-    const updated = await languageService.update(id, validatedBody);
+        message: `retrieved ${languages.length} language records successfully`,
+        data: languages,
+      });
+    },
+  )
+  .get("/:cvId/languages/:languageId", async (c) => {
+    const cvId = Number(c.req.param("cvId"));
+    const languageId = Number(c.req.param("languageId"));
+
+    const language = await languageService.getLanguage(cvId, languageId);
+
     return c.json({
       success: true,
-      message: `record ID: ${id} updated successfully`,
-      data: updated,
+      message: `language record ${languageId} retrieved successfully`,
+      data: language,
     });
   })
-  .delete("/:id", async (c) => {
-    const id = Number(c.req.param("id"));
-    await languageService.delete(id);
+  .post(
+    "/:cvId/languages",
+    zValidator("json", languageInsertSchema),
+    async (c) => {
+      const cvId = Number(c.req.param("cvId"));
+      const languageData = c.req.valid("json");
+
+      const newLanguage = await languageService.createLanguage(
+        cvId,
+        languageData,
+      );
+
+      return c.json(
+        {
+          success: true,
+          message: `language record created with ID: ${newLanguage.id}`,
+          data: newLanguage,
+        },
+        201,
+      );
+    },
+  )
+  .patch(
+    "/:cvId/languages/:languageId",
+    zValidator("json", languageUpdateSchema),
+    async (c) => {
+      const cvId = Number(c.req.param("cvId"));
+      const languageId = Number(c.req.param("languageId"));
+      const updateData = c.req.valid("json");
+
+      const updatedLanguage = await languageService.updateLanguage(
+        cvId,
+        languageId,
+        updateData,
+      );
+
+      return c.json({
+        success: true,
+        message: `language record ${languageId} updated successfully`,
+        data: updatedLanguage,
+      });
+    },
+  )
+  .delete("/:cvId/languages/:languageId", async (c) => {
+    const cvId = Number(c.req.param("cvId"));
+    const languageId = Number(c.req.param("languageId"));
+
+    await languageService.deleteLanguage(cvId, languageId);
+
     return c.json({
       success: true,
-      message: `record id: ${id} deleted successfully`,
+      message: `language record ${languageId} deleted successfully`,
     });
   });
