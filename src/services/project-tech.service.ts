@@ -18,7 +18,7 @@ export class ProjectTechService extends CvChildService<
 
   async addTechnology(
     projectId: number,
-    technologyData: ProjectTechInsert,
+    technologyData: Omit<ProjectTechInsert, "projectId">,
   ): Promise<ProjectTechSelect> {
     const created = await this.projectTechRepository.addTechnology(
       projectId,
@@ -51,7 +51,7 @@ export class ProjectTechService extends CvChildService<
   async updateTechnology(
     projectId: number,
     techId: number,
-    newTechData: ProjectTechInsert,
+    newTechData: ProjectTechUpdate,
   ): Promise<ProjectTechSelect> {
     const updated = await this.projectTechRepository.updateTechnology(
       projectId,

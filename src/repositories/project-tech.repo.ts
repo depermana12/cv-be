@@ -22,7 +22,7 @@ export class ProjectTechRepository extends CvChildRepository<
 
   async addTechnology(
     projectId: number,
-    technology: ProjectTechInsert,
+    technology: Omit<ProjectTechInsert, "projectId">,
   ): Promise<{ id: number }> {
     const [result] = await this.db
       .insert(projectTechnologies)

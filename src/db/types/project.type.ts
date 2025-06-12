@@ -29,14 +29,14 @@ export type ProjectWithDescriptionsAndTechSelect = ProjectSelect & {
 
 export type ProjectWithDescAndTechInsert = {
   project: Omit<ProjectInsert, "cvId">;
-  descriptions: ProjectDescInsert[];
-  technologies: ProjectTechInsert[];
+  descriptions: Omit<ProjectDescInsert, "projectId">[];
+  technologies: Omit<ProjectTechInsert, "projectId">[];
 };
 
 export type ProjectWithDescAndTechUpdate = {
   project?: Partial<Omit<ProjectUpdate, "cvId">>;
-  descriptions?: ProjectDescUpdate[];
-  technologies?: ProjectTechUpdate[];
+  descriptions?: Omit<ProjectDescUpdate, "projectId">[];
+  technologies?: Omit<ProjectTechUpdate, "projectId">[];
 };
 
 export type ProjectWithDescriptions = ProjectSelect & {

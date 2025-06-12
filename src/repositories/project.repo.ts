@@ -18,6 +18,7 @@ import type {
   ProjectWithDescAndTechInsert,
   ProjectTechSelect,
   ProjectWithDescAndTechUpdate,
+  ProjectDescUpdate,
 } from "../db/types/project.type";
 import { getDb } from "../db";
 
@@ -140,7 +141,7 @@ export class ProjectRepository extends CvChildRepository<
 
   async createDescription(
     projectId: number,
-    description: ProjectDescInsert,
+    description: Omit<ProjectDescInsert, "projectId">,
   ): Promise<{ id: number }> {
     const [desc] = await this.db
       .insert(projectDescription)
@@ -167,7 +168,7 @@ export class ProjectRepository extends CvChildRepository<
 
   async updateDescription(
     descId: number,
-    newDescription: ProjectDescInsert,
+    newDescription: ProjectDescUpdate,
   ): Promise<boolean> {
     const [result] = await this.db
       .update(projectDescription)
@@ -285,7 +286,7 @@ export class ProjectRepository extends CvChildRepository<
 
   async createProjectWithDescriptions(
     projectData: ProjectInsert,
-    descriptions: ProjectDescInsert[],
+    descriptions: Omit<ProjectDescInsert, "projectId">[],
   ): Promise<{ id: number }> {
     return this.db.transaction(async (tx) => {
       const [project] = await tx
@@ -306,8 +307,8 @@ export class ProjectRepository extends CvChildRepository<
 
   async createProjectFull(
     projectData: ProjectInsert,
-    descriptions: ProjectDescInsert[],
-    technologies: ProjectTechInsert[],
+    descriptions: Omit<ProjectDescInsert, "projectId">[],
+    technologies: Omit<ProjectTechInsert, "projectId">[],
   ): Promise<{ id: number }> {
     return this.db.transaction(async (tx) => {
       const [project] = await tx

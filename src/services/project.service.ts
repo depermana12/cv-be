@@ -4,6 +4,7 @@ import { ProjectRepository } from "../repositories/project.repo";
 import type {
   ProjectDescInsert,
   ProjectDescSelect,
+  ProjectDescUpdate,
   ProjectInsert,
   ProjectQueryOptions,
   ProjectSelect,
@@ -18,6 +19,7 @@ import type {
 import { NotFoundError } from "../errors/not-found.error";
 import { BadRequestError } from "../errors/bad-request.error";
 import { ProjectTechService } from "./project-tech.service";
+import type { ProjectTechUpdate } from "../db/types/project-tech.type";
 
 export class ProjectService extends CvChildService<
   ProjectSelect,
@@ -86,8 +88,8 @@ export class ProjectService extends CvChildService<
   async addProjectDescription(
     cvId: number,
     projectId: number,
-    descriptionData: ProjectDescInsert,
-  ): Promise<ProjectDescInsert> {
+    descriptionData: Omit<ProjectDescInsert, "projectId">,
+  ): Promise<ProjectDescSelect> {
     const project = await this.assertProjectOwnedByCv(cvId, projectId);
     const description = await this.projectRepository.createDescription(
       project.id,
@@ -128,7 +130,7 @@ export class ProjectService extends CvChildService<
   async updateProjectDescription(
     cvId: number,
     descriptionId: number,
-    newDescriptionData: ProjectDescInsert,
+    newDescriptionData: ProjectDescUpdate,
   ): Promise<ProjectDescSelect> {
     const description = await this.getProjectDescription(cvId, descriptionId);
     if (!description) {
@@ -177,7 +179,7 @@ export class ProjectService extends CvChildService<
   async addProjectTechnology(
     cvId: number,
     projectId: number,
-    technologyData: ProjectTechInsert,
+    technologyData: Omit<ProjectTechInsert, "projectId">,
   ): Promise<ProjectTechSelect> {
     await this.assertProjectOwnedByCv(cvId, projectId);
     return this.projectTechService.addTechnology(projectId, technologyData);
@@ -204,7 +206,7 @@ export class ProjectService extends CvChildService<
     cvId: number,
     projectId: number,
     technologyId: number,
-    newTechnologyData: ProjectTechInsert,
+    newTechnologyData: ProjectTechUpdate,
   ): Promise<ProjectTechSelect> {
     await this.assertProjectOwnedByCv(cvId, projectId);
     const updated = await this.projectTechService.updateTechnology(
@@ -248,7 +250,7 @@ export class ProjectService extends CvChildService<
   async createProjectWithDescription(
     cvId: number,
     projectData: Omit<ProjectInsert, "cvId">,
-    descriptionData: ProjectDescInsert[],
+    descriptionData: Omit<ProjectDescInsert, "projectId">[],
   ): Promise<ProjectWithDescriptions> {
     const { id } = await this.projectRepository.createProjectWithDescriptions(
       { ...projectData, cvId },
