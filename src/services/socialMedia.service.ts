@@ -1,5 +1,5 @@
 import { CvChildService } from "./cvChild.service";
-import { SocialMediaRepository } from "../repositories/social.repo";
+import { SocialMediaRepository } from "../repositories/socialMedia.repo";
 import type {
   SocialSelect,
   SocialInsert,
