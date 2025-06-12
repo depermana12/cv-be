@@ -22,37 +22,28 @@ export type ProjectTechUpdate = Partial<
   Omit<typeof projectTechnologies.$inferInsert, "id" | "projectId">
 >;
 
-export type ProjectWithDescriptionsAndTechSelect = ProjectSelect & {
+export type ProjectFullSelect = ProjectSelect & {
   descriptions: ProjectDescSelect[];
   technologies: ProjectTechSelect[];
 };
 
-export type ProjectWithDescAndTechInsert = {
-  project: Omit<ProjectInsert, "cvId">;
+export type ProjectFullInsert = Omit<ProjectInsert, "cvId"> & {
+  descriptions?: Omit<ProjectDescInsert, "projectId">[];
+  technologies?: Omit<ProjectTechInsert, "projectId">[];
+};
+
+export type ProjectFullUpdate = Partial<{
+  name: string;
+  description: string;
+  startDate: Date;
+  endDate: Date;
+  url: string;
   descriptions: Omit<ProjectDescInsert, "projectId">[];
   technologies: Omit<ProjectTechInsert, "projectId">[];
-};
-
-export type ProjectWithDescAndTechUpdate = {
-  project?: Partial<Omit<ProjectUpdate, "cvId">>;
-  descriptions?: Omit<ProjectDescUpdate, "projectId">[];
-  technologies?: Omit<ProjectTechUpdate, "projectId">[];
-};
-
-export type ProjectWithDescriptions = ProjectSelect & {
-  descriptions: ProjectDescSelect[];
-};
-
-export type ProjectWithTech = ProjectSelect & {
-  technologies: ProjectTechSelect[];
-};
+}>;
 
 export type ProjectQueryOptions = {
   search?: string;
   sortBy?: keyof ProjectSelect;
   sortOrder?: "asc" | "desc";
-};
-
-export type ProjectWithDescriptionsAndTech = ProjectWithDescriptions & {
-  technologies: ProjectTechSelect[];
 };
