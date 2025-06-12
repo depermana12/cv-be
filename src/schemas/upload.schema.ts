@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-const MAX_FILE_SIZE = 1024 * 1024 * 1; // 1MB
+const MAX_FILE_SIZE = 1024 * 1024 * 5; // 5MB
 const ALLOWED_FILE_TYPES = ["image/jpeg", "image/jpg", "image/png"] as const;
 
 export const presignedUploadSchema = z.object({
@@ -11,9 +11,12 @@ export const presignedUploadSchema = z.object({
         ", ",
       )} are allowed`,
     }),
+  folder: z.string().optional().default("uploads"),
 });
 
-export type PresignedUpload = z.infer<typeof presignedUploadSchema>;
+export const listObjectsSchema = z.object({
+  prefix: z.string().optional().default("uploads/"),
+});
 
 export const fileUploadSchema = z.object({
   file: z
@@ -28,6 +31,9 @@ export const fileUploadSchema = z.object({
         ", ",
       )} are allowed`,
     }),
+  folder: z.string().optional().default("uploads"),
 });
 
+export type PresignedUpload = z.infer<typeof presignedUploadSchema>;
+export type ListObjects = z.infer<typeof listObjectsSchema>;
 export type FileUpload = z.infer<typeof fileUploadSchema>;

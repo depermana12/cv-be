@@ -6,21 +6,21 @@ import {
   directUpload,
   listObjects,
 } from "../services/sThree.service";
-import type { Bindings } from "../lib/types";
 import { UploadError } from "../errors/upload.error";
 import { zValidator } from "../utils/validator";
 import {
   fileUploadSchema,
+  listObjectsSchema,
   presignedUploadSchema,
 } from "../schemas/upload.schema";
+import { createHonoBindings } from "../lib/create-hono";
 
-// Route to get a presigned URL for client-side uploads
-export const uploadRoutes = new Hono<Bindings>()
+export const uploadRoutes = createHonoBindings()
   .post("/presigned", zValidator("json", presignedUploadSchema), async (c) => {
     try {
-      const { fileType } = c.req.valid("json");
+      const { fileType, folder } = c.req.valid("json");
 
-      const { url, key } = await generatePresignedUploadUrl(fileType);
+      const { url, key } = await generatePresignedUploadUrl(fileType, folder);
 
       return c.json({
         success: true,
@@ -62,15 +62,22 @@ export const uploadRoutes = new Hono<Bindings>()
       const key = c.req.param("key");
       await deleteObject(key);
 
-      return c.json({ success: true, message: "Image deleted successfully" });
+      return c.json({
+        success: true,
+        message: `image with key ${key} deleted successfully`,
+      });
     } catch (error) {
-      console.error("Error deleting image:", error);
-      return c.json({ error: "Failed to delete image" }, 500);
+      if (error instanceof UploadError) {
+        throw error;
+      }
+      throw new UploadError("failed to delete image", 500, {
+        cause: error,
+      });
     }
   })
-  .get("/images", async (c) => {
+  .get("/images", zValidator("query", listObjectsSchema), async (c) => {
     try {
-      const prefix = c.req.query("prefix") || "uploads/";
+      const prefix = c.req.query("prefix");
       const objects = await listObjects(prefix);
 
       const images = await Promise.all(
@@ -80,6 +87,7 @@ export const uploadRoutes = new Hono<Bindings>()
             key: obj.Key,
             lastModified: obj.LastModified,
             size: obj.Size,
+            etag: obj.ETag,
             url,
           };
         }),
@@ -98,13 +106,13 @@ export const uploadRoutes = new Hono<Bindings>()
   })
   .post("/direct-server", zValidator("form", fileUploadSchema), async (c) => {
     try {
-      const { file } = c.req.valid("form");
+      const { file, folder } = c.req.valid("form");
 
       const buffer = Buffer.from(await file.arrayBuffer());
       const fileType = file.type || "image/jpeg";
       const fileName = `${Date.now()}-${file.name}`;
 
-      const key = await directUpload(buffer, fileName, fileType);
+      const key = await directUpload(buffer, fileName, fileType, folder);
       const url = await generatePresignedGetUrl(key);
 
       return c.json({
@@ -113,6 +121,9 @@ export const uploadRoutes = new Hono<Bindings>()
         data: {
           key,
           url,
+          fileName,
+          fileSize: file.size,
+          fileType,
         },
       });
     } catch (error) {
