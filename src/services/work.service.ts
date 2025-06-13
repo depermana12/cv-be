@@ -1,5 +1,7 @@
 import { CvChildService } from "./cvChild.service";
 import type {
+  WorkCreateRequest,
+  WorkUpdateRequest,
   WorkDescInsert,
   WorkDescSelect,
   WorkDescUpdate,
@@ -7,6 +9,7 @@ import type {
   WorkQueryOptions,
   WorkSelect,
   WorkUpdate,
+  WorkResponse,
 } from "../db/types/work.type";
 import { BadRequestError } from "../errors/bad-request.error";
 import { NotFoundError } from "../errors/not-found.error";
@@ -21,120 +24,118 @@ export class WorkService extends CvChildService<
     super(workRepository);
   }
 
-  async createWork(
-    cvId: number,
-    workData: Omit<WorkInsert, "cvId">,
-  ): Promise<WorkSelect> {
-    return this.createForCv(cvId, { ...workData, cvId });
-  }
-
-  async getWork(cvId: number, workId: number): Promise<WorkSelect> {
-    return this.findByCvId(cvId, workId);
-  }
-
   async getAllWorks(
     cvId: number,
     options?: WorkQueryOptions,
-  ): Promise<WorkSelect[]> {
+  ): Promise<WorkResponse[]> {
     return this.workRepository.getAllWorks(cvId, options);
+  }
+
+  async getWork(cvId: number, workId: number): Promise<WorkResponse> {
+    const work = await this.workRepository.getWork(workId);
+    if (!work || work.cvId !== cvId) {
+      throw new NotFoundError(`Work ${workId} not found for CV ${cvId}`);
+    }
+    return work;
+  }
+
+  async createWork(
+    cvId: number,
+    workData: WorkCreateRequest,
+  ): Promise<WorkResponse> {
+    const { descriptions = [], ...restWorkData } = workData;
+
+    const result = await this.workRepository.createWork(
+      { ...restWorkData, cvId },
+      descriptions,
+    );
+
+    return this.getWork(cvId, result.id);
   }
 
   async updateWork(
     cvId: number,
     workId: number,
-    newWorkData: WorkUpdate,
-  ): Promise<WorkSelect> {
-    return this.updateForCv(cvId, workId, newWorkData);
+    updateData: WorkUpdateRequest,
+  ): Promise<WorkResponse> {
+    await this.getWork(cvId, workId);
+
+    const { descriptions, ...workData } = updateData;
+    await this.workRepository.updateWork(workId, workData, descriptions);
+
+    return this.getWork(cvId, workId);
   }
 
   async deleteWork(cvId: number, workId: number): Promise<boolean> {
-    return this.deleteFromCv(cvId, workId);
+    await this.getWork(cvId, workId);
+    return this.workRepository.deleteWork(workId);
   }
 
-  /**
-   * Utility function that asserts that the work belongs to the specified CV.
-   * @param cvId - The ID of the CV.
-   * @param workId - The ID of the work.
-   * @returns The work if it exists and belongs to the CV.
-   * @throws NotFoundError if the work does not exist or does not belong to the CV.
-   */
-  private async assertWorkOwnedByCv(
+  async getAllWorkDescriptions(
     cvId: number,
     workId: number,
-  ): Promise<WorkSelect> {
-    return this.findByCvId(cvId, workId);
+  ): Promise<WorkDescSelect[]> {
+    await this.getWork(cvId, workId);
+    return this.workRepository.getManyDescriptions(workId);
   }
 
-  /**
-   * All below are description related methods for courses.
-   * whether single CRUD operations or bulk operations.
-   */
-
-  async createDescriptionForWork(
+  async addWorkDescription(
     cvId: number,
     workId: number,
-    descriptionData: Omit<WorkDescInsert, "workId">,
+    descriptionData: { description: string },
   ): Promise<WorkDescSelect> {
-    const work = await this.assertWorkOwnedByCv(cvId, workId);
-    const description = await this.workRepository.createDescription(
-      work.id,
+    await this.getWork(cvId, workId);
+    const result = await this.workRepository.createDescription(
+      workId,
       descriptionData,
     );
-    if (!description) {
-      throw new BadRequestError(
-        `cannot create description for work with id ${workId}`,
-      );
+
+    if (!result) {
+      throw new BadRequestError(`Failed to add description to work ${workId}`);
     }
-    return this.getWorkDescription(cvId, description.id);
+
+    return this.getWorkDescription(cvId, result.id);
   }
 
   async getWorkDescription(
     cvId: number,
     descriptionId: number,
   ): Promise<WorkDescSelect> {
-    const description = await this.workRepository.getDescriptionById(
+    const description = await this.workRepository.getOneDescription(
       descriptionId,
     );
     if (!description) {
-      throw new NotFoundError(
-        `cannot get: description with id ${descriptionId} not found`,
-      );
+      throw new NotFoundError(`Description ${descriptionId} not found`);
     }
-    await this.assertWorkOwnedByCv(cvId, description.workId);
-    return description;
-  }
 
-  async getWorkDescriptions(
-    cvId: number,
-    workId: number,
-  ): Promise<WorkDescSelect[]> {
-    await this.assertWorkOwnedByCv(cvId, workId);
-    return this.workRepository.getAllDescriptions(workId);
+    await this.getWork(cvId, description.workId);
+    return description;
   }
 
   async updateWorkDescription(
     cvId: number,
     descriptionId: number,
-    newDescriptionData: WorkDescUpdate,
+    updateData: WorkDescUpdate,
   ): Promise<WorkDescSelect> {
-    const description = await this.workRepository.getDescriptionById(
+    const description = await this.workRepository.getOneDescription(
       descriptionId,
     );
     if (!description) {
-      throw new NotFoundError(
-        `cannot update: description with id ${descriptionId} not found`,
-      );
+      throw new NotFoundError(`Description ${descriptionId} not found`);
     }
-    await this.assertWorkOwnedByCv(cvId, description.workId);
-    const updatedDescription = await this.workRepository.updateDescription(
+
+    await this.getWork(cvId, description.workId);
+
+    const updated = await this.workRepository.updateDescription(
       descriptionId,
-      newDescriptionData,
+      updateData,
     );
-    if (!updatedDescription) {
+    if (!updated) {
       throw new BadRequestError(
-        `cannot update description with id ${descriptionId}`,
+        `Failed to update description ${descriptionId}`,
       );
     }
+
     return this.getWorkDescription(cvId, descriptionId);
   }
 
@@ -142,79 +143,14 @@ export class WorkService extends CvChildService<
     cvId: number,
     descriptionId: number,
   ): Promise<boolean> {
-    const description = await this.workRepository.getDescriptionById(
+    const description = await this.workRepository.getOneDescription(
       descriptionId,
     );
     if (!description) {
-      throw new NotFoundError(
-        `cannot delete: description with id ${descriptionId} not found`,
-      );
-    }
-    await this.assertWorkOwnedByCv(cvId, description.workId);
-    const deletedDescription = await this.workRepository.deleteDescription(
-      descriptionId,
-    );
-    if (!deletedDescription) {
-      throw new BadRequestError(
-        `cannot delete description with id ${descriptionId}`,
-      );
-    }
-    return deletedDescription;
-  }
-
-  /**
-   * Bulk operations: create a work with multiple descriptions.
-   * @param cvId - The ID of the CV.
-   * @param workData - The data for the work to be created.
-   * @param descriptions - An array of descriptions to be associated with the work.
-   * @returns A composite object containing the created work and its descriptions.
-   */
-  async createWorkWithDescriptions(
-    cvId: number,
-    workData: Omit<WorkInsert, "cvId">,
-    descriptions: Omit<WorkDescInsert, "workId">[],
-  ): Promise<WorkSelect & { descriptions: WorkDescSelect[] }> {
-    const { id } = await this.workRepository.createWorkWithDescriptions(
-      { ...workData, cvId },
-      descriptions,
-    );
-
-    const workWithDescriptions =
-      await this.workRepository.getWorkWithDescriptions(id);
-    if (!workWithDescriptions) {
-      throw new NotFoundError(`Work with id ${id} not found`);
+      throw new NotFoundError(`Description ${descriptionId} not found`);
     }
 
-    return workWithDescriptions;
-  }
-
-  /**
-   * Get all works with their descriptions for a specific CV.
-   * @param cvId - The ID of the CV.
-   * @param options - Optional query options for filtering or sorting.
-   * @param options.search - Optional search term to filter works by title or description.
-   * @param options.sortBy - Optional field to sort by (e.g., 'company', 'position').
-   * @param options.sortOrder - Optional sort order ('asc' or 'desc').
-   * @returns An array of works with their descriptions.
-   */
-  async getAllWorksWithDescriptions(
-    cvId: number,
-    options?: WorkQueryOptions,
-  ): Promise<(WorkSelect & { descriptions: WorkDescSelect[] })[]> {
-    return this.workRepository.getAllWorksWithDescriptions(cvId, options);
-  }
-
-  async deleteWorkWithDescriptions(
-    cvId: number,
-    workId: number,
-  ): Promise<boolean> {
-    await this.assertWorkOwnedByCv(cvId, workId);
-    const deleted = await this.workRepository.deleteWorkWithDescriptions(
-      workId,
-    );
-    if (!deleted) {
-      throw new BadRequestError(`cannot delete work with id ${workId}`);
-    }
-    return deleted;
+    await this.getWork(cvId, description.workId);
+    return this.workRepository.deleteDescription(descriptionId);
   }
 }

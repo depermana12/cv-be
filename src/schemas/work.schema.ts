@@ -2,54 +2,40 @@ import { z } from "zod";
 
 const idSchema = z.number().int().positive();
 
-export const workSelectSchema = z.object({
-  id: idSchema,
-  cvId: idSchema,
+export const workBaseSchema = z.object({
   company: z.string().max(100, { message: "Must be 100 characters or fewer" }),
   position: z.string().max(100, { message: "Must be 100 characters or fewer" }),
   startDate: z.coerce.date({ invalid_type_error: "Invalid start date" }),
-  endDate: z.coerce.date({ invalid_type_error: "Invalid end date" }),
-  url: z.string().url({ message: "Invalid URL format" }),
-  isCurrent: z.boolean(),
+  endDate: z.coerce.date({ invalid_type_error: "Invalid end date" }).optional(),
+  url: z.string().url({ message: "Invalid URL format" }).optional(),
+  isCurrent: z.boolean().optional().default(false),
 });
 
-export const workInsertSchema = workSelectSchema.omit({
-  id: true,
-  cvId: true,
+export const workResponseSchema = workBaseSchema.extend({
+  id: idSchema,
+  cvId: idSchema,
 });
 
-export const workUpdateSchema = workInsertSchema.partial();
-
-export type WorkSelect = z.infer<typeof workSelectSchema>;
-export type WorkInsert = z.infer<typeof workInsertSchema>;
-export type WorkUpdate = z.infer<typeof workUpdateSchema>;
-
-export const workDescSelectSchema = z.object({
+export const workDescResponseSchema = z.object({
   id: idSchema,
   workId: idSchema,
   description: z.string(),
 });
 
-export const workDescInsertSchema = workDescSelectSchema.omit({
+// API operation schemas
+export const workDescCreateSchema = workDescResponseSchema.omit({
   id: true,
   workId: true,
 });
-
-export const workDescUpdateSchema = workDescInsertSchema.partial();
-
+export const workDescUpdateSchema = workDescCreateSchema.partial();
+export const workCreateSchema = workBaseSchema.extend({
+  descriptions: z.array(workDescCreateSchema).optional().default([]),
+});
+export const workUpdateSchema = workBaseSchema.partial().extend({
+  descriptions: z.array(workDescCreateSchema).optional(),
+});
 export const workQueryOptionsSchema = z.object({
   search: z.string().optional(),
   sortBy: z.enum(["company", "position", "startDate", "endDate"]).optional(),
   sortOrder: z.enum(["asc", "desc"]).optional(),
 });
-
-export type WorkDescSelect = z.infer<typeof workDescSelectSchema>;
-export type WorkDescInsert = z.infer<typeof workDescInsertSchema>;
-export type WorkDescUpdate = z.infer<typeof workDescUpdateSchema>;
-
-export const workInsertWithDescSchema = workInsertSchema.extend({
-  descriptions: z.array(workDescInsertSchema).optional(),
-});
-
-export type WorkInsertWithDesc = z.infer<typeof workInsertWithDescSchema>;
-export type WorkQueryOptions = z.infer<typeof workQueryOptionsSchema>;

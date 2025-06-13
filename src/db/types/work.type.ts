@@ -8,10 +8,18 @@ export type WorkDescSelect = typeof workDescriptions.$inferSelect;
 export type WorkDescInsert = typeof workDescriptions.$inferInsert;
 export type WorkDescUpdate = Partial<Omit<WorkDescInsert, "id" | "workId">>;
 
-export type WorkWithDescriptions = WorkSelect & {
+// Composite types
+export type WorkResponse = WorkSelect & {
   descriptions: WorkDescSelect[];
 };
 
+// API operation types
+export type WorkCreateRequest = Omit<WorkInsert, "id" | "cvId"> & {
+  descriptions?: Omit<WorkDescInsert, "id" | "workId">[];
+};
+export type WorkUpdateRequest = Partial<Omit<WorkInsert, "id" | "cvId">> & {
+  descriptions?: Omit<WorkDescInsert, "id" | "workId">[];
+};
 export type WorkQueryOptions = {
   search?: string;
   sortBy?: keyof WorkSelect;
