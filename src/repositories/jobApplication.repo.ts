@@ -1,14 +1,16 @@
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql, like, desc, asc } from "drizzle-orm";
 import { jobApplications } from "../db/schema/jobApplication.db";
 import type {
   JobApplicationInsert,
   JobApplicationSelect,
   JobApplicationUpdate,
+  JobApplicationQueryOptions,
+  PaginatedJobApplicationResponse,
 } from "../db/types/jobApplication.type";
 import { BaseRepository } from "./base.repo";
 import type { Database } from "../db/index";
 
-export class JobApplicationRepo extends BaseRepository<
+export class JobApplicationRepository extends BaseRepository<
   typeof jobApplications,
   JobApplicationInsert,
   JobApplicationSelect,
@@ -18,42 +20,90 @@ export class JobApplicationRepo extends BaseRepository<
     super(jobApplications, db);
   }
 
-  /**
-   * Get all job applications by user ID.
-   * @param userId - The user ID.
-   * @returns An array of job applications.
-   */
-  async getByUserId(userId: number): Promise<JobApplicationSelect[]> {
-    return this.db
-      .select()
-      .from(this.table)
-      .where(eq(this.table.userId, userId));
+  async createJobApplication(
+    data: JobApplicationInsert,
+  ): Promise<{ id: number }> {
+    const [result] = await this.db
+      .insert(jobApplications)
+      .values(data)
+      .$returningId();
+    return { id: result.id };
   }
 
-  /**
-   * Get all job applications by CV ID.
-   * @param cvId - The CV ID.
-   * @returns An array of job applications.
-   */
-  async getByCvId(cvId: number): Promise<JobApplicationSelect[]> {
-    return this.db.select().from(this.table).where(eq(this.table.cvId, cvId));
+  async getJobApplicationByIdAndUserId(
+    id: number,
+    userId: number,
+  ): Promise<JobApplicationSelect | null> {
+    const result = await this.db.query.jobApplications.findFirst({
+      where: and(
+        eq(jobApplications.id, id),
+        eq(jobApplications.userId, userId),
+      ),
+    });
+    return result ?? null;
   }
 
-  /**
-   * Check if a job application belongs to a user.
-   * @param applicationId - The job application ID.
-   * @param userId - The user ID.
-   * @returns True if the application belongs to the user, false otherwise.
-   */
-  async isOwnedByUser(applicationId: number, userId: number): Promise<boolean> {
+  async getAllJobApplicationsByUserId(
+    userId: number,
+    options?: JobApplicationQueryOptions,
+  ): Promise<PaginatedJobApplicationResponse> {
+    const whereClause = [eq(jobApplications.userId, userId)];
+
+    if (options?.search) {
+      whereClause.push(
+        like(
+          sql`lower(${jobApplications.position})`,
+          `%${options.search.toLowerCase()}%`,
+        ),
+      );
+    }
+
+    const data = await this.db.query.jobApplications.findMany({
+      where: and(...whereClause),
+      orderBy: options?.sortBy
+        ? [
+            options.sortOrder === "desc"
+              ? desc(jobApplications[options.sortBy])
+              : asc(jobApplications[options.sortBy]),
+          ]
+        : [desc(jobApplications.createdAt)],
+      limit: options?.limit ?? 10,
+      offset: options?.offset ?? 0,
+    });
+
+    const count = await this.db.$count(jobApplications, and(...whereClause));
+
+    return {
+      data,
+      total: count,
+      limit: options?.limit ?? 10,
+      offset: options?.offset ?? 0,
+    };
+  }
+
+  async updateJobApplicationByIdAndUserId(
+    id: number,
+    userId: number,
+    newData: JobApplicationUpdate,
+  ): Promise<boolean> {
     const result = await this.db
-      .select()
-      .from(this.table)
+      .update(jobApplications)
+      .set(newData)
       .where(
-        and(eq(this.table.id, applicationId), eq(this.table.userId, userId)),
-      )
-      .limit(1);
+        and(eq(jobApplications.id, id), eq(jobApplications.userId, userId)),
+      );
+    return result.length > 0;
+  }
 
+  async deleteJobApplicationByIdAndUserId(
+    id: number,
+    userId: number,
+  ): Promise<boolean> {
+    const result = await this.db
+      .delete(jobApplications)
+      .where(
+        and(eq(jobApplications.id, id), eq(jobApplications.userId, userId)),
+      );
     return result.length > 0;
   }
 }

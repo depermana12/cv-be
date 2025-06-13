@@ -29,6 +29,8 @@ import { SocialMediaService } from "../services/socialMedia.service";
 import { SoftSkillService } from "../services/soft-skill.service";
 import { UserService } from "../services/user.service";
 import { WorkService } from "../services/work.service";
+import { JobApplicationRepository } from "../repositories/jobApplication.repo";
+import { JobApplicationService } from "../services/jobApplication.service";
 
 const db = await getDb();
 
@@ -47,6 +49,7 @@ const socialMediaRepository = new SocialMediaRepository(db);
 const softSkillRepository = new SoftSkillRepository(db);
 const userRepository = new UserRepository(db);
 const workRepository = new WorkRepository(db);
+const jobApplicationRepository = new JobApplicationRepository(db);
 
 // services
 export const tokenService = new TokenService(process.env.JWT_SECRET!);
@@ -70,3 +73,6 @@ export const socialMediaService = new SocialMediaService(socialMediaRepository);
 export const softSkillService = new SoftSkillService(softSkillRepository);
 export const userService = new UserService(userRepository, cvService);
 export const workService = new WorkService(workRepository);
+export const jobApplicationService = new JobApplicationService(
+  jobApplicationRepository,
+);

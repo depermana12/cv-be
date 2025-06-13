@@ -8,9 +8,7 @@ export const jobApplicationSelectSchema = z.object({
   cvId: idSchema.nullable(),
   jobPortal: z
     .string()
-    .max(100, { message: "Job portal must be 100 characters or less" })
-    .optional()
-    .nullable(),
+    .max(100, { message: "Job portal must be 100 characters or less" }),
   jobUrl: z
     .string()
     .max(255, { message: "Job URL must be 255 characters or less" })
@@ -22,14 +20,27 @@ export const jobApplicationSelectSchema = z.object({
   jobTitle: z
     .string()
     .max(255, { message: "Job title must be 255 characters or less" }),
-  position: z
-    .string()
-    .max(255, { message: "Position must be 255 characters or less" }),
-  location: z
-    .string()
-    .max(255, { message: "Location must be 255 characters or less" })
-    .optional()
-    .nullable(),
+  jobType: z.enum([
+    "Full-time",
+    "Part-time",
+    "Contract",
+    "Internship",
+    "Freelance",
+    "Volunteer",
+  ]),
+  position: z.enum([
+    "Manager",
+    "Lead",
+    "Senior",
+    "Mid-level",
+    "Junior",
+    "Intern",
+    "Entry-level",
+    "Staff",
+    "Other",
+  ]),
+
+  location: z.enum(["Remote", "On-site", "Hybrid"]).optional().nullable(),
   status: z
     .enum(
       ["applied", "interview", "offer", "rejected", "accepted", "ghosted"],
@@ -37,25 +48,23 @@ export const jobApplicationSelectSchema = z.object({
     )
     .default("applied"),
   notes: z.string().optional().nullable(),
-  appliedAt: z.coerce.date().optional().nullable(),
+  appliedAt: z.coerce.date(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
 });
 
-export const jobApplicationInsertSchema = jobApplicationSelectSchema.omit({
+export const jobApplicationCreateSchema = jobApplicationSelectSchema.omit({
   id: true,
   createdAt: true,
   updatedAt: true,
 });
 
-export const jobApplicationUpdateSchema = jobApplicationInsertSchema.partial();
+export const jobApplicationUpdateSchema = jobApplicationCreateSchema.partial();
 
-export type JobApplicationSelectSchema = z.infer<
-  typeof jobApplicationSelectSchema
->;
-export type JobApplicationInsertSchema = z.infer<
-  typeof jobApplicationInsertSchema
->;
-export type JobApplicationUpdateSchema = z.infer<
-  typeof jobApplicationUpdateSchema
->;
+export const jobApplicationQueryOptionsSchema = z.object({
+  search: z.string().optional(),
+  sortBy: z.enum(["position", "companyName", "status", "appliedAt"]).optional(),
+  sortOrder: z.enum(["asc", "desc"]).optional(),
+  limit: z.number().optional(),
+  offset: z.number().optional(),
+});
