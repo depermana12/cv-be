@@ -1,5 +1,4 @@
 import { zValidator } from "../utils/validator";
-import { OrganizationService } from "../services/organization.service";
 import {
   orgCreateSchema,
   orgUpdateSchema,
@@ -7,11 +6,8 @@ import {
   orgDescUpdateSchema,
   orgQueryOptionsSchema,
 } from "../schemas/organization.schema";
-import { OrganizationRepository } from "../repositories/organization.repo";
+import { organizationService } from "../lib/container";
 import { createHonoBindings } from "../lib/create-hono";
-
-const organizationRepository = new OrganizationRepository();
-const organizationService = new OrganizationService(organizationRepository);
 
 export const organizationRoutes = createHonoBindings()
   .get(

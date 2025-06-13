@@ -1,6 +1,4 @@
 import { zValidator } from "../utils/validator";
-import { ProjectService } from "../services/project.service";
-import { ProjectTechService } from "../services/project-tech.service";
 import {
   projectInsertSchema,
   projectUpdateSchema,
@@ -8,17 +6,8 @@ import {
   projectTechInsertSchema,
   projectQueryOptionsSchema,
 } from "../schemas/project.schema";
-import { ProjectRepository } from "../repositories/project.repo";
-import { ProjectTechRepository } from "../repositories/project-tech.repo";
+import { projectService } from "../lib/container";
 import { createHonoBindings } from "../lib/create-hono";
-
-const projectRepository = new ProjectRepository();
-const projectTechRepository = new ProjectTechRepository();
-const projectTechService = new ProjectTechService(projectTechRepository);
-const projectService = new ProjectService(
-  projectRepository,
-  projectTechService,
-);
 
 export const projectRoutes = createHonoBindings()
   .get(

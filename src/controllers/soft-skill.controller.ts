@@ -1,15 +1,11 @@
 import { zValidator } from "../utils/validator";
-import { SoftSkillService } from "../services/soft-skill.service";
 import {
   softSkillInsertSchema,
   softSkillUpdateSchema,
   softSkillQueryOptionsSchema,
 } from "../schemas/soft-skill.schema";
-import { SoftSkillRepository } from "../repositories/soft-skill.repo";
+import { softSkillService } from "../lib/container";
 import { createHonoBindings } from "../lib/create-hono";
-
-const softSkillRepository = new SoftSkillRepository();
-const softSkillService = new SoftSkillService(softSkillRepository);
 
 export const softSkillRoutes = createHonoBindings()
   .get(

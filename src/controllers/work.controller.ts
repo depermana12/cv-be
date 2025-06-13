@@ -1,5 +1,4 @@
 import { zValidator } from "../utils/validator";
-import { WorkService } from "../services/work.service";
 import {
   workCreateSchema,
   workUpdateSchema,
@@ -7,11 +6,8 @@ import {
   workDescUpdateSchema,
   workQueryOptionsSchema,
 } from "../schemas/work.schema";
-import { WorkRepository } from "../repositories/work.repo";
+import { workService } from "../lib/container";
 import { createHonoBindings } from "../lib/create-hono";
-
-const workRepository = new WorkRepository();
-const workService = new WorkService(workRepository);
 
 export const workRoutes = createHonoBindings()
   // Get all works for a CV (with descriptions by default)

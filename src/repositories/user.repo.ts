@@ -1,12 +1,11 @@
-import type { MySql2Database } from "drizzle-orm/mysql2";
 import { eq, sql } from "drizzle-orm";
 import { users } from "../db/schema/user.db";
-import type { schema } from "../db";
+import type { Database } from "../db";
 import type { UserInsert, UserSelect, UserUpdate } from "../db/types/user.type";
 
 export class UserRepository {
   private readonly table = users;
-  constructor(private readonly db: MySql2Database<typeof schema>) {}
+  constructor(private readonly db: Database) {}
 
   async userExistsById(id: number): Promise<boolean> {
     const [rows] = await this.db

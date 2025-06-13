@@ -17,16 +17,14 @@ import type {
   ProjectTechSelect,
   ProjectFullSelect,
 } from "../db/types/project.type";
-import { getDb } from "../db";
-
-const db = await getDb();
+import type { Database } from "../db/index";
 export class ProjectRepository extends CvChildRepository<
   typeof projects,
   ProjectInsert,
   ProjectSelect,
   ProjectUpdate
 > {
-  constructor() {
+  constructor(db: Database) {
     super(projects, db);
   }
   async getAllProjects(cvId: number, options?: ProjectQueryOptions) {

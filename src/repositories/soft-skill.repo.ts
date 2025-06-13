@@ -6,17 +6,15 @@ import type {
   SoftSkillSelect,
   SoftSkillUpdate,
 } from "../db/types/soft-skill.type";
-import { getDb } from "../db";
 import { and, asc, desc, eq, like, sql } from "drizzle-orm";
-
-const db = await getDb();
+import type { Database } from "../db/index";
 export class SoftSkillRepository extends CvChildRepository<
   typeof softSkills,
   SoftSkillInsert,
   SoftSkillSelect,
   SoftSkillUpdate
 > {
-  constructor() {
+  constructor(db: Database) {
     super(softSkills, db);
   }
 

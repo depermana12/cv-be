@@ -7,16 +7,14 @@ import type {
   LanguageSelect,
   LanguageUpdate,
 } from "../db/types/language.type";
-import { getDb } from "../db";
-
-const db = await getDb();
+import type { Database } from "../db/index";
 export class LanguageRepository extends CvChildRepository<
   typeof languages,
   LanguageInsert,
   LanguageSelect,
   LanguageUpdate
 > {
-  constructor() {
+  constructor(db: Database) {
     super(languages, db);
   }
 

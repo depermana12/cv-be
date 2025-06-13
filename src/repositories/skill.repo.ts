@@ -7,16 +7,14 @@ import type {
   SkillSelect,
   SkillUpdate,
 } from "../db/types/skill.type";
-import { getDb } from "../db";
-
-const db = await getDb();
+import type { Database } from "../db/index";
 export class SkillRepository extends CvChildRepository<
   typeof skills,
   SkillInsert,
   SkillSelect,
   SkillUpdate
 > {
-  constructor() {
+  constructor(db: Database) {
     super(skills, db);
   }
   async getCategoriesByCv(cvId: number): Promise<string[]> {

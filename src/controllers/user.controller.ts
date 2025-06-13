@@ -1,16 +1,7 @@
 import { zValidator } from "../utils/validator";
-import { UserService } from "../services/user.service";
 import { userUpdateSchema } from "../schemas/user.schema";
+import { userService } from "../lib/container";
 import { createHonoBindings } from "../lib/create-hono";
-import { getDb } from "../db";
-import { UserRepository } from "../repositories/user.repo";
-import { CvService } from "../services/cv.service";
-import { CvRepository } from "../repositories/cv.repo";
-
-const db = await getDb();
-const userRepository = new UserRepository(db);
-const cvService = new CvService(new CvRepository(db));
-const userService = new UserService(userRepository, cvService);
 
 export const userRoutes = createHonoBindings()
   .get("/me", async (c) => {

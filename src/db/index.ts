@@ -54,8 +54,10 @@ const getDatabaseUrl = () => {
  * extending global object to add __drizzleDbInstance and __drizzlePool
  * This allows to reuse single database connection and db instance after the first call
  */
+export type Database = MySql2Database<typeof schema>;
+
 const globalAny = global as typeof globalThis & {
-  __drizzleDbInstance?: MySql2Database<typeof schema>;
+  __drizzleDbInstance?: Database;
   __drizzlePool?: mysql.Pool;
 };
 

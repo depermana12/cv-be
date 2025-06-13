@@ -5,18 +5,16 @@ import type {
   ProjectTechSelect,
   ProjectTechUpdate,
 } from "../db/types/project.type";
-import { getDb } from "../db";
 import { and, asc, desc, eq, like, sql } from "drizzle-orm";
 import type { ProjectTechQueryOptions } from "../db/types/project-tech.type";
-
-const db = await getDb();
+import type { Database } from "../db/index";
 export class ProjectTechRepository extends CvChildRepository<
   typeof projectTechnologies,
   ProjectTechInsert,
   ProjectTechSelect,
   ProjectTechUpdate
 > {
-  constructor() {
+  constructor(db: Database) {
     super(projectTechnologies, db);
   }
 

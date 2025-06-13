@@ -11,17 +11,16 @@ import type {
   OrganizationQueryOptions,
   OrganizationDescUpdate,
 } from "../db/types/organization.type";
-import { getDb } from "../db";
 import { organizationDesc, organizations } from "../db/schema/organization.db";
+import type { Database } from "../db/index";
 
-const db = await getDb();
 export class OrganizationRepository extends CvChildRepository<
   typeof organizations,
   OrganizationInsert,
   OrganizationSelect,
   OrganizationUpdate
 > {
-  constructor() {
+  constructor(db: Database) {
     super(organizations, db);
   }
 

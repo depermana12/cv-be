@@ -1,15 +1,11 @@
 import { zValidator } from "../utils/validator";
-import { EducationService } from "../services/education.service";
 import {
   educationInsertSchema,
   educationUpdateSchema,
   educationQueryOptionsSchema,
 } from "../schemas/education.schema";
-import { EducationRepository } from "../repositories/education.repo";
+import { educationService } from "../lib/container";
 import { createHonoBindings } from "../lib/create-hono";
-
-const educationRepository = new EducationRepository();
-const educationService = new EducationService(educationRepository);
 
 export const educationRoutes = createHonoBindings()
   .get(

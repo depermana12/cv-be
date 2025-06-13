@@ -1,15 +1,11 @@
 import { zValidator } from "../utils/validator";
-import { SkillService } from "../services/skill.service";
 import {
   skillInsertSchema,
   skillUpdateSchema,
   skillQueryOptionsSchema,
 } from "../schemas/skill.schema";
-import { SkillRepository } from "../repositories/skill.repo";
+import { skillService } from "../lib/container";
 import { createHonoBindings } from "../lib/create-hono";
-
-const skillRepository = new SkillRepository();
-const skillService = new SkillService(skillRepository);
 
 export const skillRoutes = createHonoBindings()
   .get("/:cvId/skills/categories", async (c) => {

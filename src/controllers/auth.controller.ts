@@ -6,17 +6,8 @@ import {
   refreshTokenSchema,
 } from "../schemas/auth.schema";
 import { createHonoBindings } from "../lib/create-hono";
-import { AuthService } from "../services/auth.service";
-import { UserRepository } from "../repositories/user.repo";
-import { TokenService } from "../services/token.service";
-import { getDb } from "../db";
+import { authService } from "../lib/container";
 import { userInsertSchema } from "../schemas/user.schema";
-
-const db = await getDb();
-const authService = new AuthService(
-  new UserRepository(db),
-  new TokenService(process.env.JWT_SECRET!),
-);
 
 const authRoutes = createHonoBindings();
 authRoutes

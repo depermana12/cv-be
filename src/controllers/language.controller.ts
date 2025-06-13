@@ -1,15 +1,11 @@
 import { zValidator } from "../utils/validator";
-import { LanguageService } from "../services/language.service";
 import {
   languageInsertSchema,
   languageUpdateSchema,
   languageQueryOptionsSchema,
 } from "../schemas/language.schema";
-import { LanguageRepository } from "../repositories/language.repo";
+import { languageService } from "../lib/container";
 import { createHonoBindings } from "../lib/create-hono";
-
-const languageRepository = new LanguageRepository();
-const languageService = new LanguageService(languageRepository);
 
 export const languageRoutes = createHonoBindings()
   .get(

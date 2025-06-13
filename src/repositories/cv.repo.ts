@@ -1,5 +1,4 @@
 import { and, asc, desc, eq, like, sql } from "drizzle-orm";
-import type { MySql2Database } from "drizzle-orm/mysql2";
 import { cv } from "../db/schema/cv.db";
 import type {
   CvInsert,
@@ -8,14 +7,10 @@ import type {
   CvUpdate,
   PaginatedCvResponse,
 } from "../db/types/cv.type";
-import { getDb } from "../db/index";
-import { schema } from "../db/index";
+import type { Database } from "../db/index";
 
-const dbInstance = await getDb();
 export class CvRepository {
-  constructor(
-    private readonly db: MySql2Database<typeof schema> = dbInstance,
-  ) {}
+  constructor(private readonly db: Database) {}
 
   async createCv(cvData: CvInsert): Promise<{ id: number }> {
     const [result] = await this.db.insert(cv).values(cvData).$returningId();

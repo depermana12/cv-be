@@ -7,16 +7,14 @@ import type {
   ProfileSelect,
   ProfileUpdate,
 } from "../db/types/profile.type";
-import { getDb } from "../db";
-
-const db = await getDb();
+import type { Database } from "../db/index";
 export class ProfileRepository extends CvChildRepository<
   typeof profile,
   ProfileInsert,
   ProfileSelect,
   ProfileUpdate
 > {
-  constructor() {
+  constructor(db: Database) {
     super(profile, db);
   }
 

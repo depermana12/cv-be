@@ -1,4 +1,3 @@
-import { CvService } from "../services/cv.service";
 import { createHonoBindings } from "../lib/create-hono";
 import { zValidator } from "../utils/validator";
 import {
@@ -6,11 +5,7 @@ import {
   cvUpdateSchema,
   cvQueryOptionsSchema,
 } from "../schemas/cv.schema";
-import { CvRepository } from "../repositories/cv.repo";
-import { getDb } from "../db";
-
-const db = await getDb();
-const cvService = new CvService(new CvRepository(db));
+import { cvService } from "../lib/container";
 
 export const cvRoutes = createHonoBindings()
   .get("/", zValidator("query", cvQueryOptionsSchema), async (c) => {

@@ -12,16 +12,14 @@ import type {
   WorkQueryOptions,
   WorkResponse,
 } from "../db/types/work.type";
-import { getDb } from "../db";
-
-const db = await getDb();
+import type { Database } from "../db/index";
 export class WorkRepository extends CvChildRepository<
   typeof works,
   WorkInsert,
   WorkSelect,
   WorkUpdate
 > {
-  constructor() {
+  constructor(db: Database) {
     super(works, db);
   }
 

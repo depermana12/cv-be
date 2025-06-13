@@ -1,15 +1,11 @@
 import { zValidator } from "../utils/validator";
-import { ProfileService } from "../services/profile.service";
-import { createHonoBindings } from "../lib/create-hono";
 import {
   profileInsertSchema,
   profileUpdateSchema,
   profileQueryOptionsSchema,
 } from "../schemas/profile.schema";
-import { ProfileRepository } from "../repositories/profile.repo";
-
-const profileRepository = new ProfileRepository();
-const profileService = new ProfileService(profileRepository);
+import { profileService } from "../lib/container";
+import { createHonoBindings } from "../lib/create-hono";
 
 export const profileRoutes = createHonoBindings()
   .get(

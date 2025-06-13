@@ -6,9 +6,7 @@ import type {
   JobApplicationUpdate,
 } from "../db/types/jobApplication.type";
 import { BaseRepository } from "./base.repo";
-import { getDb } from "../db";
-
-const db = await getDb();
+import type { Database } from "../db/index";
 
 export class JobApplicationRepo extends BaseRepository<
   typeof jobApplications,
@@ -16,7 +14,7 @@ export class JobApplicationRepo extends BaseRepository<
   JobApplicationSelect,
   JobApplicationUpdate
 > {
-  constructor() {
+  constructor(db: Database) {
     super(jobApplications, db);
   }
 

@@ -1,6 +1,5 @@
 import { zValidator } from "../utils/validator";
-
-import { CourseService } from "../services/course.service";
+import { courseService } from "../lib/container";
 import {
   courseDescInsertSchema,
   courseDescUpdateSchema,
@@ -8,11 +7,7 @@ import {
   courseQueryOptionsSchema,
   courseUpdateSchema,
 } from "../schemas/course.schema";
-import { CourseRepository } from "../repositories/course.repo";
 import { createHonoBindings } from "../lib/create-hono";
-
-const courseRepository = new CourseRepository();
-const courseService = new CourseService(courseRepository);
 
 export const courseRoutes = createHonoBindings()
   .get(

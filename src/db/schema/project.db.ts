@@ -8,7 +8,6 @@ export const projects = mysqlTable("projects", {
     .notNull()
     .references(() => cv.id),
   name: varchar("name", { length: 100 }).notNull(),
-  description: text("description"),
   startDate: date("start_date"),
   endDate: date("end_date"),
   url: varchar("url", { length: 255 }),

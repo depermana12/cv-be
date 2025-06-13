@@ -1,15 +1,11 @@
 import { zValidator } from "../utils/validator";
-import { SocialMediaService } from "../services/socialMedia.service";
 import {
   socialMediaInsertSchema,
   socialMediaUpdateSchema,
   socialMediaQueryOptionsSchema,
 } from "../schemas/socialMedia.schema";
-import { SocialMediaRepository } from "../repositories/socialMedia.repo";
+import { socialMediaService } from "../lib/container";
 import { createHonoBindings } from "../lib/create-hono";
-
-const socialMediaRepository = new SocialMediaRepository();
-const socialMediaService = new SocialMediaService(socialMediaRepository);
 
 export const socialRoutes = createHonoBindings()
   .get(

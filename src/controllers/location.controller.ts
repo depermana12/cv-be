@@ -1,15 +1,11 @@
 import { zValidator } from "../utils/validator";
-import { LocationService } from "../services/location.service";
 import {
   locationInsertSchema,
   locationQueryOptionsSchema,
   locationUpdateSchema,
 } from "../schemas/location.schema";
-import { LocationRepository } from "../repositories/location.repo";
+import { locationService } from "../lib/container";
 import { createHonoBindings } from "../lib/create-hono";
-
-const locationRepository = new LocationRepository();
-const locationService = new LocationService(locationRepository);
 
 export const locationRoutes = createHonoBindings()
   .get(

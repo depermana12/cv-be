@@ -7,16 +7,14 @@ import type {
   SocialSelect,
   SocialUpdate,
 } from "../db/types/social.type";
-import { getDb } from "../db";
-
-const db = await getDb();
+import type { Database } from "../db/index";
 export class SocialMediaRepository extends CvChildRepository<
   typeof socials,
   SocialInsert,
   SocialSelect,
   SocialUpdate
 > {
-  constructor() {
+  constructor(db: Database) {
     super(socials, db);
   }
 

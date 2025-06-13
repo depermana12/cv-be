@@ -6,18 +6,17 @@ import type {
   EducationUpdate,
   EducationQueryOptions,
 } from "../db/types/education.type";
-import { getDb } from "../db";
+import type { Database } from "../db";
 
 import { eq, like, and, desc, asc, sql } from "drizzle-orm";
 
-const db = await getDb();
 export class EducationRepository extends CvChildRepository<
   typeof educations,
   EducationInsert,
   EducationSelect,
   EducationUpdate
 > {
-  constructor() {
+  constructor(db: Database) {
     super(educations, db);
   }
   async getAllEducations(

@@ -6,17 +6,15 @@ import type {
   LocationSelect,
   LocationUpdate,
 } from "../db/types/location.type";
-import { getDb } from "../db";
 import { and, asc, desc, eq, like, sql } from "drizzle-orm";
-
-const db = await getDb();
+import type { Database } from "../db/index";
 export class LocationRepository extends CvChildRepository<
   typeof location,
   LocationInsert,
   LocationSelect,
   LocationUpdate
 > {
-  constructor() {
+  constructor(db: Database) {
     super(location, db);
   }
 

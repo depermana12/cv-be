@@ -11,16 +11,15 @@ import type {
   CourseResponse,
   CourseQueryOptions,
 } from "../db/types/course.type";
-import { getDb } from "../db";
+import type { Database } from "../db/index";
 
-const db = await getDb();
 export class CourseRepository extends CvChildRepository<
   typeof courses,
   CourseInsert,
   CourseSelect,
   CourseUpdate
 > {
-  constructor() {
+  constructor(db: Database) {
     super(courses, db);
   }
 
