@@ -6,7 +6,7 @@ import type {
 export type OrganizationSelect = typeof organizations.$inferSelect;
 export type OrganizationInsert = typeof organizations.$inferInsert;
 export type OrganizationUpdate = Partial<
-  Omit<OrganizationInsert, "id" | "userId">
+  Omit<OrganizationInsert, "id" | "cvId">
 >;
 
 export type OrganizationDescSelect = typeof organizationDesc.$inferSelect;
@@ -15,8 +15,21 @@ export type OrganizationDescUpdate = Partial<
   Omit<OrganizationDescInsert, "id" | "organizationId">
 >;
 
-export type OrganizationWithDescriptions = OrganizationSelect & {
+export type OrganizationResponse = OrganizationSelect & {
   descriptions: OrganizationDescSelect[];
+};
+
+export type OrganizationCreateRequest = Omit<
+  OrganizationInsert,
+  "id" | "cvId"
+> & {
+  descriptions?: Omit<OrganizationDescInsert, "id" | "organizationId">[];
+};
+
+export type OrganizationUpdateRequest = Partial<
+  Omit<OrganizationInsert, "id" | "cvId">
+> & {
+  descriptions?: Omit<OrganizationDescInsert, "id" | "organizationId">[];
 };
 
 export type OrganizationQueryOptions = {

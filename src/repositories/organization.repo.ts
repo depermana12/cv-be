@@ -7,7 +7,7 @@ import type {
   OrganizationUpdate,
   OrganizationDescInsert,
   OrganizationDescSelect,
-  OrganizationWithDescriptions,
+  OrganizationResponse,
   OrganizationQueryOptions,
   OrganizationDescUpdate,
 } from "../db/types/organization.type";
@@ -25,9 +25,7 @@ export class OrganizationRepository extends CvChildRepository<
     super(organizations, db);
   }
 
-  async getOrgWithDescriptions(
-    id: number,
-  ): Promise<OrganizationWithDescriptions | null> {
+  async getOrganization(id: number): Promise<OrganizationResponse | null> {
     const result = await this.db.query.organizations.findFirst({
       where: eq(organizations.id, id),
       with: {
@@ -37,10 +35,10 @@ export class OrganizationRepository extends CvChildRepository<
     return result ?? null;
   }
 
-  async getAllByIdWithDescriptions(
+  async getAllOrganizations(
     cvId: number,
     options?: OrganizationQueryOptions,
-  ): Promise<OrganizationWithDescriptions[]> {
+  ): Promise<OrganizationResponse[]> {
     const whereClause = [eq(organizations.cvId, cvId)];
 
     if (options?.search) {
@@ -67,7 +65,7 @@ export class OrganizationRepository extends CvChildRepository<
     });
   }
 
-  async createOrganizationWithDescriptions(
+  async createOrganization(
     organizationData: OrganizationInsert,
     descriptions: Omit<OrganizationDescInsert, "organizationId">[],
   ): Promise<{ id: number }> {
@@ -89,7 +87,40 @@ export class OrganizationRepository extends CvChildRepository<
     });
   }
 
-  async deleteOrgWithDescriptions(id: number): Promise<boolean> {
+  async updateOrganization(
+    organizationId: number,
+    organizationData: OrganizationUpdate,
+    descriptions?: Omit<OrganizationDescInsert, "organizationId">[],
+  ): Promise<boolean> {
+    return this.db.transaction(async (tx) => {
+      // Update main organization only if there's actual data
+      if (Object.keys(organizationData).length > 0) {
+        const [result] = await tx
+          .update(organizations)
+          .set(organizationData)
+          .where(eq(organizations.id, organizationId));
+
+        if (result.affectedRows === 0) return false;
+      }
+
+      // Replace descriptions if provided
+      if (descriptions !== undefined) {
+        await tx
+          .delete(organizationDesc)
+          .where(eq(organizationDesc.organizationId, organizationId));
+
+        if (descriptions.length > 0) {
+          await tx
+            .insert(organizationDesc)
+            .values(descriptions.map((desc) => ({ ...desc, organizationId })));
+        }
+      }
+
+      return true;
+    });
+  }
+
+  async deleteOrganization(id: number): Promise<boolean> {
     return this.db.transaction(async (tx) => {
       await tx
         .delete(organizationDesc)
@@ -102,7 +133,7 @@ export class OrganizationRepository extends CvChildRepository<
     });
   }
 
-  async createDescription(
+  async addDescription(
     organizationId: number,
     description: Omit<OrganizationDescInsert, "organizationId">,
   ): Promise<{ id: number }> {
@@ -114,17 +145,6 @@ export class OrganizationRepository extends CvChildRepository<
     return { id: desc.id };
   }
 
-  async getDescriptionById(
-    descId: number,
-  ): Promise<OrganizationDescSelect | null> {
-    const [result] = await this.db
-      .select()
-      .from(organizationDesc)
-      .where(eq(organizationDesc.id, descId));
-
-    return result ?? null;
-  }
-
   async getAllDescriptions(
     organizationId: number,
   ): Promise<OrganizationDescSelect[]> {
@@ -132,6 +152,15 @@ export class OrganizationRepository extends CvChildRepository<
       .select()
       .from(organizationDesc)
       .where(eq(organizationDesc.organizationId, organizationId));
+  }
+
+  async getDescription(descId: number): Promise<OrganizationDescSelect | null> {
+    const [result] = await this.db
+      .select()
+      .from(organizationDesc)
+      .where(eq(organizationDesc.id, descId));
+
+    return result ?? null;
   }
 
   async updateDescription(

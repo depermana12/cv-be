@@ -1,11 +1,10 @@
 import { zValidator } from "../utils/validator";
 import { OrganizationService } from "../services/organization.service";
 import {
-  orgInsertSchema,
+  orgCreateSchema,
   orgUpdateSchema,
-  orgDescInsertSchema,
+  orgDescCreateSchema,
   orgDescUpdateSchema,
-  orgInsertWithDescSchema,
   orgQueryOptionsSchema,
 } from "../schemas/organization.schema";
 import { OrganizationRepository } from "../repositories/organization.repo";
@@ -22,30 +21,15 @@ export const organizationRoutes = createHonoBindings()
       const cvId = Number(c.req.param("cvId"));
       const options = c.req.valid("query");
 
-      const organizations = await organizationService.getAllOrganizations(cvId);
+      const organizations = await organizationService.getAllOrganizations(
+        cvId,
+        options,
+      );
 
       return c.json({
         success: true,
         message: `retrieved ${organizations.length} organization records successfully`,
         data: organizations,
-      });
-    },
-  )
-  // Get all organizations with descriptions for a CV
-  .get(
-    "/:cvId/organizations-with-desc",
-    zValidator("query", orgQueryOptionsSchema),
-    async (c) => {
-      const cvId = Number(c.req.param("cvId"));
-      const options = c.req.valid("query");
-
-      const organizationsWithDescriptions =
-        await organizationService.getAllOrgWithDescriptions(cvId, options);
-
-      return c.json({
-        success: true,
-        message: `retrieved ${organizationsWithDescriptions.length} organization records with descriptions successfully`,
-        data: organizationsWithDescriptions,
       });
     },
   )
@@ -64,22 +48,9 @@ export const organizationRoutes = createHonoBindings()
       data: organization,
     });
   })
-  .get("/:cvId/organizations-with-desc/:organizationId", async (c) => {
-    const cvId = Number(c.req.param("cvId"));
-    const organizationId = Number(c.req.param("organizationId"));
-
-    const organizationWithDescriptions =
-      await organizationService.getOrgWithDescriptions(cvId, organizationId);
-
-    return c.json({
-      success: true,
-      message: `organization record ${organizationId} with descriptions retrieved successfully`,
-      data: organizationWithDescriptions,
-    });
-  })
   .post(
     "/:cvId/organizations",
-    zValidator("json", orgInsertSchema),
+    zValidator("json", orgCreateSchema),
     async (c) => {
       const cvId = Number(c.req.param("cvId"));
       const organizationData = c.req.valid("json");
@@ -94,30 +65,6 @@ export const organizationRoutes = createHonoBindings()
           success: true,
           message: `organization record created with ID: ${newOrganization.id}`,
           data: newOrganization,
-        },
-        201,
-      );
-    },
-  )
-  .post(
-    "/:cvId/organizations-with-desc",
-    zValidator("json", orgInsertWithDescSchema),
-    async (c) => {
-      const cvId = Number(c.req.param("cvId"));
-      const { descriptions = [], ...organizationData } = c.req.valid("json");
-
-      const newOrganizationWithDescriptions =
-        await organizationService.createOrgWithDescription(
-          cvId,
-          organizationData,
-          descriptions,
-        );
-
-      return c.json(
-        {
-          success: true,
-          message: `organization record with descriptions created with ID: ${newOrganizationWithDescriptions.id}`,
-          data: newOrganizationWithDescriptions,
         },
         201,
       );
@@ -155,56 +102,30 @@ export const organizationRoutes = createHonoBindings()
       message: `organization record ${organizationId} deleted successfully`,
     });
   })
-  .delete("/:cvId/organizations-with-desc/:organizationId", async (c) => {
-    const cvId = Number(c.req.param("cvId"));
-    const organizationId = Number(c.req.param("organizationId"));
-
-    await organizationService.deleteOrgWithDescriptions(cvId, organizationId);
-
-    return c.json({
-      success: true,
-      message: `organization record ${organizationId} with all descriptions deleted successfully`,
-    });
-  })
   .get("/:cvId/organizations/:organizationId/descriptions", async (c) => {
     const cvId = Number(c.req.param("cvId"));
     const organizationId = Number(c.req.param("organizationId"));
 
-    const descriptions = await organizationService.getAllOrgDescriptions(
+    const descriptions = await organizationService.getAllDescriptions(
       cvId,
       organizationId,
     );
 
     return c.json({
       success: true,
-      message: `retrieved ${descriptions.length} description records for organization ${organizationId}`,
+      message: `retrieved ${descriptions.length} description records`,
       data: descriptions,
-    });
-  })
-  .get("/:cvId/organizations/descriptions/:descriptionId", async (c) => {
-    const cvId = Number(c.req.param("cvId"));
-    const descriptionId = Number(c.req.param("descriptionId"));
-
-    const description = await organizationService.getOrgDescription(
-      cvId,
-      descriptionId,
-    );
-
-    return c.json({
-      success: true,
-      message: `description record ${descriptionId} retrieved successfully`,
-      data: description,
     });
   })
   .post(
     "/:cvId/organizations/:organizationId/descriptions",
-    zValidator("json", orgDescInsertSchema),
+    zValidator("json", orgDescCreateSchema),
     async (c) => {
       const cvId = Number(c.req.param("cvId"));
       const organizationId = Number(c.req.param("organizationId"));
       const descriptionData = c.req.valid("json");
 
-      const newDescription = await organizationService.createOrgDescription(
+      const newDescription = await organizationService.addDescription(
         cvId,
         organizationId,
         descriptionData,
@@ -213,7 +134,7 @@ export const organizationRoutes = createHonoBindings()
       return c.json(
         {
           success: true,
-          message: `description created with ID: ${newDescription.id} for organization ${organizationId}`,
+          message: `description added to organization ${organizationId}`,
           data: newDescription,
         },
         201,
@@ -228,7 +149,7 @@ export const organizationRoutes = createHonoBindings()
       const descriptionId = Number(c.req.param("descriptionId"));
       const updateData = c.req.valid("json");
 
-      const updatedDescription = await organizationService.updateOrgDescription(
+      const updatedDescription = await organizationService.updateDescription(
         cvId,
         descriptionId,
         updateData,
@@ -236,7 +157,7 @@ export const organizationRoutes = createHonoBindings()
 
       return c.json({
         success: true,
-        message: `description record ${descriptionId} updated successfully`,
+        message: `description ${descriptionId} updated successfully`,
         data: updatedDescription,
       });
     },
@@ -245,10 +166,10 @@ export const organizationRoutes = createHonoBindings()
     const cvId = Number(c.req.param("cvId"));
     const descriptionId = Number(c.req.param("descriptionId"));
 
-    await organizationService.deleteOrgDescription(cvId, descriptionId);
+    await organizationService.deleteDescription(cvId, descriptionId);
 
     return c.json({
       success: true,
-      message: `description record ${descriptionId} deleted successfully`,
+      message: `description ${descriptionId} deleted successfully`,
     });
   });
