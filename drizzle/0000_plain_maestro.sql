@@ -54,8 +54,10 @@ CREATE TABLE `job_applications` (
 	`job_url` varchar(255),
 	`company_name` varchar(255) NOT NULL,
 	`job_title` varchar(255) NOT NULL,
-	`position` varchar(255) NOT NULL,
+	`job_type` enum('Full-time','Part-time','Contract','Internship','Freelance','Volunteer'),
+	`position` enum('Manager','Lead','Senior','Mid-level','Junior','Intern','Entry-level','Staff','Other'),
 	`location` varchar(255),
+	`location_type` enum('Remote','On-site','Hybrid'),
 	`status` enum('applied','interview','offer','rejected','accepted','ghosted') DEFAULT 'applied',
 	`notes` text,
 	`applied_at` datetime,
@@ -170,7 +172,13 @@ CREATE TABLE `users` (
 	`email` varchar(100) NOT NULL,
 	`password` varchar(255) NOT NULL,
 	`is_email_verified` boolean DEFAULT false,
+	`profile_image` text,
+	`birth_date` date,
+	`first_name` varchar(50),
+	`last_name` varchar(50),
+	`gender` enum('male','female'),
 	`created_at` timestamp DEFAULT (now()),
+	`updated_at` timestamp DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,
 	CONSTRAINT `users_id` PRIMARY KEY(`id`),
 	CONSTRAINT `users_username_unique` UNIQUE(`username`),
 	CONSTRAINT `users_email_unique` UNIQUE(`email`)
@@ -195,24 +203,27 @@ CREATE TABLE `works` (
 	CONSTRAINT `works_id` PRIMARY KEY(`id`)
 );
 --> statement-breakpoint
-ALTER TABLE `course_descriptions` ADD CONSTRAINT `course_descriptions_course_id_courses_id_fk` FOREIGN KEY (`course_id`) REFERENCES `courses`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE `courses` ADD CONSTRAINT `courses_cv_id_cvs_id_fk` FOREIGN KEY (`cv_id`) REFERENCES `cvs`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE `course_descriptions` ADD CONSTRAINT `course_descriptions_course_id_courses_id_fk` FOREIGN KEY (`course_id`) REFERENCES `courses`(`id`) ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE `courses` ADD CONSTRAINT `courses_cv_id_cvs_id_fk` FOREIGN KEY (`cv_id`) REFERENCES `cvs`(`id`) ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `cvs` ADD CONSTRAINT `cvs_user_id_users_id_fk` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE `educations` ADD CONSTRAINT `educations_cv_id_cvs_id_fk` FOREIGN KEY (`cv_id`) REFERENCES `cvs`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE `educations` ADD CONSTRAINT `educations_cv_id_cvs_id_fk` FOREIGN KEY (`cv_id`) REFERENCES `cvs`(`id`) ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `job_applications` ADD CONSTRAINT `job_applications_user_id_users_id_fk` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `job_applications` ADD CONSTRAINT `job_applications_cv_id_cvs_id_fk` FOREIGN KEY (`cv_id`) REFERENCES `cvs`(`id`) ON DELETE set null ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE `languages` ADD CONSTRAINT `languages_cv_id_cvs_id_fk` FOREIGN KEY (`cv_id`) REFERENCES `cvs`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE `location` ADD CONSTRAINT `location_cv_id_cvs_id_fk` FOREIGN KEY (`cv_id`) REFERENCES `cvs`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE `organization_desc` ADD CONSTRAINT `organization_desc_organization_id_organizations_id_fk` FOREIGN KEY (`organization_id`) REFERENCES `organizations`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE `organizations` ADD CONSTRAINT `organizations_cv_id_cvs_id_fk` FOREIGN KEY (`cv_id`) REFERENCES `cvs`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE `profile` ADD CONSTRAINT `profile_cv_id_cvs_id_fk` FOREIGN KEY (`cv_id`) REFERENCES `cvs`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE `project_descriptions` ADD CONSTRAINT `project_descriptions_project_id_projects_id_fk` FOREIGN KEY (`project_id`) REFERENCES `projects`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE `project_technologies` ADD CONSTRAINT `project_technologies_project_id_projects_id_fk` FOREIGN KEY (`project_id`) REFERENCES `projects`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE `languages` ADD CONSTRAINT `languages_cv_id_cvs_id_fk` FOREIGN KEY (`cv_id`) REFERENCES `cvs`(`id`) ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE `location` ADD CONSTRAINT `location_cv_id_cvs_id_fk` FOREIGN KEY (`cv_id`) REFERENCES `cvs`(`id`) ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE `organization_desc` ADD CONSTRAINT `organization_desc_organization_id_organizations_id_fk` FOREIGN KEY (`organization_id`) REFERENCES `organizations`(`id`) ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE `organizations` ADD CONSTRAINT `organizations_cv_id_cvs_id_fk` FOREIGN KEY (`cv_id`) REFERENCES `cvs`(`id`) ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE `profile` ADD CONSTRAINT `profile_cv_id_cvs_id_fk` FOREIGN KEY (`cv_id`) REFERENCES `cvs`(`id`) ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE `project_descriptions` ADD CONSTRAINT `project_descriptions_project_id_projects_id_fk` FOREIGN KEY (`project_id`) REFERENCES `projects`(`id`) ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE `project_technologies` ADD CONSTRAINT `project_technologies_project_id_projects_id_fk` FOREIGN KEY (`project_id`) REFERENCES `projects`(`id`) ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `projects` ADD CONSTRAINT `projects_cv_id_cvs_id_fk` FOREIGN KEY (`cv_id`) REFERENCES `cvs`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE `skills` ADD CONSTRAINT `skills_cv_id_cvs_id_fk` FOREIGN KEY (`cv_id`) REFERENCES `cvs`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE `socials` ADD CONSTRAINT `socials_cv_id_cvs_id_fk` FOREIGN KEY (`cv_id`) REFERENCES `cvs`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE `soft_skills` ADD CONSTRAINT `soft_skills_cv_id_cvs_id_fk` FOREIGN KEY (`cv_id`) REFERENCES `cvs`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE `work_descriptions` ADD CONSTRAINT `work_descriptions_work_id_works_id_fk` FOREIGN KEY (`work_id`) REFERENCES `works`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE `works` ADD CONSTRAINT `works_cv_id_cvs_id_fk` FOREIGN KEY (`cv_id`) REFERENCES `cvs`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE `skills` ADD CONSTRAINT `skills_cv_id_cvs_id_fk` FOREIGN KEY (`cv_id`) REFERENCES `cvs`(`id`) ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE `socials` ADD CONSTRAINT `socials_cv_id_cvs_id_fk` FOREIGN KEY (`cv_id`) REFERENCES `cvs`(`id`) ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE `soft_skills` ADD CONSTRAINT `soft_skills_cv_id_cvs_id_fk` FOREIGN KEY (`cv_id`) REFERENCES `cvs`(`id`) ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE `work_descriptions` ADD CONSTRAINT `work_descriptions_work_id_works_id_fk` FOREIGN KEY (`work_id`) REFERENCES `works`(`id`) ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE `works` ADD CONSTRAINT `works_cv_id_cvs_id_fk` FOREIGN KEY (`cv_id`) REFERENCES `cvs`(`id`) ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 CREATE INDEX `idx_user_id` ON `job_applications` (`user_id`);--> statement-breakpoint
-CREATE INDEX `idx_cv_id` ON `job_applications` (`cv_id`);
+CREATE INDEX `idx_cv_id` ON `job_applications` (`cv_id`);--> statement-breakpoint
+CREATE INDEX `idx_users_username` ON `users` (`username`);--> statement-breakpoint
+CREATE INDEX `idx_users_email` ON `users` (`email`);--> statement-breakpoint
+CREATE INDEX `idx_users_created_at` ON `users` (`created_at`);

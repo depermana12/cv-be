@@ -52,7 +52,7 @@ const workRepository = new WorkRepository(db);
 const jobApplicationRepository = new JobApplicationRepository(db);
 
 // services
-export const tokenService = new TokenService(process.env.JWT_SECRET!);
+export const tokenService = new TokenService(process.env.SECRET!);
 export const authService = new AuthService(userRepository, tokenService);
 export const courseService = new CourseService(courseRepository);
 export const cvService = new CvService(cvRepository);

@@ -45,6 +45,7 @@ export const cvSelectSchema = z.object({
 export const cvInsertSchema = cvSelectSchema
   .omit({
     id: true,
+    userId: true,
     views: true,
     downloads: true,
     createdAt: true,
