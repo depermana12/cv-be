@@ -12,8 +12,16 @@ export type CourseDescUpdate = Partial<
   Omit<typeof courseDescriptions.$inferInsert, "id" | "courseId">
 >;
 
-export type CourseWithDescriptions = CourseSelect & {
+export type CourseResponse = CourseSelect & {
   descriptions: CourseDescSelect[];
+};
+
+export type CourseCreateRequest = Omit<CourseInsert, "id" | "cvId"> & {
+  descriptions?: Omit<CourseDescInsert, "id" | "courseId">[];
+};
+
+export type CourseUpdateRequest = Partial<Omit<CourseInsert, "id" | "cvId">> & {
+  descriptions?: Omit<CourseDescInsert, "id" | "courseId">[];
 };
 
 export type CourseQueryOptions = {

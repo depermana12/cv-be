@@ -8,7 +8,7 @@ import type {
   CourseUpdate,
   CourseSelect,
   CourseDescSelect,
-  CourseWithDescriptions,
+  CourseResponse,
   CourseQueryOptions,
 } from "../db/types/course.type";
 import { getDb } from "../db";
@@ -24,9 +24,7 @@ export class CourseRepository extends CvChildRepository<
     super(courses, db);
   }
 
-  async getCourseByIdWithDescriptions(
-    id: number,
-  ): Promise<CourseWithDescriptions | null> {
+  async getCourse(id: number): Promise<CourseResponse | null> {
     const result = await this.db.query.courses.findFirst({
       where: eq(courses.id, id),
       with: {
@@ -36,20 +34,11 @@ export class CourseRepository extends CvChildRepository<
     return result ?? null;
   }
 
-  async getAllCoursesWithDescriptions(
+  async getAllCourses(
     cvId: number,
     options?: CourseQueryOptions,
-  ): Promise<CourseWithDescriptions[]> {
-    // construct where clause for queries filtering in findmany
+  ): Promise<CourseResponse[]> {
     const whereClause = [eq(courses.cvId, cvId)];
-
-    /**
-     * if search option is provided, push a condition to the where clause
-     * mysql does not support ilike (insensitive) so i mimic it with like
-     * but make it lower case
-     * so the whereClause array will look like:
-     * [eq(courses.cvId, cvId), like(LOWER(courses.courseName), '%searchTerm%')]
-     */
     if (options?.search) {
       whereClause.push(
         like(
@@ -74,7 +63,7 @@ export class CourseRepository extends CvChildRepository<
     });
   }
 
-  async createCourseWithDescriptions(
+  async createCourse(
     courseData: CourseInsert,
     descriptions: Omit<CourseDescInsert, "courseId">[],
   ): Promise<{ id: number }> {
@@ -96,7 +85,36 @@ export class CourseRepository extends CvChildRepository<
     });
   }
 
-  async deleteCourseWithDescriptions(id: number): Promise<boolean> {
+  async updateCourse(
+    courseId: number,
+    courseData: CourseUpdate,
+    descriptions?: Omit<CourseDescInsert, "courseId">[],
+  ): Promise<boolean> {
+    return this.db.transaction(async (tx) => {
+      // Update main course if data provided
+      if (Object.keys(courseData).length > 0) {
+        const [result] = await tx
+          .update(courses)
+          .set(courseData)
+          .where(eq(courses.id, courseId));
+        if (result.affectedRows === 0) return false;
+      }
+      // Replace descriptions if provided
+      if (descriptions !== undefined) {
+        await tx
+          .delete(courseDescriptions)
+          .where(eq(courseDescriptions.courseId, courseId));
+        if (descriptions.length > 0) {
+          await tx
+            .insert(courseDescriptions)
+            .values(descriptions.map((desc) => ({ ...desc, courseId })));
+        }
+      }
+      return true;
+    });
+  }
+
+  async deleteCourse(id: number): Promise<boolean> {
     return this.db.transaction(async (tx) => {
       await tx
         .delete(courseDescriptions)
@@ -118,7 +136,7 @@ export class CourseRepository extends CvChildRepository<
     return { id: desc.id };
   }
 
-  async getDescriptionById(descId: number): Promise<CourseDescSelect | null> {
+  async getDescription(descId: number): Promise<CourseDescSelect | null> {
     const [result] = await this.db
       .select()
       .from(courseDescriptions)
