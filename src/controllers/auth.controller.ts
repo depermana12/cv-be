@@ -8,28 +8,46 @@ import {
 import { createHonoBindings } from "../lib/create-hono";
 import { authService } from "../lib/container";
 import { userInsertSchema } from "../schemas/user.schema";
+import { setCookie } from "hono/cookie";
+
+const COOKIE_OPTIONS = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
+  sameSite: "strict" as const,
+  path: "/",
+  maxAge: 60 * 60 * 24 * 7, // 7 days
+};
 
 const authRoutes = createHonoBindings();
 authRoutes
   .post("/signup", zValidator("json", userInsertSchema), async (c) => {
     const validatedBody = c.req.valid("json");
 
-    const newUser = await authService.registerUser(validatedBody);
+    const { accessToken, refreshToken, ...user } =
+      await authService.registerUser(validatedBody);
+    setCookie(c, "refreshToken", refreshToken, COOKIE_OPTIONS);
 
     return c.json(
-      { success: true, message: "user created", data: newUser },
+      {
+        success: true,
+        message: "user created",
+        data: { ...user, token: accessToken },
+      },
       201,
     );
   })
   .post("/signin", zValidator("json", userLoginSchema), async (c) => {
     const validatedLogin = c.req.valid("json");
 
-    const login = await authService.userLogin(validatedLogin);
+    const { accessToken, refreshToken, ...user } = await authService.userLogin(
+      validatedLogin,
+    );
+    setCookie(c, "refreshToken", refreshToken, COOKIE_OPTIONS);
 
     return c.json({
       success: true,
       message: "user login successfully",
-      data: login,
+      data: { ...user, token: accessToken },
     });
   })
   .post(
@@ -106,16 +124,21 @@ authRoutes
       data: { token }, // remove this in production
     });
   })
-  .post("/refresh-token", zValidator("json", refreshTokenSchema), async (c) => {
-    const { refreshToken } = c.req.valid("json");
+  .post(
+    "/refresh-token",
+    zValidator("cookie", refreshTokenSchema),
+    async (c) => {
+      const { refreshToken } = c.req.valid("cookie");
 
-    const userPayload = await authService.validateRefreshToken(refreshToken);
-    const newTokens = await authService.generateAuthTokens(userPayload);
+      const userPayload = await authService.validateRefreshToken(refreshToken);
+      const newTokens = await authService.generateAuthTokens(userPayload);
 
-    return c.json({
-      success: true,
-      message: "tokens refreshed",
-      data: newTokens,
-    });
-  });
+      setCookie(c, "refreshToken", newTokens.refreshToken, COOKIE_OPTIONS);
+      return c.json({
+        success: true,
+        message: "tokens refreshed",
+        data: newTokens.accessToken,
+      });
+    },
+  );
 export { authRoutes };
