@@ -68,7 +68,7 @@ export const projectRoutes = createHonoBindings()
       const updatedProject = await projectService.updateProject(
         cvId,
         projectId,
-        updateData, //error here
+        updateData,
       );
 
       return c.json({
@@ -87,6 +87,33 @@ export const projectRoutes = createHonoBindings()
     return c.json({
       success: true,
       message: `project ${projectId} deleted successfully`,
+    });
+  })
+  .get("/:cvId/projects/:projectId/descriptions", async (c) => {
+    const cvId = Number(c.req.param("cvId"));
+    const projectId = Number(c.req.param("projectId"));
+
+    const descriptions = await projectService.getDescriptions(cvId, projectId);
+
+    return c.json({
+      success: true,
+      message: `retrieved ${descriptions.length} description records`,
+      data: descriptions,
+    });
+  })
+  .get("/:cvId/projects/descriptions/:descriptionId", async (c) => {
+    const cvId = Number(c.req.param("cvId"));
+    const descriptionId = Number(c.req.param("descriptionId"));
+
+    const description = await projectService.getDescription(
+      cvId,
+      descriptionId,
+    );
+
+    return c.json({
+      success: true,
+      message: `description ${descriptionId} retrieved successfully`,
+      data: description,
     });
   })
   .post(
@@ -135,5 +162,43 @@ export const projectRoutes = createHonoBindings()
         },
         201,
       );
+    },
+  )
+  .patch(
+    "/:cvId/projects/:projectId/descriptions/:descriptionId",
+    zValidator("json", projectDescInsertSchema),
+    async (c) => {
+      const cvId = Number(c.req.param("cvId"));
+      const projectId = Number(c.req.param("projectId"));
+      const descriptionId = Number(c.req.param("descriptionId"));
+      const updateData = c.req.valid("json");
+
+      const updatedDescription = await projectService.updateDescription(
+        cvId,
+        descriptionId,
+        updateData,
+      );
+
+      return c.json({
+        success: true,
+        message: `description ${descriptionId} updated successfully`,
+        data: updatedDescription,
+      });
+    },
+  )
+
+  .delete(
+    "/:cvId/projects/:projectId/descriptions/:descriptionId",
+    async (c) => {
+      const cvId = Number(c.req.param("cvId"));
+      const projectId = Number(c.req.param("projectId"));
+      const descriptionId = Number(c.req.param("descriptionId"));
+
+      await projectService.deleteDescription(cvId, descriptionId);
+
+      return c.json({
+        success: true,
+        message: `description ${descriptionId} deleted successfully`,
+      });
     },
   );

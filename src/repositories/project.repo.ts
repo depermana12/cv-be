@@ -143,18 +143,21 @@ export class ProjectRepository extends CvChildRepository<
     return result.affectedRows > 0;
   }
 
+  async getDescriptionById(
+    descriptionId: number,
+  ): Promise<ProjectDescSelect | null> {
+    const [result] = await this.db
+      .select()
+      .from(projectDescription)
+      .where(eq(projectDescription.id, descriptionId));
+    return result ?? null;
+  }
+
   async getDescriptions(projectId: number): Promise<ProjectDescSelect[]> {
     return this.db
       .select()
       .from(projectDescription)
       .where(eq(projectDescription.projectId, projectId));
-  }
-
-  async getTechnologies(projectId: number): Promise<ProjectTechSelect[]> {
-    return this.db
-      .select()
-      .from(projectTechnologies)
-      .where(eq(projectTechnologies.projectId, projectId));
   }
 
   async addDescription(
@@ -166,6 +169,31 @@ export class ProjectRepository extends CvChildRepository<
       .values({ ...description, projectId })
       .$returningId();
     return { id: result.id };
+  }
+
+  async updateDescription(
+    descriptionId: number,
+    updateData: Partial<Omit<ProjectDescInsert, "id" | "projectId">>,
+  ): Promise<boolean> {
+    const [result] = await this.db
+      .update(projectDescription)
+      .set(updateData)
+      .where(eq(projectDescription.id, descriptionId));
+    return result.affectedRows > 0;
+  }
+
+  async deleteDescription(descriptionId: number): Promise<boolean> {
+    const [result] = await this.db
+      .delete(projectDescription)
+      .where(eq(projectDescription.id, descriptionId));
+    return result.affectedRows > 0;
+  }
+
+  async getTechnologies(projectId: number): Promise<ProjectTechSelect[]> {
+    return this.db
+      .select()
+      .from(projectTechnologies)
+      .where(eq(projectTechnologies.projectId, projectId));
   }
 
   async addTechnology(

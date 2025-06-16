@@ -2,6 +2,8 @@ import { CvChildService } from "./cvChild.service";
 import { ProjectRepository } from "../repositories/project.repo";
 
 import type {
+  ProjectDescInsert,
+  ProjectDescSelect,
   ProjectFullInsert,
   ProjectFullSelect,
   ProjectFullUpdate,
@@ -81,6 +83,29 @@ export class ProjectService extends CvChildService<
     await this.getProject(cvId, projectId);
     return this.projectRepository.deleteProject(projectId);
   }
+
+  async getDescriptions(
+    cvId: number,
+    projectId: number,
+  ): Promise<ProjectDescSelect[]> {
+    await this.getProject(cvId, projectId);
+    return this.projectRepository.getDescriptions(projectId);
+  }
+
+  async getDescription(
+    cvId: number,
+    descriptionId: number,
+  ): Promise<ProjectDescSelect> {
+    const description = await this.projectRepository.getDescriptionById(
+      descriptionId,
+    );
+    if (!description) {
+      throw new NotFoundError(`Description ${descriptionId} not found`);
+    }
+    await this.getProject(cvId, description.projectId);
+    return description;
+  }
+
   async addDescription(
     cvId: number,
     projectId: number,
@@ -88,6 +113,43 @@ export class ProjectService extends CvChildService<
   ) {
     await this.getProject(cvId, projectId);
     return this.projectRepository.addDescription(projectId, description);
+  }
+
+  async updateDescription(
+    cvId: number,
+    descriptionId: number,
+    updateData: Partial<Omit<ProjectDescInsert, "id" | "projectId">>,
+  ): Promise<ProjectDescSelect> {
+    const description = await this.projectRepository.getDescriptionById(
+      descriptionId,
+    );
+    if (!description) {
+      throw new NotFoundError(`Description ${descriptionId} not found`);
+    }
+    await this.getProject(cvId, description.projectId);
+
+    const updated = await this.projectRepository.updateDescription(
+      descriptionId,
+      updateData,
+    );
+    if (!updated) {
+      throw new Error(`Failed to update description ${descriptionId}`);
+    }
+    return this.getDescription(cvId, descriptionId);
+  }
+
+  async deleteDescription(
+    cvId: number,
+    descriptionId: number,
+  ): Promise<boolean> {
+    const description = await this.projectRepository.getDescriptionById(
+      descriptionId,
+    );
+    if (!description) {
+      throw new NotFoundError(`Description ${descriptionId} not found`);
+    }
+    await this.getProject(cvId, description.projectId);
+    return this.projectRepository.deleteDescription(descriptionId);
   }
 
   async addTechnology(
