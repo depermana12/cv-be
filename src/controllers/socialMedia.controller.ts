@@ -9,7 +9,7 @@ import { createHonoBindings } from "../lib/create-hono";
 
 export const socialRoutes = createHonoBindings()
   .get(
-    "/:cvId/social-media",
+    "/:cvId/social-medias",
     zValidator("query", socialMediaQueryOptionsSchema),
     async (c) => {
       const cvId = Number(c.req.param("cvId"));
@@ -27,7 +27,7 @@ export const socialRoutes = createHonoBindings()
       });
     },
   )
-  .get("/:cvId/social-media/:socialId", async (c) => {
+  .get("/:cvId/social-medias/:socialId", async (c) => {
     const cvId = Number(c.req.param("cvId"));
     const socialId = Number(c.req.param("socialId"));
 
@@ -40,7 +40,7 @@ export const socialRoutes = createHonoBindings()
     });
   })
   .post(
-    "/:cvId/social-media",
+    "/:cvId/social-medias",
     zValidator("json", socialMediaInsertSchema),
     async (c) => {
       const cvId = Number(c.req.param("cvId"));
@@ -62,7 +62,7 @@ export const socialRoutes = createHonoBindings()
     },
   )
   .patch(
-    "/:cvId/social-media/:socialId",
+    "/:cvId/social-medias/:socialId",
     zValidator("json", socialMediaUpdateSchema),
     async (c) => {
       const cvId = Number(c.req.param("cvId"));
@@ -82,7 +82,7 @@ export const socialRoutes = createHonoBindings()
       });
     },
   )
-  .delete("/:cvId/social-media/:socialId", async (c) => {
+  .delete("/:cvId/social-medias/:socialId", async (c) => {
     const cvId = Number(c.req.param("cvId"));
     const socialId = Number(c.req.param("socialId"));
 

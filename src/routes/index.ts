@@ -6,6 +6,7 @@ import { uploadRoutes } from "../controllers/upload.controller";
 import cvChildRoutes from "./cvRoutes";
 import { cvRoutes } from "../controllers/cv.controller";
 import { authRoutes } from "../controllers/auth.controller";
+import { jobApplicationRoutes } from "../controllers/jobApplication.controller";
 
 const router = new Hono();
 
@@ -15,6 +16,7 @@ router.route("/auth", authRoutes);
 // protected routes
 router.use("*", jwt());
 router.route("/users", userRoutes);
+router.route("/applications-tracking", jobApplicationRoutes);
 router.route("/uploads", uploadRoutes);
 
 // main cv crud routes
