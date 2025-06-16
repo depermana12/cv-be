@@ -44,6 +44,7 @@ export const userRoutes = createHonoBindings()
       data: updatedUser,
     });
   })
+
   .get("/check-username/:username", async (c) => {
     const username = c.req.param("username");
 

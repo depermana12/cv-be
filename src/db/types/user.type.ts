@@ -7,6 +7,12 @@ export type UserUpdate = Partial<Omit<UserInsert, "id" | "createdAt">>;
 export type UpdateUserProfileSafe = Partial<
   Omit<
     UserInsert,
-    "id" | "email" | "isEmailVerified" | "password" | "createdAt" | "updatedAt"
+    | "id"
+    | "username"
+    | "email"
+    | "isEmailVerified"
+    | "password"
+    | "createdAt"
+    | "updatedAt"
   >
 >;

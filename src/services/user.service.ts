@@ -44,15 +44,6 @@ export class UserService {
     id: number,
     newUserData: UpdateUserProfileSafe,
   ): Promise<AuthUserSafe> {
-    if (newUserData.username) {
-      const existingUser = await this.isUsernameExists(
-        newUserData.username.toLowerCase(),
-      );
-      if (existingUser) {
-        throw new ValidationError("username already taken");
-      }
-    }
-
     const updatedUser = await this.userRepository.updateUser(id, newUserData);
     if (!updatedUser) {
       throw new NotFoundError("user record not found");
@@ -60,6 +51,26 @@ export class UserService {
 
     return this.getUserByIdSafe(id);
   }
+  // async updateUser(
+  //   id: number,
+  //   newUserData: UpdateUserProfileSafe,
+  // ): Promise<AuthUserSafe> {
+  //   if (newUserData.username) {
+  //     const existingUser = await this.isUsernameExists(
+  //       newUserData.username.toLowerCase(),
+  //     );
+  //     if (existingUser) {
+  //       throw new ValidationError("username already taken");
+  //     }
+  //   }
+
+  //   const updatedUser = await this.userRepository.updateUser(id, newUserData);
+  //   if (!updatedUser) {
+  //     throw new NotFoundError("user record not found");
+  //   }
+
+  //   return this.getUserByIdSafe(id);
+  // }
 
   //----------------------------------
   // Utility methods
