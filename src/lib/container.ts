@@ -31,6 +31,7 @@ import { UserService } from "../services/user.service";
 import { WorkService } from "../services/work.service";
 import { JobApplicationRepository } from "../repositories/jobApplication.repo";
 import { JobApplicationService } from "../services/jobApplication.service";
+import { EmailService } from "../services/email.service";
 
 const db = await getDb();
 
@@ -76,3 +77,4 @@ export const workService = new WorkService(workRepository);
 export const jobApplicationService = new JobApplicationService(
   jobApplicationRepository,
 );
+export const emailService = new EmailService();
