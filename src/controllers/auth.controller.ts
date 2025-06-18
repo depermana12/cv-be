@@ -6,7 +6,7 @@ import {
   refreshTokenSchema,
 } from "../schemas/auth.schema";
 import { createHonoBindings } from "../lib/create-hono";
-import { authService } from "../lib/container";
+import { authService, emailService } from "../lib/container";
 import { userInsertSchema } from "../schemas/user.schema";
 import { setCookie } from "hono/cookie";
 
@@ -18,7 +18,7 @@ const COOKIE_OPTIONS = {
   maxAge: 60 * 60 * 24 * 7, // 7 days
 };
 
-const authRoutes = createHonoBindings();
+export const authRoutes = createHonoBindings();
 authRoutes
   .post("/signup", zValidator("json", userInsertSchema), async (c) => {
     const validatedBody = c.req.valid("json");
@@ -27,10 +27,22 @@ authRoutes
       await authService.registerUser(validatedBody);
     setCookie(c, "refreshToken", refreshToken, COOKIE_OPTIONS);
 
+    const verificationToken = await authService.createEmailVerificationToken({
+      id: user.id.toString(),
+      email: user.email,
+    });
+
+    await emailService.sendEmailVerification({
+      email: user.email,
+      username: user.username,
+      verificationToken,
+    });
+
     return c.json(
       {
         success: true,
-        message: "user created",
+        message:
+          "User created successfully. Please check your email for verification.",
         data: { ...user, token: accessToken },
       },
       201,
@@ -57,15 +69,20 @@ authRoutes
       const validatedInput = c.req.valid("json");
       const user = await authService.getByEmail(validatedInput.email);
 
-      await authService.createResetPasswordToken({
+      const resetToken = await authService.createResetPasswordToken({
         id: user.id.toString(),
         email: user.email,
       });
 
-      // TODO: email service
+      await emailService.sendPasswordReset({
+        email: user.email,
+        username: user.username,
+        resetToken,
+      });
+
       return c.json({
         success: true,
-        message: "reset password email sent",
+        message: "Reset password email sent successfully",
       });
     },
   )
@@ -92,9 +109,12 @@ authRoutes
 
     const user = await authService.validateEmailVerificationToken(token);
 
+    const fullUser = await authService.getByEmail(user.email);
+    await emailService.sendWelcomeEmail(fullUser.email, fullUser.username);
+
     return c.json({
       success: true,
-      message: "email verified successfully",
+      message: "Email verified successfully",
       data: { userId: user.id },
     });
   })
@@ -117,11 +137,16 @@ authRoutes
       email: user.email,
     });
 
-    // TODO: Send email with verification link, and remove the token
+    const fullUser = await authService.getByEmail(user.email);
+    await emailService.sendEmailVerification({
+      email: fullUser.email,
+      username: fullUser.username,
+      verificationToken: token,
+    });
+
     return c.json({
       success: true,
-      message: "email verification sent",
-      data: { token }, // remove this in production
+      message: "Email verification sent successfully",
     });
   })
   .post(
@@ -141,4 +166,3 @@ authRoutes
       });
     },
   );
-export { authRoutes };
