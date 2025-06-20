@@ -9,6 +9,7 @@ import { createHonoBindings } from "../lib/create-hono";
 import { authService, emailService } from "../lib/container";
 import { userInsertSchema } from "../schemas/user.schema";
 import { setCookie } from "hono/cookie";
+import { jwt } from "../middlewares/auth";
 
 const COOKIE_OPTIONS = {
   httpOnly: true,
@@ -109,8 +110,11 @@ authRoutes
 
     const user = await authService.validateEmailVerificationToken(token);
 
-    const fullUser = await authService.getByEmail(user.email);
-    await emailService.sendWelcomeEmail(fullUser.email, fullUser.username);
+    const isVerified = await authService.isEmailVerified(Number(user.id));
+    if (!isVerified) {
+      const fullUser = await authService.getByEmail(user.email);
+      await emailService.sendWelcomeEmail(fullUser.email, fullUser.username);
+    }
 
     return c.json({
       success: true,
@@ -129,7 +133,7 @@ authRoutes
       data: status,
     });
   })
-  .post("/send-email-verification", async (c) => {
+  .post("/send-email-verification", jwt(), async (c) => {
     const user = c.get("jwtPayload");
 
     const token = await authService.createEmailVerificationToken({
