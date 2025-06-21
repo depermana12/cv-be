@@ -80,20 +80,19 @@ export class BaseRepository<
    * Create a new entry in the database.
    * @param data - The data to insert into the database.
    * @returns The ID of the newly created entry.
-   */
-  async create(data: TInsert): Promise<{ id: number }> {
-    const result = await this.db
+   */ async create(data: TInsert): Promise<{ id: number }> {
+    const [result] = await this.db
       .insert(this.table)
       .values(data as any)
       .$returningId();
 
-    const id = (result as Array<{ insertId: number }>)[0].insertId;
+    const insertedId = (result as any).id;
 
-    if (!id) {
+    if (!insertedId) {
       throw new DataBaseError("Insert did not return an ID.");
     }
 
-    return { id };
+    return { id: insertedId };
   }
 
   /**

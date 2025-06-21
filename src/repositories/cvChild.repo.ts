@@ -23,9 +23,8 @@ export abstract class CvChildRepository<
       .limit(1);
     return record.length > 0;
   }
-
   async createForCv(cvId: number, data: TInsert): Promise<{ id: number }> {
-    const result = await this.db
+    const [result] = await this.db
       .insert(this.table)
       .values({
         ...(data as any),
@@ -33,13 +32,13 @@ export abstract class CvChildRepository<
       })
       .$returningId();
 
-    const id = (result as Array<{ insertId: number }>)[0].insertId;
-    if (!id)
+    const insertedId = (result as any).id;
+    if (!insertedId)
       throw new DataBaseError(
         `[CvChildRepository] Failed to create record in CV ${cvId}`,
       );
 
-    return { id };
+    return { id: insertedId };
   }
 
   async getAllByIdInCv(cvId: number): Promise<TSelect[]> {
