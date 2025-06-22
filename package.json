@@ -5,7 +5,16 @@
     "db:push": "bunx --bun drizzle-kit push",
     "db:generate": "bunx --bun drizzle-kit generate",
     "db:migrate": "bunx drizzle-kit migrate",
-    "dbml": "tsx ./dbml.ts"
+    "dbml": "tsx ./dbml.ts",
+    "test": "vitest --config vitest.config.ts",
+    "test:unit": "vitest --config vitest.config.ts",
+    "test:e2e": "NODE_ENV=test vitest --config vitest.e2e.config.ts",
+    "test:ci": "vitest run --config vitest.config.ts",
+    "test:e2e:ci": "NODE_ENV=test vitest run --config vitest.e2e.config.ts",
+    "test:coverage": "vitest --coverage",
+    "docker:test:up": "docker-compose -f docker-compose.test.yml up -d",
+    "docker:test:down": "docker-compose -f docker-compose.test.yml down -v",
+    "db:test:migrate": "NODE_ENV=test bunx drizzle-kit migrate"
   },
   "module": "index.ts",
   "type": "module",
