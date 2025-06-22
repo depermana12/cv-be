@@ -3,7 +3,20 @@ import { users } from "../db/schema/user.db";
 import type { Database } from "../db";
 import type { UserInsert, UserSelect, UserUpdate } from "../db/types/user.type";
 
-export class UserRepository {
+export interface IUserRepository {
+  userExistsById(id: number): Promise<boolean>;
+  isUsernameExists(username: string): Promise<boolean>;
+  createUser(user: UserInsert): Promise<{ id: number }>;
+  getById(id: number): Promise<Omit<UserSelect, "password"> | null>;
+  getByEmail(email: string): Promise<UserSelect | null>;
+  getByEmailSafe(email: string): Promise<Omit<UserSelect, "password"> | null>;
+  updateUser(id: number, newUserData: UserUpdate): Promise<boolean>;
+  verifyUserEmail(id: number): Promise<boolean>;
+  updateUserPassword(id: number, newPw: string): Promise<boolean>;
+  deleteUser(id: number): Promise<boolean>;
+}
+
+export class UserRepository implements IUserRepository {
   private readonly table = users;
   constructor(private readonly db: Database) {}
 
