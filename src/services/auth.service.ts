@@ -137,14 +137,13 @@ export class AuthService {
   async generateAuthTokens(user: UserPayload): Promise<AuthTokens> {
     return this.tokenService.generateAuthTokens(user);
   }
-
   async changeUserPassword(id: number, newPassword: string): Promise<void> {
     const hashedNewPassword = await Bun.password.hash(newPassword);
     const userExists = await this.userRepository.userExistsById(id);
     if (!userExists) {
       throw new ValidationError("User not found");
     }
-    const updated = this.userRepository.updateUserPassword(
+    const updated = await this.userRepository.updateUserPassword(
       id,
       hashedNewPassword,
     );
