@@ -3,7 +3,20 @@ import type { UserPayload } from "../lib/types";
 import { ValidationError } from "../errors/validation.error";
 import type { AuthTokens } from "../db/types/auth.type";
 
-export class TokenService {
+export interface ITokenService {
+  decodeToken(token: string): Promise<UserPayload>;
+  createAccessToken(user: UserPayload): Promise<string>;
+  createRefreshToken(user: UserPayload, rememberMe?: boolean): Promise<string>;
+  generateAuthTokens(user: UserPayload): Promise<AuthTokens>;
+  createResetPasswordToken(user: UserPayload): Promise<string>;
+  createEmailVerificationToken(user: UserPayload): Promise<string>;
+  verifyToken<T extends object>(token: string): Promise<T>;
+  validateRefreshToken(token: string): Promise<UserPayload>;
+  validateResetPasswordToken(token: string): Promise<UserPayload>;
+  validateEmailVerificationToken(token: string): Promise<UserPayload>;
+}
+
+export class TokenServicen implements ITokenService {
   private readonly accessTokenExpirationSeconds = 60 * 60 * 1; // 1 hour
   private readonly refreshTokenExpirationSeconds = 60 * 60 * 24 * 14; // 14 days
   private readonly resetTokenExpirationSeconds = 60 * 15; // 15 minutes

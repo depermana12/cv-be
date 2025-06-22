@@ -1,6 +1,6 @@
 // TODO: move this to auth types
-import { TokenService } from "./token.service";
-import { UserRepository } from "../repositories/user.repo";
+import type { ITokenService } from "./token.service";
+import type { IUserRepository } from "../repositories/user.repo";
 import type {
   AuthTokens,
   AuthUserLogin,
@@ -13,8 +13,8 @@ import { NotFoundError } from "../errors/not-found.error";
 
 export class AuthService {
   constructor(
-    private readonly userRepository: UserRepository,
-    private readonly tokenService: TokenService,
+    private readonly userRepository: IUserRepository,
+    private readonly tokenService: ITokenService,
   ) {}
 
   async registerUser(

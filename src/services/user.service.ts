@@ -1,8 +1,6 @@
-import { ValidationError } from "../errors/validation.error";
 import { NotFoundError } from "../errors/not-found.error";
 import type { IUserRepository } from "../repositories/user.repo";
 
-import type { TokenService } from "./token.service";
 import type { AuthUserSafe } from "../db/types/auth.type";
 import type { UpdateUserProfileSafe } from "../db/types/user.type";
 import type { CvService } from "./cv.service";
