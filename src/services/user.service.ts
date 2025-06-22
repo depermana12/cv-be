@@ -1,6 +1,6 @@
 import { ValidationError } from "../errors/validation.error";
 import { NotFoundError } from "../errors/not-found.error";
-import { UserRepository } from "../repositories/user.repo";
+import type { IUserRepository } from "../repositories/user.repo";
 
 import type { TokenService } from "./token.service";
 import type { AuthUserSafe } from "../db/types/auth.type";
@@ -9,7 +9,7 @@ import type { CvService } from "./cv.service";
 
 export class UserService {
   constructor(
-    private readonly userRepository: UserRepository,
+    private readonly userRepository: IUserRepository,
     private readonly cvService: CvService,
   ) {}
 
