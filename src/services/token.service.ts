@@ -16,7 +16,7 @@ export interface ITokenService {
   validateEmailVerificationToken(token: string): Promise<UserPayload>;
 }
 
-export class TokenServicen implements ITokenService {
+export class TokenService implements ITokenService {
   private readonly accessTokenExpirationSeconds = 60 * 60 * 1; // 1 hour
   private readonly refreshTokenExpirationSeconds = 60 * 60 * 24 * 14; // 14 days
   private readonly resetTokenExpirationSeconds = 60 * 15; // 15 minutes

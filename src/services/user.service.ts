@@ -1,11 +1,23 @@
 import { NotFoundError } from "../errors/not-found.error";
 import type { IUserRepository } from "../repositories/user.repo";
 
-import type { AuthUserSafe } from "../db/types/auth.type";
+import type { AuthUserSafe, UserStats } from "../db/types/auth.type";
 import type { UpdateUserProfileSafe } from "../db/types/user.type";
 import type { CvService } from "./cv.service";
 
-export class UserService {
+export interface IUserService {
+  getUserByIdSafe(id: number): Promise<AuthUserSafe>;
+  getUserByEmail(email: string): Promise<AuthUserSafe>;
+  getUserByEmailSafe(email: string): Promise<AuthUserSafe>;
+  updateUserProfile(
+    id: number,
+    newUserData: UpdateUserProfileSafe,
+  ): Promise<AuthUserSafe>;
+  isUserEmailVerified(id: number): Promise<{ verified: boolean }>;
+  isUsernameExists(username: string): Promise<boolean>;
+  getUserStats(id: number): Promise<UserStats>;
+}
+export class UserService implements IUserService {
   constructor(
     private readonly userRepository: IUserRepository,
     private readonly cvService: CvService,
@@ -111,13 +123,7 @@ export class UserService {
     return !!user;
   }
 
-  async getUserStats(id: number): Promise<{
-    user: AuthUserSafe;
-    accountAge: number;
-    isEmailVerified: boolean;
-    cvCreated: number;
-    totalJobApplications?: number;
-  }> {
+  async getUserStats(id: number): Promise<UserStats> {
     const user = await this.getUserByIdSafe(id);
     const accountAge = this.calculateAccountAge(user.createdAt);
     const isEmailVerified = await this.isUserEmailVerified(id);

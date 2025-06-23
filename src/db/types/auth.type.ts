@@ -17,3 +17,11 @@ export type AuthTokens = {
 };
 
 export type AuthUserSafe = Omit<UserSelect, "password">;
+
+export type UserStats = {
+  user: AuthUserSafe;
+  accountAge: number;
+  isEmailVerified: boolean;
+  cvCreated: number;
+  totalJobApplications?: number;
+};
