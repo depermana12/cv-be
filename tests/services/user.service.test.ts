@@ -5,7 +5,7 @@ import type { AuthUserSafe } from "../../src/db/types/auth.type";
 import type { UpdateUserProfileSafe } from "../../src/db/types/user.type";
 import type { IUserRepository } from "../../src/repositories/user.repo";
 
-function createMockUserRepository(): Mocked<IUserRepository> {
+export function createMockUserRepository(): Mocked<IUserRepository> {
   return {
     userExistsById: vi.fn(),
     isUsernameExists: vi.fn(),

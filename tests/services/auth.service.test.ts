@@ -46,7 +46,6 @@ describe("AuthService", () => {
   let mockTokenService: Mocked<ITokenService>;
 
   const userId = 1;
-
   const mockUser: AuthUserSafe = {
     id: userId,
     email: "tungtungsahur@example.com",
