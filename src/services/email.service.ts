@@ -19,6 +19,12 @@ type PasswordResetData = {
   resetToken: string;
 };
 
+export interface IEmailService {
+  sendEmailVerification(data: EmailVerificationData): Promise<void>;
+  sendPasswordReset(data: PasswordResetData): Promise<void>;
+  sendWelcomeEmail(email: string, username: string): Promise<void>;
+}
+
 export class EmailService {
   private transporter: nodemailer.Transporter;
   private readonly fromEmail: string;
