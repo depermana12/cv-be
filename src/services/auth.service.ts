@@ -11,7 +11,24 @@ import type { UserPayload } from "../lib/types";
 import { ValidationError } from "../errors/validation.error";
 import { NotFoundError } from "../errors/not-found.error";
 
-export class AuthService {
+export interface IAuthService {
+  registerUser(
+    userRegistration: AuthUserRegister,
+  ): Promise<AuthUserSafe & AuthTokens>;
+  userLogin(loginInput: AuthUserLogin): Promise<AuthUserSafe & AuthTokens>;
+  getByEmail(email: string): Promise<AuthUserSafe>;
+  isEmailVerified(id: number): Promise<{ verified: boolean }>;
+  verifyUserEmail(id: number): Promise<boolean>;
+  createResetPasswordToken(payload: UserPayload): Promise<string>;
+  validateDecodeResetPasswordToken(token: string): Promise<UserPayload>;
+  createEmailVerificationToken(payload: UserPayload): Promise<string>;
+  validateEmailVerificationToken(token: string): Promise<UserPayload>;
+  validateRefreshToken(refreshToken: string): Promise<UserPayload>;
+  generateAuthTokens(user: UserPayload): Promise<AuthTokens>;
+  changeUserPassword(id: number, newPassword: string): Promise<void>;
+}
+
+export class AuthService implements IAuthService {
   constructor(
     private readonly userRepository: IUserRepository,
     private readonly tokenService: ITokenService,
@@ -106,8 +123,8 @@ export class AuthService {
     return { verified: user.isEmailVerified || false };
   }
 
-  async verifyUserEmail(id: number): Promise<void> {
-    await this.userRepository.verifyUserEmail(id);
+  async verifyUserEmail(id: number): Promise<boolean> {
+    return this.userRepository.verifyUserEmail(id);
   }
 
   async createResetPasswordToken(payload: UserPayload): Promise<string> {
