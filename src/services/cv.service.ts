@@ -1,4 +1,4 @@
-import type { CvRepository } from "../repositories/cv.repo";
+import type { ICvRepository } from "../repositories/cv.repo";
 import type {
   CvInsert,
   CvQueryOptions,
@@ -9,7 +9,7 @@ import type {
 import { NotFoundError } from "../errors/not-found.error";
 
 export class CvService {
-  constructor(private readonly cvRepository: CvRepository) {}
+  constructor(private readonly cvRepository: ICvRepository) {}
 
   private async assertCvOwnedByUser(
     cvId: number,

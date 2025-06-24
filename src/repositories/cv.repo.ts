@@ -9,7 +9,23 @@ import type {
 } from "../db/types/cv.type";
 import type { Database } from "../db/index";
 
-export class CvRepository {
+export interface ICvRepository {
+  createCv(cvData: CvInsert): Promise<{ id: number }>;
+  getCvByIdAndUserId(cvId: number, userId: number): Promise<CvSelect | null>;
+  getAllCvByUserId(
+    userId: number,
+    options?: CvQueryOptions,
+  ): Promise<PaginatedCvResponse>;
+  getUserCvCount(userId: number): Promise<number | null>;
+  updateCvByIdAndUserId(
+    cvId: number,
+    userId: number,
+    newCvData: CvUpdate,
+  ): Promise<boolean>;
+  deleteCvByIdAndUserId(cvId: number, userId: number): Promise<boolean>;
+}
+
+export class CvRepository implements ICvRepository {
   constructor(private readonly db: Database) {}
 
   async createCv(cvData: CvInsert): Promise<{ id: number }> {
@@ -63,7 +79,7 @@ export class CvRepository {
     };
   }
 
-  async getUserCvCount(userId: number): Promise<number> {
+  async getUserCvCount(userId: number): Promise<number | null> {
     return this.db.$count(cv, eq(cv.userId, userId));
   }
 
