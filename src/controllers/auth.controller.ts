@@ -10,6 +10,15 @@ import { authService, emailService } from "../lib/container";
 import { userInsertSchema } from "../schemas/user.schema";
 import { setCookie } from "hono/cookie";
 import { jwt } from "../middlewares/auth";
+import {
+  JwtAlgorithmNotImplemented,
+  JwtTokenExpired,
+  JwtTokenInvalid,
+  JwtTokenIssuedAt,
+  JwtTokenNotBefore,
+  JwtTokenSignatureMismatched,
+} from "hono/utils/jwt/types";
+import { ValidationError } from "../errors/validation.error";
 
 const COOKIE_OPTIONS = {
   httpOnly: true,
@@ -19,8 +28,7 @@ const COOKIE_OPTIONS = {
   maxAge: 60 * 60 * 24 * 7, // 7 days
 };
 
-export const authRoutes = createHonoBindings();
-authRoutes
+export const authRoutes = createHonoBindings()
   .post("/signup", zValidator("json", userInsertSchema), async (c) => {
     const validatedBody = c.req.valid("json");
 
@@ -106,21 +114,37 @@ authRoutes
     },
   )
   .post("/verify-email/:token", async (c) => {
-    const token = c.req.param("token");
+    try {
+      const token = c.req.param("token");
 
-    const user = await authService.validateEmailVerificationToken(token);
+      const user = await authService.validateEmailVerificationToken(token);
 
-    const isVerified = await authService.isEmailVerified(Number(user.id));
-    if (!isVerified) {
-      const fullUser = await authService.getByEmail(user.email);
-      await emailService.sendWelcomeEmail(fullUser.email, fullUser.username);
+      const isVerified = await authService.isEmailVerified(Number(user.id));
+      if (!isVerified.verified) {
+        await authService.verifyUserEmail(Number(user.id));
+        const fullUser = await authService.getByEmail(user.email);
+        await emailService.sendWelcomeEmail(fullUser.email, fullUser.username);
+      }
+
+      return c.json({
+        success: true,
+        message: "Email verified successfully",
+        data: { userId: user.id },
+      });
+    } catch (err) {
+      if (
+        err instanceof JwtTokenInvalid ||
+        err instanceof JwtTokenExpired ||
+        err instanceof JwtTokenNotBefore ||
+        err instanceof JwtTokenIssuedAt ||
+        err instanceof JwtTokenSignatureMismatched ||
+        err instanceof JwtAlgorithmNotImplemented
+      ) {
+        console.log("jwt token error");
+        throw new ValidationError("jwt token invalid or expired");
+      }
+      throw err;
     }
-
-    return c.json({
-      success: true,
-      message: "Email verified successfully",
-      data: { userId: user.id },
-    });
   })
   .get("/email-verification-status/:userId", async (c) => {
     const userId = Number(c.req.param("userId"));

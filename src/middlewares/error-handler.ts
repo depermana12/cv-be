@@ -29,6 +29,13 @@ const errResponse = (
 export const errorHandler = async (err: Error, c: Context<Bindings>) => {
   const logger = c.var?.logger ?? console;
 
+  console.log("Error handler called with:", {
+    name: err.name,
+    message: err.message,
+    constructor: err.constructor.name,
+    isValidationError: err instanceof ValidationError,
+  });
+
   logger.error?.(
     {
       reqId: c.var.requestId,
