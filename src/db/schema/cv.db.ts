@@ -25,13 +25,13 @@ export const cv = mysqlTable("cvs", {
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
   title: varchar("title", { length: 255 }).notNull().unique(),
-  description: text("description"),
-  theme: varchar("theme", { length: 100 }).default("default"),
-  isPublic: boolean("is_public").default(false),
+  description: text("description").notNull(),
+  theme: varchar("theme", { length: 100 }).default("default").notNull(),
+  isPublic: boolean("is_public").default(false).notNull(),
   slug: varchar("slug", { length: 255 }).unique(),
   views: int("views").default(0),
   downloads: int("downloads").default(0),
-  language: varchar("language", { length: 3 }).default("id"),
+  language: varchar("language", { length: 3 }).default("id").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").onUpdateNow(),
 });

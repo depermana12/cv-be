@@ -11,19 +11,14 @@ export const cvSelectSchema = z.object({
     .max(255, { message: "Title must be 255 characters or fewer" }),
   description: z
     .string({ required_error: "Description is required" })
-    .max(1000, { message: "Description must be 1000 characters or fewer" })
-    .optional(),
+    .max(1000, { message: "Description must be 1000 characters or fewer" }),
   theme: z
     .string()
-    .max(100, { message: "Theme must be 100 characters or fewer" })
-    .optional(),
+    .max(100, { message: "Theme must be 100 characters or fewer" }),
   isPublic: z.boolean({
     required_error: "Visibility status (isPublic) is required",
   }),
-  slug: z
-    .string()
-    .max(255, { message: "Slug must be 255 characters or fewer" })
-    .optional(),
+  slug: z.string().max(255).nullable().default(null),
   views: z
     .number()
     .int({ message: "Views must be an integer" })
@@ -38,8 +33,13 @@ export const cvSelectSchema = z.object({
       message: "Language must be a 2-letter ISO code (e.g., 'en', 'id')",
     })
     .or(z.literal("id")),
-  createdAt: z.string().datetime({ message: "Invalid creation date" }),
-  updatedAt: z.string().datetime({ message: "Invalid update date" }),
+  createdAt: z.coerce.date({ message: "Invalid creation date" }),
+  updatedAt: z.coerce.date({ message: "Invalid update date" }),
+});
+
+export const cvApiResponseSchema = cvSelectSchema.extend({
+  createdAt: z.date().transform((d) => d.toISOString()),
+  updatedAt: z.date().transform((d) => d.toISOString()),
 });
 
 export const cvInsertSchema = cvSelectSchema
