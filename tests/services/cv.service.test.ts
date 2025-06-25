@@ -119,11 +119,11 @@ describe("CvService", () => {
           userId,
           createdAt: new Date("2024-01-01"),
           updatedAt: new Date("2024-01-01"),
-          theme: null,
+          theme: "default",
           slug: null,
           views: null,
           downloads: null,
-          language: null,
+          language: "id",
         },
         {
           id: 2,
@@ -133,11 +133,11 @@ describe("CvService", () => {
           userId,
           createdAt: new Date("2024-01-02"),
           updatedAt: new Date("2024-01-02"),
-          theme: null,
+          theme: "default",
           slug: null,
           views: null,
           downloads: null,
-          language: null,
+          language: "id",
         },
       ];
 
@@ -233,11 +233,11 @@ describe("CvService", () => {
       isPublic: false,
       createdAt: new Date("2025-06-23"),
       updatedAt: new Date("2025-06-23"),
-      theme: null,
+      theme: "default",
       slug: null,
       views: null,
       downloads: null,
-      language: null,
+      language: "id",
     };
 
     it("should successfully update a CV", async () => {
