@@ -8,7 +8,23 @@ import type {
 } from "../db/types/cv.type";
 import { NotFoundError } from "../errors/not-found.error";
 
-export class CvService {
+export interface ICvService {
+  createCv(cvData: Omit<CvInsert, "userId">, userId: number): Promise<CvSelect>;
+  getCvById(cvId: number, userId: number): Promise<CvSelect>;
+  getAllCvs(
+    userId: number,
+    options?: CvQueryOptions,
+  ): Promise<PaginatedCvResponse>;
+  getUserCvCount(userId: number): Promise<number>;
+  updateCv(
+    cvId: number,
+    userId: number,
+    newCvData: CvUpdate,
+  ): Promise<CvSelect>;
+  deleteCv(cvId: number, userId: number): Promise<boolean>;
+}
+
+export class CvService implements ICvService {
   constructor(private readonly cvRepository: ICvRepository) {}
 
   private async assertCvOwnedByUser(
