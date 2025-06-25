@@ -1,4 +1,5 @@
 import nodemailer from "nodemailer";
+import { config } from "../config/index";
 
 type EmailOptions = {
   to: string;
@@ -32,9 +33,9 @@ export class EmailService {
   private readonly frontendUrl: string;
 
   constructor() {
-    this.fromEmail = process.env.FROM_EMAIL!;
-    this.fromName = process.env.FROM_NAME!;
-    this.frontendUrl = process.env.FRONTEND_URL!;
+    this.fromEmail = config.email.from!;
+    this.fromName = config.email.fromName!;
+    this.frontendUrl = config.urls.frontend;
     this.transporter = this.initTransporter();
 
     this.testConnection();
@@ -42,11 +43,11 @@ export class EmailService {
 
   private initTransporter(): nodemailer.Transporter {
     return nodemailer.createTransport({
-      host: process.env.MAILTRAP_HOST!,
-      port: Number(process.env.MAILTRAP_PORT!),
+      host: config.email.host,
+      port: config.email.port,
       auth: {
-        user: process.env.MAILTRAP_USER!,
-        pass: process.env.MAILTRAP_PASS!,
+        user: config.email.user,
+        pass: config.email.pass,
       },
     });
   }

@@ -1,6 +1,7 @@
 import "dotenv/config";
 import { drizzle, MySql2Database } from "drizzle-orm/mysql2";
 import mysql from "mysql2/promise";
+import { config } from "../config/index.js";
 
 import * as user from "./schema/user.db";
 import * as cv from "./schema/cv.db";
@@ -35,18 +36,7 @@ export const schema = {
 };
 
 const getDatabaseUrl = () => {
-  if (process.env.NODE_ENV === "test") {
-    return (
-      process.env.TEST_DATABASE_URL || "mysql://root:root@localhost:3306/testdb"
-    );
-  }
-  if (!process.env.DATABASE_URL) {
-    throw new Error(`
-      DATABASE_URL is not defined. Please configure it for ${process.env.NODE_ENV} environment.
-      For tests, you can set TEST_DATABASE_URL or it will use the default test connection.
-    `);
-  }
-  return process.env.DATABASE_URL;
+  return config.database.url;
 };
 
 /**

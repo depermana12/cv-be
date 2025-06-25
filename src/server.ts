@@ -1,7 +1,8 @@
 import app from "./app";
+import { config } from "./config/index";
 
 const server = Bun.serve({
-  port: process.env.PORT || 5000,
+  port: config.PORT,
   fetch: app.fetch,
 });
 

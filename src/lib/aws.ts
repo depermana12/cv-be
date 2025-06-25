@@ -1,20 +1,18 @@
 import { S3Client } from "@aws-sdk/client-s3";
+import { config } from "../config/index";
 
-const AWS_REGION = process.env.AWS_REGION || "ap-southeast-1";
-const AWS_ACCESS_KEY_ID = process.env.AWS_ACCESS_KEY_ID;
-const AWS_SECRET_ACCESS_KEY = process.env.AWS_SECRET_ACCESS_KEY;
-const S3_BUCKET_NAME = process.env.S3_BUCKET_NAME;
+const aws = config.aws;
 
-if (!AWS_ACCESS_KEY_ID || !AWS_SECRET_ACCESS_KEY || !S3_BUCKET_NAME) {
+if (!aws.accessKeyId || !aws.secretAccessKey || !aws.s3Bucket) {
   throw new Error("Missing required AWS environment variables");
 }
 
 export const s3Client = new S3Client({
-  region: AWS_REGION,
+  region: aws.region,
   credentials: {
-    accessKeyId: AWS_ACCESS_KEY_ID,
-    secretAccessKey: AWS_SECRET_ACCESS_KEY,
+    accessKeyId: aws.secretAccessKey,
+    secretAccessKey: aws.secretAccessKey,
   },
 });
 
-export const bucketName = S3_BUCKET_NAME;
+export const bucketName = aws.s3Bucket;

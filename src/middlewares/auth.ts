@@ -8,13 +8,14 @@ import {
   JwtTokenSignatureMismatched,
 } from "hono/utils/jwt/types";
 import { HTTPException } from "hono/http-exception";
+import { config as env } from "../config/index";
 
 export const config = {
-  jwtSecret: process.env.SECRET || "devmode",
+  jwtSecret: env.jwt.secret || "devmode",
   jwtAlgorithm: "HS256" as const,
 };
 
-if (!process.env.SECRET && process.env.NODE_ENV === "production") {
+if (!env.jwt.secret && env.NODE_ENV === "production") {
   throw new Error("JWT_SECRET is required in production");
 }
 

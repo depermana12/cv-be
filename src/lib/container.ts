@@ -1,4 +1,5 @@
 import { getDb } from "../db";
+import { config } from "../config/index.js";
 import { CourseRepository } from "../repositories/course.repo";
 import { CvRepository } from "../repositories/cv.repo";
 import { EducationRepository } from "../repositories/education.repo";
@@ -53,7 +54,7 @@ const workRepository = new WorkRepository(db);
 const jobApplicationRepository = new JobApplicationRepository(db);
 
 // services
-export const tokenService = new TokenService(process.env.SECRET!);
+export const tokenService = new TokenService(config.jwt.secret);
 export const authService = new AuthService(userRepository, tokenService);
 export const courseService = new CourseService(courseRepository);
 export const cvService = new CvService(cvRepository);
