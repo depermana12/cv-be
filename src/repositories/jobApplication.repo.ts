@@ -10,12 +10,36 @@ import type {
 import { BaseRepository } from "./base.repo";
 import type { Database } from "../db/index";
 
-export class JobApplicationRepository extends BaseRepository<
-  typeof jobApplications,
-  JobApplicationInsert,
-  JobApplicationSelect,
-  JobApplicationUpdate
-> {
+export interface IJobApplication {
+  createJobApplication(data: JobApplicationInsert): Promise<{ id: number }>;
+  getJobApplicationByIdAndUserId(
+    id: number,
+    userId: number,
+  ): Promise<JobApplicationSelect | null>;
+  getAllJobApplicationsByUserId(
+    userId: number,
+    options?: JobApplicationQueryOptions,
+  ): Promise<PaginatedJobApplicationResponse>;
+  updateJobApplicationByIdAndUserId(
+    id: number,
+    userId: number,
+    newData: JobApplicationUpdate,
+  ): Promise<boolean>;
+  deleteJobApplicationByIdAndUserId(
+    id: number,
+    userId: number,
+  ): Promise<boolean>;
+}
+
+export class JobApplicationRepository
+  extends BaseRepository<
+    typeof jobApplications,
+    JobApplicationInsert,
+    JobApplicationSelect,
+    JobApplicationUpdate
+  >
+  implements IJobApplication
+{
   constructor(db: Database) {
     super(jobApplications, db);
   }

@@ -1,4 +1,7 @@
-import type { JobApplicationRepository } from "../repositories/jobApplication.repo";
+import type {
+  IJobApplication,
+  JobApplicationRepository,
+} from "../repositories/jobApplication.repo";
 import type {
   JobApplicationInsert,
   JobApplicationQueryOptions,
@@ -9,9 +12,7 @@ import type {
 import { NotFoundError } from "../errors/not-found.error";
 
 export class JobApplicationService {
-  constructor(
-    private readonly jobApplicationRepository: JobApplicationRepository,
-  ) {}
+  constructor(private readonly jobApplicationRepository: IJobApplication) {}
 
   private async assertJobApplicationOwnedByUser(
     id: number,
