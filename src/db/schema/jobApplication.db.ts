@@ -20,7 +20,7 @@ export const jobApplications = mysqlTable(
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
     cvId: int("cv_id").references(() => cv.id, { onDelete: "set null" }),
-    jobPortal: varchar("job_portal", { length: 100 }),
+    jobPortal: varchar("job_portal", { length: 100 }).notNull(),
     jobUrl: varchar("job_url", { length: 255 }),
     companyName: varchar("company_name", { length: 255 }).notNull(),
     jobTitle: varchar("job_title", { length: 255 }).notNull(),
@@ -31,7 +31,7 @@ export const jobApplications = mysqlTable(
       "Internship",
       "Freelance",
       "Volunteer",
-    ]),
+    ]).notNull(),
     position: mysqlEnum("position", [
       "Manager",
       "Lead",
@@ -42,9 +42,13 @@ export const jobApplications = mysqlTable(
       "Entry-level",
       "Staff",
       "Other",
-    ]),
+    ]).notNull(),
     location: varchar("location", { length: 255 }),
-    locationType: mysqlEnum("location_type", ["Remote", "On-site", "Hybrid"]),
+    locationType: mysqlEnum("location_type", [
+      "Remote",
+      "On-site",
+      "Hybrid",
+    ]).notNull(),
     status: mysqlEnum("status", [
       "applied",
       "interview",
@@ -52,9 +56,11 @@ export const jobApplications = mysqlTable(
       "rejected",
       "accepted",
       "ghosted",
-    ]).default("applied"),
+    ])
+      .default("applied")
+      .notNull(),
     notes: text("notes"),
-    appliedAt: datetime("applied_at"),
+    appliedAt: datetime("applied_at").notNull(),
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at").onUpdateNow(),
   },

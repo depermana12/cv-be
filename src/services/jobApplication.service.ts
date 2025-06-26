@@ -11,6 +11,31 @@ import type {
 } from "../db/types/jobApplication.type";
 import { NotFoundError } from "../errors/not-found.error";
 
+export interface IJobApplicationService {
+  createJobApplication(
+    data: Omit<JobApplicationInsert, "userId">,
+    userId: number,
+  ): Promise<JobApplicationSelect>;
+  getJobApplicationById(
+    id: number,
+    userId: number,
+  ): Promise<JobApplicationSelect>;
+  getJobApplicationById(
+    id: number,
+    userId: number,
+  ): Promise<JobApplicationSelect>;
+  getAllJobApplications(
+    userId: number,
+    options?: JobApplicationQueryOptions,
+  ): Promise<PaginatedJobApplicationResponse>;
+  updateJobApplication(
+    id: number,
+    userId: number,
+    newData: JobApplicationUpdate,
+  ): Promise<JobApplicationSelect>;
+  deleteJobApplication(id: number, userId: number): Promise<boolean>;
+}
+
 export class JobApplicationService {
   constructor(private readonly jobApplicationRepository: IJobApplication) {}
 
