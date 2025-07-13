@@ -13,6 +13,7 @@ import type {
 } from "../../src/schemas/jobApplication.schema";
 import { errorHandler } from "../../src/middlewares/error-handler";
 import { NotFoundError } from "../../src/errors/not-found.error";
+import type { JobApplicationStatusSelect } from "../../src/db/types/jobApplication.type";
 
 vi.mock("../../src/lib/container", async () => {
   return {
@@ -21,6 +22,7 @@ vi.mock("../../src/lib/container", async () => {
       getJobApplicationById: vi.fn(),
       getAllJobApplications: vi.fn(),
       updateJobApplication: vi.fn(),
+      getStatusTimeline: vi.fn(),
       deleteJobApplication: vi.fn(),
     },
   };
@@ -344,7 +346,7 @@ describe("http integration job application test", async () => {
       ).rejects.toThrow("Database error");
     });
   });
-  describe("PUT /applications-tracking/:id", async () => {
+  describe("PATCH /applications-tracking/:id", async () => {
     it("should update job application successfully", async () => {
       const jobApplicationId = 1;
       const updateData = {
@@ -384,7 +386,7 @@ describe("http integration job application test", async () => {
       expect(data.data).toEqual(updatedJobApplicationResponse);
       expect(
         mockedJobApplicationService.updateJobApplication,
-      ).toHaveBeenCalledWith(userId, jobApplicationId, updateData);
+      ).toHaveBeenCalledWith(jobApplicationId, userId, updateData, undefined);
     });
 
     it("should handle partial updates", async () => {
@@ -435,11 +437,9 @@ describe("http integration job application test", async () => {
         param: { id: jobApplicationId.toString() },
         json: { status: "accepted" },
       });
-      await expect(
-        mockedJobApplicationService.updateJobApplication(999, userId, {
-          status: "accepted",
-        }),
-      ).rejects.toThrow(NotFoundError);
+      expect(res.status).toBe(404);
+      const data = await res.json();
+      expect(data.message).toContain("Job Application with ID 999 not found");
     });
 
     it("should handle service errors when updating job application", async () => {
@@ -450,8 +450,8 @@ describe("http integration job application test", async () => {
 
       await expect(
         mockedJobApplicationService.updateJobApplication(
-          userId,
           jobApplicationId,
+          userId,
           {},
         ),
       ).rejects.toThrow("Update failed");
@@ -465,7 +465,43 @@ describe("http integration job application test", async () => {
 
       expect(
         mockedJobApplicationService.updateJobApplication,
-      ).toHaveBeenCalledWith(NaN, userId, { status: "accepted" });
+      ).not.toHaveBeenCalled();
+      expect(res.status).toBe(400);
+    });
+  });
+
+  describe("GET /applications-tracking/:id/status-timeline", () => {
+    it("should return the job status timeline for owned job", async () => {
+      const mockTimeline: JobApplicationStatusSelect[] = [
+        {
+          id: 1,
+          applicationId: 1,
+          status: "applied",
+          changedAt: new Date("2025-06-01"),
+        },
+        {
+          id: 2,
+          applicationId: 1,
+          status: "interview",
+          changedAt: new Date("2025-06-05"),
+        },
+      ];
+
+      mockedJobApplicationService.getStatusTimeline.mockResolvedValue(
+        mockTimeline,
+      );
+
+      const res = await client[":id"]["statuses"].$get({
+        param: { id: mockJobApplication.id.toString() },
+      });
+
+      expect(res.status).toBe(200);
+      const data = await res.json();
+      expect(data.success).toBe(true);
+      expect(data.data).toHaveLength(2);
+      expect(
+        mockedJobApplicationService.getStatusTimeline,
+      ).toHaveBeenCalledWith(mockJobApplication.id, userId);
     });
   });
 
@@ -510,7 +546,8 @@ describe("http integration job application test", async () => {
 
       expect(
         mockedJobApplicationService.deleteJobApplication,
-      ).toHaveBeenCalledWith(NaN, userId);
+      ).not.toHaveBeenCalled();
+      expect(res.status).toBe(400);
     });
     it("should handle service errors when deleting job application", async () => {
       const jobApplicationId = 1;
