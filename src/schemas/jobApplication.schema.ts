@@ -68,6 +68,16 @@ export const jobApplicationUpdateSchema = jobApplicationCreateSchema
   .partial()
   .extend({ statusChangedAt: z.coerce.date().optional() });
 
+export const idParamSchema = z.object({
+  id: z
+    .string()
+    .regex(/^\d+$/)
+    .transform(Number)
+    .refine((n) => n > 0, {
+      message: "ID must be a positive number",
+    }),
+});
+
 export const jobApplicationQueryOptionsSchema = z.object({
   search: z.string().optional(),
   sortBy: z.enum(["position", "companyName", "status", "appliedAt"]).optional(),
