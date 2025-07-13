@@ -18,11 +18,7 @@ export const userSchema = z.object({
     .min(8, { message: "Password must be at least 8 characters" })
     .max(255),
   isEmailVerified: z.boolean().optional(),
-  profileImage: z
-    .string()
-    .url({ message: "Invalid image URL" })
-    .optional()
-    .nullable(),
+  profileImage: z.string().optional().nullable(),
   birthDate: z.coerce
     .date({ invalid_type_error: "Invalid birth date" })
     .optional()
