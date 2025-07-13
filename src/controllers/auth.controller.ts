@@ -19,10 +19,11 @@ import {
   JwtTokenSignatureMismatched,
 } from "hono/utils/jwt/types";
 import { ValidationError } from "../errors/validation.error";
+import { config } from "../config/index";
 
 const COOKIE_OPTIONS = {
   httpOnly: true,
-  secure: process.env.NODE_ENV === "production",
+  secure: config.NODE_ENV === "production",
   sameSite: "strict" as const,
   path: "/",
   maxAge: 60 * 60 * 24 * 7, // 7 days
