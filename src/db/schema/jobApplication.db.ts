@@ -67,9 +67,25 @@ export const jobApplications = mysqlTable(
   (t) => [index("idx_user_id").on(t.userId), index("idx_cv_id").on(t.cvId)],
 );
 
+export const jobApplicationStatuses = mysqlTable("job_application_statuses", {
+  id: int("id").primaryKey().autoincrement(),
+  applicationId: int("application_id")
+    .notNull()
+    .references(() => jobApplications.id, { onDelete: "cascade" }),
+  status: mysqlEnum("status", [
+    "applied",
+    "interview",
+    "offer",
+    "rejected",
+    "accepted",
+    "ghosted",
+  ]).notNull(),
+  changedAt: datetime("changed_at").notNull(),
+});
+
 export const jobApplicationRelations = relations(
   jobApplications,
-  ({ one }) => ({
+  ({ one, many }) => ({
     user: one(users, {
       fields: [jobApplications.userId],
       references: [users.id],
@@ -77,6 +93,17 @@ export const jobApplicationRelations = relations(
     cv: one(cv, {
       fields: [jobApplications.cvId],
       references: [cv.id],
+    }),
+    status: many(jobApplicationStatuses),
+  }),
+);
+
+export const jobApplicationStatusesRelations = relations(
+  jobApplicationStatuses,
+  ({ one }) => ({
+    jobApplication: one(jobApplications, {
+      fields: [jobApplicationStatuses.applicationId],
+      references: [jobApplications.id],
     }),
   }),
 );
