@@ -1,7 +1,7 @@
 {
   "version": "5",
   "dialect": "mysql",
-  "id": "97ae2cae-bec4-4c4c-b629-34790d52e121",
+  "id": "de2c24ff-ebc0-49d3-85f0-cf2ca8165ba5",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "course_descriptions": {
@@ -157,14 +157,14 @@
           "name": "description",
           "type": "text",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
           "autoincrement": false
         },
         "theme": {
           "name": "theme",
           "type": "varchar(100)",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
           "autoincrement": false,
           "default": "'default'"
         },
@@ -172,7 +172,7 @@
           "name": "is_public",
           "type": "boolean",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
           "autoincrement": false,
           "default": false
         },
@@ -203,7 +203,7 @@
           "name": "language",
           "type": "varchar(3)",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
           "autoincrement": false,
           "default": "'id'"
         },
@@ -386,7 +386,7 @@
           "name": "job_portal",
           "type": "varchar(100)",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
           "autoincrement": false
         },
         "job_url": {
@@ -414,14 +414,14 @@
           "name": "job_type",
           "type": "enum('Full-time','Part-time','Contract','Internship','Freelance','Volunteer')",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
           "autoincrement": false
         },
         "position": {
           "name": "position",
           "type": "enum('Manager','Lead','Senior','Mid-level','Junior','Intern','Entry-level','Staff','Other')",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
           "autoincrement": false
         },
         "location": {
@@ -435,14 +435,14 @@
           "name": "location_type",
           "type": "enum('Remote','On-site','Hybrid')",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
           "autoincrement": false
         },
         "status": {
           "name": "status",
           "type": "enum('applied','interview','offer','rejected','accepted','ghosted')",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
           "autoincrement": false,
           "default": "'applied'"
         },
@@ -457,7 +457,7 @@
           "name": "applied_at",
           "type": "datetime",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
           "autoincrement": false
         },
         "created_at": {
