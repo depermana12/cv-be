@@ -9,10 +9,12 @@ import type {
   PaginatedJobApplicationResponse,
 } from "../../src/db/types/jobApplication.type";
 import type { IJobApplication } from "../../src/repositories/jobApplication.repo";
+import type { IJobApplicationStatus } from "../../src/repositories/jobApplicationStatus.repo";
 
 describe("JobApplicationService", () => {
   let jobApplicationService: JobApplicationService;
   let mockJobApplicationRepository: Mocked<IJobApplication>;
+  let mockJobApplicationStatusRepository: Mocked<IJobApplicationStatus>;
 
   const userId = 1;
   const jobApplicationId = 1;
@@ -61,8 +63,16 @@ describe("JobApplicationService", () => {
       deleteJobApplicationByIdAndUserId: vi.fn(),
     };
 
+    mockJobApplicationStatusRepository = {
+      getStatuses: vi.fn(),
+      addStatus: vi.fn(),
+      updateStatus: vi.fn(),
+      deleteStatuses: vi.fn(),
+    };
+
     jobApplicationService = new JobApplicationService(
       mockJobApplicationRepository,
+      mockJobApplicationStatusRepository,
     );
   });
 
@@ -87,6 +97,14 @@ describe("JobApplicationService", () => {
         ...mockJobApplicationData,
         userId,
       });
+      expect(mockJobApplicationStatusRepository.addStatus).toHaveBeenCalledWith(
+        jobApplicationId,
+        {
+          applicationId: jobApplicationId,
+          status: mockJobApplicationData.status,
+          changedAt: mockJobApplicationData.appliedAt,
+        },
+      );
       expect(
         mockJobApplicationRepository.getJobApplicationByIdAndUserId,
       ).toHaveBeenCalledWith(jobApplicationId, userId);
@@ -381,16 +399,16 @@ describe("JobApplicationService", () => {
       userId,
       companyName: "Original Corp",
       jobTitle: "Original Title",
-      jobType: null,
-      position: null,
+      jobType: "Full-time",
+      position: "Junior",
       location: null,
-      locationType: null,
+      locationType: "On-site",
       status: "applied",
-      jobPortal: null,
+      jobPortal: "JobStreet",
       jobUrl: null,
       cvId: null,
       notes: null,
-      appliedAt: null,
+      appliedAt: new Date("2025-06-24"),
       createdAt: new Date("2025-06-24"),
       updatedAt: new Date("2025-06-24"),
     };
@@ -551,6 +569,123 @@ describe("JobApplicationService", () => {
       expect(result).toEqual(updatedJobApplication);
       expect(result.status).toBe("rejected");
       expect(result.notes).toBe("Unfortunately not selected");
+    });
+
+    it("should log status change when status is updated", async () => {
+      const updateData: JobApplicationUpdate = {
+        status: "interview",
+        notes: "Scheduled for call",
+      };
+      const statusChangedAt = new Date("2025-07-10T15:00:00Z");
+
+      mockJobApplicationRepository.getJobApplicationByIdAndUserId
+        .mockResolvedValueOnce(existingJobApplication) // before update
+        .mockResolvedValueOnce({ ...existingJobApplication, ...updateData }); // after update
+
+      mockJobApplicationRepository.updateJobApplicationByIdAndUserId.mockResolvedValue(
+        true,
+      );
+
+      const result = await jobApplicationService.updateJobApplication(
+        jobApplicationId,
+        userId,
+        updateData,
+        statusChangedAt,
+      );
+
+      expect(mockJobApplicationStatusRepository.addStatus).toHaveBeenCalledWith(
+        jobApplicationId,
+        {
+          applicationId: jobApplicationId,
+          status: "interview",
+          changedAt: statusChangedAt,
+        },
+      );
+    });
+    it("should not log status change if status is unchanged", async () => {
+      const updateData: JobApplicationUpdate = {
+        notes: "No status change",
+      };
+
+      mockJobApplicationRepository.getJobApplicationByIdAndUserId
+        .mockResolvedValueOnce(existingJobApplication)
+        .mockResolvedValueOnce({ ...existingJobApplication, ...updateData });
+
+      mockJobApplicationRepository.updateJobApplicationByIdAndUserId.mockResolvedValue(
+        true,
+      );
+
+      const result = await jobApplicationService.updateJobApplication(
+        jobApplicationId,
+        userId,
+        updateData,
+      );
+
+      expect(
+        mockJobApplicationStatusRepository.addStatus,
+      ).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("getStatusTimeline", () => {
+    it("should return status timeline if application belongs to user", async () => {
+      const applicationId = 1;
+      const mockTimeline = [
+        {
+          id: 10,
+          applicationId,
+          status: "applied",
+          changedAt: new Date("2025-06-15T09:00:00Z"),
+        },
+        {
+          id: 11,
+          applicationId,
+          status: "interview",
+          changedAt: new Date("2025-06-20T14:30:00Z"),
+        },
+      ];
+
+      mockJobApplicationRepository.getJobApplicationByIdAndUserId.mockResolvedValue(
+        mockJobApplication,
+      );
+      mockJobApplicationStatusRepository.getStatuses.mockResolvedValue(
+        mockTimeline,
+      );
+
+      const result = await jobApplicationService.getStatusTimeline(
+        applicationId,
+        userId,
+      );
+
+      expect(
+        mockJobApplicationRepository.getJobApplicationByIdAndUserId,
+      ).toHaveBeenCalledWith(applicationId, userId);
+
+      expect(
+        mockJobApplicationStatusRepository.getStatuses,
+      ).toHaveBeenCalledWith(applicationId);
+
+      expect(result).toEqual(mockTimeline);
+    });
+
+    it("should throw NotFoundError if application does not belong to user", async () => {
+      const applicationId = 999;
+
+      mockJobApplicationRepository.getJobApplicationByIdAndUserId.mockResolvedValue(
+        null,
+      );
+
+      await expect(
+        jobApplicationService.getStatusTimeline(applicationId, userId),
+      ).rejects.toThrow(
+        new NotFoundError(
+          `[Service] Job Application with ID ${applicationId} not found for user ${userId}`,
+        ),
+      );
+
+      expect(
+        mockJobApplicationStatusRepository.getStatuses,
+      ).not.toHaveBeenCalled();
     });
   });
 
