@@ -33,6 +33,7 @@ import { WorkService } from "../services/work.service";
 import { JobApplicationRepository } from "../repositories/jobApplication.repo";
 import { JobApplicationService } from "../services/jobApplication.service";
 import { EmailService } from "../services/email.service";
+import { JobApplicationStatusRepository } from "../repositories/jobApplicationStatus.repo.js";
 
 const db = await getDb();
 
@@ -52,6 +53,7 @@ const softSkillRepository = new SoftSkillRepository(db);
 const userRepository = new UserRepository(db);
 const workRepository = new WorkRepository(db);
 const jobApplicationRepository = new JobApplicationRepository(db);
+const jobApplicationStatusRepository = new JobApplicationStatusRepository(db);
 
 // services
 export const tokenService = new TokenService(config.jwt.secret);
@@ -77,5 +79,6 @@ export const userService = new UserService(userRepository, cvService);
 export const workService = new WorkService(workRepository);
 export const jobApplicationService = new JobApplicationService(
   jobApplicationRepository,
+  jobApplicationStatusRepository,
 );
 export const emailService = new EmailService();
