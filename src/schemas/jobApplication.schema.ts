@@ -64,7 +64,9 @@ export const jobApplicationCreateSchema = jobApplicationSelectSchema.omit({
   updatedAt: true,
 });
 
-export const jobApplicationUpdateSchema = jobApplicationCreateSchema.partial();
+export const jobApplicationUpdateSchema = jobApplicationCreateSchema
+  .partial()
+  .extend({ statusChangedAt: z.coerce.date().optional() });
 
 export const jobApplicationQueryOptionsSchema = z.object({
   search: z.string().optional(),
