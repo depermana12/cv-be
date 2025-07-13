@@ -16,7 +16,7 @@ app.use(
   cors({
     origin: "*",
     allowHeaders: ["Authorization", "Content-Type"],
-    allowMethods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
+    allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     exposeHeaders: ["Content-Length"],
     maxAge: 86400, //
   }),
@@ -24,10 +24,10 @@ app.use(
 app.use(requestId());
 app.use(secureHeaders());
 app.use(pinoLogger());
+app.onError(errorHandler);
 
 app.route("/", router);
 
 app.notFound(notFoundHandler);
-app.onError(errorHandler);
 
 export default app;
