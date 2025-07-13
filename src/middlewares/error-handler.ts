@@ -41,6 +41,7 @@ export const errorHandler = async (err: Error, c: Context<Bindings>) => {
       reqId: c.var.requestId,
       name: err.name,
       message: err.message,
+      cause: err.cause,
       path: c.req.path,
       method: c.req.method,
       stack: err.stack,
@@ -48,12 +49,14 @@ export const errorHandler = async (err: Error, c: Context<Bindings>) => {
     "Error handled",
   );
   if (err instanceof HTTPException) {
+    const cause = err.cause as any;
+    const isZod = cause?.type === "ZOD_VALIDATION";
     return errResponse(
       c,
       err.message,
-      (err as any).constructor.name,
+      isZod ? "ZodValidationError" : err.constructor.name,
       err.status,
-      err.cause,
+      cause?.errors ?? cause,
     );
   } else if (err instanceof NotFoundError) {
     return errResponse(c, err.message, err.name, 404);

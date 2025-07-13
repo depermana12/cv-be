@@ -15,9 +15,14 @@ export const zValidator = <
   zV(target, schema, (result, c) => {
     if (!result.success) {
       const formattedError = zFormatter(result.error);
+      const allMessage = result.error.issues.map((issue) => issue.message);
       throw new HTTPException(400, {
-        cause: formattedError,
-        message: result.error.name || "Validation failed",
+        message: `[zValidationError] 
+        ${allMessage.join(" | ")}`,
+        cause: {
+          type: "ZOD_VALIDATION",
+          errors: formattedError,
+        },
       });
     }
   });
