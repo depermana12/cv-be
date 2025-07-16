@@ -81,9 +81,6 @@ export const jobApplicationRoutes = createHonoBindings()
       const { id: jobId } = c.req.valid("param");
       const updateData = c.req.valid("json");
 
-      if (!Number.isInteger(jobId) || jobId <= 0) {
-      }
-
       const { statusChangedAt, ...formData } = updateData;
 
       const updated = await jobApplicationService.updateJobApplication(

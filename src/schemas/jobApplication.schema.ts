@@ -84,6 +84,8 @@ export const jobApplicationQueryOptionsSchema = z.object({
   sortOrder: z.enum(["asc", "desc"]).optional(),
   limit: z.coerce.number().optional(),
   offset: z.coerce.number().optional(),
+  appliedAtFrom: z.coerce.date().optional(),
+  appliedAtTo: z.coerce.date().optional(),
 });
 
 export type JobApplicationSelect = z.infer<typeof jobApplicationSelectSchema>;

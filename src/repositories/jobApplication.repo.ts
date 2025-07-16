@@ -1,4 +1,4 @@
-import { and, eq, sql, like, desc, asc } from "drizzle-orm";
+import { and, eq, sql, like, desc, asc, gte, lte } from "drizzle-orm";
 import { jobApplications } from "../db/schema/jobApplication.db";
 import type {
   JobApplicationInsert,
@@ -80,6 +80,14 @@ export class JobApplicationRepository
           `%${options.search.toLowerCase()}%`,
         ),
       );
+    }
+
+    if (options?.appliedAtFrom) {
+      whereClause.push(gte(jobApplications.appliedAt, options.appliedAtFrom));
+    }
+
+    if (options?.appliedAtTo) {
+      whereClause.push(lte(jobApplications.appliedAt, options.appliedAtTo));
     }
 
     const data = await this.db.query.jobApplications.findMany({

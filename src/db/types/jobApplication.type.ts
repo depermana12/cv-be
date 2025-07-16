@@ -23,6 +23,8 @@ export type JobApplicationQueryOptions = {
   sortOrder?: "asc" | "desc";
   limit?: number;
   offset?: number;
+  appliedAtFrom?: Date;
+  appliedAtTo?: Date;
 };
 
 export type PaginatedJobApplicationResponse = {
