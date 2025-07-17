@@ -1,4 +1,4 @@
-import { and, eq, sql, like, desc, asc, gte, lte } from "drizzle-orm";
+import { and, eq, sql, desc, asc, gte, lte } from "drizzle-orm";
 import { jobApplications } from "../db/schema/jobApplication.db";
 import type {
   JobApplicationInsert,
@@ -74,11 +74,9 @@ export class JobApplicationRepository
     const whereClause = [eq(jobApplications.userId, userId)];
 
     if (options?.search) {
+      const searchTerm = `%${options.search.toLowerCase()}%`;
       whereClause.push(
-        like(
-          sql`lower(${jobApplications.position})`,
-          `%${options.search.toLowerCase()}%`,
-        ),
+        sql`(lower(${jobApplications.companyName}) like ${searchTerm} or lower(${jobApplications.jobTitle}) like ${searchTerm})`,
       );
     }
 

@@ -4,6 +4,7 @@ import type { IUserRepository } from "../repositories/user.repo";
 import type { AuthUserSafe, UserStats } from "../db/types/auth.type";
 import type { UpdateUserProfileSafe } from "../db/types/user.type";
 import type { CvService } from "./cv.service";
+import type { IJobApplicationService } from "./jobApplication.service";
 
 export interface IUserService {
   getUserByIdSafe(id: number): Promise<AuthUserSafe>;
@@ -21,6 +22,7 @@ export class UserService implements IUserService {
   constructor(
     private readonly userRepository: IUserRepository,
     private readonly cvService: CvService,
+    private readonly jobApplicationService: IJobApplicationService,
   ) {}
 
   async getUserByIdSafe(id: number): Promise<AuthUserSafe> {
@@ -108,8 +110,13 @@ export class UserService implements IUserService {
     return this.cvService.getUserCvCount(user.id);
   }
 
-  // TODO: Implement this method to return the count of job applications for the user.
-  private async getUserJobApplicationsCount(id: number) {}
+  private async getUserJobApplicationsCount(id: number): Promise<number> {
+    const result = await this.jobApplicationService.getAllJobApplications(id, {
+      limit: 1,
+      offset: 0,
+    });
+    return result.total;
+  }
 
   async isUserEmailVerified(id: number): Promise<{ verified: boolean }> {
     const user = await this.getUserByIdSafe(id);
@@ -128,12 +135,14 @@ export class UserService implements IUserService {
     const accountAge = this.calculateAccountAge(user.createdAt);
     const isEmailVerified = await this.isUserEmailVerified(id);
     const cvCount = await this.getUserCvCount(id);
+    const totalJobApplications = await this.getUserJobApplicationsCount(id);
 
     return {
       user,
       accountAge,
       isEmailVerified: isEmailVerified.verified,
       cvCreated: cvCount,
+      totalJobApplications,
     };
   }
 }
