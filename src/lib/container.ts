@@ -75,7 +75,6 @@ export const projectService = new ProjectService(
 export const skillService = new SkillService(skillRepository);
 export const socialMediaService = new SocialMediaService(socialMediaRepository);
 export const softSkillService = new SoftSkillService(softSkillRepository);
-export const userService = new UserService(userRepository, cvService);
 export const workService = new WorkService(workRepository);
 export const jobApplicationService = new JobApplicationService(
   jobApplicationRepository,
