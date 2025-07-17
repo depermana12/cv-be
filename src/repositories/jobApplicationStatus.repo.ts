@@ -5,7 +5,7 @@ import type {
   JobApplicationStatusUpdate,
 } from "../db/types/jobApplication.type";
 import { jobApplicationStatuses } from "../db/schema/jobApplication.db";
-import { asc, eq } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 
 export interface IJobApplicationStatus {
   getStatuses(applicationId: number): Promise<JobApplicationStatusSelect[]>;
@@ -27,7 +27,7 @@ export class JobApplicationStatusRepository implements IJobApplicationStatus {
   async getStatuses(applicationId: number) {
     return this.db.query.jobApplicationStatuses.findMany({
       where: eq(jobApplicationStatuses.applicationId, applicationId),
-      orderBy: [asc(jobApplicationStatuses.changedAt)],
+      orderBy: [desc(jobApplicationStatuses.changedAt)],
     });
   }
 
