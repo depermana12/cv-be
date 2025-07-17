@@ -16,7 +16,6 @@ export interface ICvRepository {
     userId: number,
     options?: CvQueryOptions,
   ): Promise<PaginatedCvResponse>;
-  getUserCvCount(userId: number): Promise<number | null>;
   updateCvByIdAndUserId(
     cvId: number,
     userId: number,
@@ -77,10 +76,6 @@ export class CvRepository implements ICvRepository {
       limit: options?.limit ?? 10,
       offset: options?.offset ?? 0,
     };
-  }
-
-  async getUserCvCount(userId: number): Promise<number | null> {
-    return this.db.$count(cv, eq(cv.userId, userId));
   }
 
   async updateCvByIdAndUserId(

@@ -107,7 +107,11 @@ export class UserService implements IUserService {
 
   private async getUserCvCount(id: number): Promise<number> {
     const user = await this.getUserByIdSafe(id);
-    return this.cvService.getUserCvCount(user.id);
+    const result = await this.cvService.getAllCvs(user.id, {
+      limit: 1,
+      offset: 0,
+    });
+    return result.total;
   }
 
   private async getUserJobApplicationsCount(id: number): Promise<number> {

@@ -15,7 +15,6 @@ export interface ICvService {
     userId: number,
     options?: CvQueryOptions,
   ): Promise<PaginatedCvResponse>;
-  getUserCvCount(userId: number): Promise<number>;
   updateCv(
     cvId: number,
     userId: number,
@@ -58,11 +57,6 @@ export class CvService implements ICvService {
     options?: CvQueryOptions,
   ): Promise<PaginatedCvResponse> {
     return this.cvRepository.getAllCvByUserId(userId, options);
-  }
-
-  async getUserCvCount(userId: number): Promise<number> {
-    const userCv = await this.cvRepository.getUserCvCount(userId);
-    return userCv ?? 0;
   }
 
   async updateCv(

@@ -80,4 +80,9 @@ export const jobApplicationService = new JobApplicationService(
   jobApplicationRepository,
   jobApplicationStatusRepository,
 );
+export const userService = new UserService(
+  userRepository,
+  cvService,
+  jobApplicationService,
+);
 export const emailService = new EmailService();
