@@ -1,89 +1,117 @@
-import type { MySqlTable, TableConfig } from "drizzle-orm/mysql-core";
-import { and, eq, type InferSelectModel } from "drizzle-orm";
-import { DataBaseError } from "../errors/database.error";
+import { PgTable, type TableConfig } from "drizzle-orm/pg-core";
+import {
+  and,
+  eq,
+  type InferInsertModel,
+  type InferSelectModel,
+} from "drizzle-orm";
 import type { Database } from "../db";
 
+export interface CvChildCrudRepository<TS, TI> {
+  // create a child record for a specific CV
+  createInCv(cvId: number, data: TI): Promise<TS>;
+  // get a child record by ID, but only if it belongs to the specified CV
+  getByIdInCv(cvId: number, childId: number): Promise<TS | null>;
+  // get all child records for a specific CV
+  getAllInCv(cvId: number): Promise<TS[]>;
+  // update a child record by ID, but only if it belongs to the specified CV
+  updateInCv(cvId: number, childId: number, data: Partial<TI>): Promise<TS>;
+  // delete a child record by ID, but only if it belongs to the specified CV
+  deleteInCv(cvId: number, childId: number): Promise<boolean>;
+  // check if a child record exists in a specific CV
+  existsInCv(cvId: number, childId: number): Promise<boolean>;
+}
+
 export abstract class CvChildRepository<
-  TTable extends MySqlTable<TableConfig>,
-  TInsert,
-  TSelect = InferSelectModel<TTable>,
-  TUpdate = Partial<TInsert>,
-> {
+  TT extends PgTable<TableConfig>,
+  TI extends InferInsertModel<TT>,
+  TS extends InferSelectModel<TT>,
+  ID extends keyof TT["$inferSelect"],
+> implements CvChildCrudRepository<TS, TI>
+{
   constructor(
-    protected readonly table: TTable,
+    protected readonly table: TT,
     protected readonly db: Database,
+    protected readonly primaryKey: ID,
   ) {}
-  async existsInCv(cvId: number, id: number): Promise<boolean> {
-    const record = await this.db
+  async existsInCv(cvId: number, childId: number): Promise<boolean> {
+    const records = await this.db
       .select()
-      .from(this.table)
+      .from(this.table as any)
       .where(
-        and(eq((this.table as any).id, id), eq((this.table as any).cvId, cvId)),
+        and(
+          eq((this.table as any)[this.primaryKey], childId),
+          eq((this.table as any).cvId, cvId),
+        ),
       )
       .limit(1);
-    return record.length > 0;
+    return records.length > 0;
   }
-  async createForCv(cvId: number, data: TInsert): Promise<{ id: number }> {
-    const [result] = await this.db
+
+  async createInCv(cvId: number, data: TI): Promise<TS> {
+    const records = await this.db
       .insert(this.table)
       .values({
-        ...(data as any),
+        ...data,
         cvId,
       })
-      .$returningId();
+      .returning();
 
-    const insertedId = (result as any).id;
-    if (!insertedId)
-      throw new DataBaseError(
-        `[CvChildRepository] Failed to create record in CV ${cvId}`,
-      );
-
-    return { id: insertedId };
+    return records[0] as TS;
   }
 
-  async getAllByIdInCv(cvId: number): Promise<TSelect[]> {
-    return this.db
+  async getAllInCv(cvId: number): Promise<TS[]> {
+    return (await this.db
       .select()
-      .from(this.table)
-      .where(eq((this.table as any).cvId, cvId)) as Promise<TSelect[]>;
+      .from(this.table as any)
+      .where(eq((this.table as any).cvId, cvId))) as TS[];
   }
 
-  async getByIdInCv(cvId: number, id: number): Promise<TSelect> {
-    const row = await this.db
+  async getByIdInCv(cvId: number, childId: number): Promise<TS | null> {
+    const records = await this.db
       .select()
-      .from(this.table)
+      .from(this.table as any)
       .where(
-        and(eq((this.table as any).id, id), eq((this.table as any).cvId, cvId)),
+        and(
+          eq((this.table as any)[this.primaryKey], childId),
+          eq((this.table as any).cvId, cvId),
+        ),
       )
       .limit(1);
 
-    const result = row.at(0);
-    if (!result)
-      throw new DataBaseError(
-        `[CvChildRepository] Record ID ${id} not found in CV ${cvId}`,
-      );
-
-    return result as TSelect;
+    return (records[0] as TS) ?? null;
   }
 
-  async updateInCv(cvId: number, id: number, data: TUpdate): Promise<boolean> {
-    const [result] = await this.db
+  async updateInCv(
+    cvId: number,
+    childId: number,
+    data: Partial<TI>,
+  ): Promise<TS> {
+    const records = await this.db
       .update(this.table)
       .set(data)
       .where(
-        and(eq((this.table as any).id, id), eq((this.table as any).cvId, cvId)),
-      );
+        and(
+          eq((this.table as any)[this.primaryKey], childId),
+          eq((this.table as any).cvId, cvId),
+        ),
+      )
+      .returning();
 
-    return result.affectedRows > 0;
+    return (records as TS[])[0];
   }
 
-  async deleteByIdInCv(cvId: number, id: number): Promise<boolean> {
-    const [result] = await this.db
+  async deleteInCv(cvId: number, childId: number): Promise<boolean> {
+    const records = await this.db
       .delete(this.table)
       .where(
-        and(eq((this.table as any).id, id), eq((this.table as any).cvId, cvId)),
-      );
+        and(
+          eq((this.table as any)[this.primaryKey], childId),
+          eq((this.table as any).cvId, cvId),
+        ),
+      )
+      .returning();
 
-    return result.affectedRows > 0;
+    return records.length > 0;
   }
 }
