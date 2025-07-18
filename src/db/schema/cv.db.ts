@@ -3,29 +3,28 @@ import {
   integer,
   varchar,
   text,
-  date,
-  boolean,
+  timestamp,
 } from "drizzle-orm/pg-core";
 import { users } from "./user.db";
-import { profile } from "./profile.db";
 import { relations } from "drizzle-orm";
-import { location } from "./location.db";
-import { socials } from "./social.db";
+import { contacts } from "./contact.db";
 import { educations } from "./education.db";
 import { works } from "./work.db";
 import { organizations } from "./organization.db";
 import { projects } from "./project.db";
 import { skills } from "./skill.db";
-import { softSkills } from "./soft-skill.db";
 import { courses } from "./course.db";
+import { coverLetters } from "./coverLetter.db";
 
 export const cv = pgTable("cvs", {
   id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
   userId: integer("user_id").notNull(),
   title: varchar("title", { length: 255 }).notNull(),
   summary: text("summary"),
-  createdAt: date("created_at"),
-  updatedAt: date("updated_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at")
+    .defaultNow()
+    .$onUpdateFn(() => new Date()),
 });
 
 export const cvRelations = relations(cv, ({ one, many }) => ({
@@ -33,14 +32,12 @@ export const cvRelations = relations(cv, ({ one, many }) => ({
     fields: [cv.userId],
     references: [users.id],
   }),
-  profile: one(profile),
-  location: one(location),
-  socials: many(socials),
+  contact: one(contacts),
   educations: many(educations),
   works: many(works),
   organizations: many(organizations),
   projects: many(projects),
   skills: many(skills),
-  softSkills: many(softSkills),
   courses: many(courses),
+  coverLetters: many(coverLetters),
 }));
