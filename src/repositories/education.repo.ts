@@ -14,11 +14,26 @@ export class EducationRepository extends CvChildRepository<
   typeof educations,
   EducationInsert,
   EducationSelect,
-  EducationUpdate
+  "id"
 > {
   constructor(db: Database) {
-    super(educations, db);
+    super(educations, db, "id");
   }
+
+  async createEducation(
+    cvId: number,
+    educationData: EducationInsert,
+  ): Promise<EducationSelect> {
+    return this.createInCv(cvId, educationData);
+  }
+
+  async getEducation(
+    cvId: number,
+    educationId: number,
+  ): Promise<EducationSelect | null> {
+    return this.getByIdInCv(cvId, educationId);
+  }
+
   async getAllEducations(
     cvId: number,
     options?: EducationQueryOptions,
@@ -34,15 +49,28 @@ export class EducationRepository extends CvChildRepository<
       );
     }
 
-    return this.db.query.educations.findMany({
-      where: and(...whereClause),
-      orderBy: options?.sortBy
-        ? [
-            options.sortOrder === "desc"
-              ? desc(educations[options.sortBy])
-              : asc(educations[options.sortBy]),
-          ]
-        : [],
-    });
+    return this.db
+      .select()
+      .from(educations)
+      .where(and(...whereClause))
+      .orderBy(
+        options?.sortBy
+          ? options.sortOrder === "desc"
+            ? desc(educations[options.sortBy])
+            : asc(educations[options.sortBy])
+          : asc(educations.id),
+      );
+  }
+
+  async updateEducation(
+    cvId: number,
+    educationId: number,
+    educationData: EducationUpdate,
+  ): Promise<EducationSelect> {
+    return this.updateInCv(cvId, educationId, educationData);
+  }
+
+  async deleteEducation(cvId: number, educationId: number): Promise<boolean> {
+    return this.deleteInCv(cvId, educationId);
   }
 }
