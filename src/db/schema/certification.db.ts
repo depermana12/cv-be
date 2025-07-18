@@ -2,23 +2,24 @@ import { relations } from "drizzle-orm";
 import { pgTable, integer, varchar, text, date } from "drizzle-orm/pg-core";
 import { cv } from "./cv.db";
 
-export const organizations = pgTable("organizations", {
+export const certifications = pgTable("certifications", {
   id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
   cvId: integer("cv_id")
     .notNull()
     .references(() => cv.id, { onDelete: "cascade" }),
+  name: varchar("name", { length: 200 }).notNull(),
   organization: varchar("organization", { length: 100 }).notNull(),
-  role: varchar("role", { length: 100 }).notNull(),
-  startDate: date("start_date"),
-  endDate: date("end_date"),
-  descriptions: text("descriptions").array(),
-  location: varchar("location", { length: 100 }),
+  issueDate: date("issue_date"),
+  expiryDate: date("expiry_date"),
+  credentialId: varchar("credential_id", { length: 100 }),
   displayOrder: integer("display_order"),
+  url: varchar("url", { length: 255 }),
+  descriptions: text("descriptions").array(),
 });
 
-export const organizationRelations = relations(organizations, ({ one }) => ({
+export const certificationsRelations = relations(certifications, ({ one }) => ({
   cv: one(cv, {
-    fields: [organizations.cvId],
+    fields: [certifications.cvId],
     references: [cv.id],
   }),
 }));

@@ -1,25 +1,36 @@
 import { relations } from "drizzle-orm";
 import {
-  mysqlTable,
-  int,
+  pgTable,
+  integer,
   varchar,
   date,
   decimal,
-} from "drizzle-orm/mysql-core";
+  pgEnum,
+} from "drizzle-orm/pg-core";
+import { text } from "drizzle-orm/pg-core";
 import { cv } from "./cv.db";
 
-export const educations = mysqlTable("educations", {
-  id: int("id").primaryKey().autoincrement(),
-  cvId: int("cv_id")
+export const educations = pgTable("educations", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+  cvId: integer("cv_id")
     .notNull()
     .references(() => cv.id, { onDelete: "cascade" }),
   institution: varchar("institution", { length: 100 }).notNull(),
-  degree: varchar("degree", { length: 100 }).notNull(),
+  degree: pgEnum("education_type", [
+    "high_school",
+    "diploma",
+    "bachelor",
+    "master",
+    "doctorate",
+  ])("degree").notNull(),
   fieldOfStudy: varchar("field_of_study", { length: 100 }),
   startDate: date("start_date"),
   endDate: date("end_date"),
   gpa: decimal("gpa", { precision: 3, scale: 2 }),
   url: varchar("url", { length: 255 }),
+  displayOrder: integer("display_order"),
+  location: varchar("location", { length: 100 }),
+  description: text("description").array(),
 });
 
 export const educationRelations = relations(educations, ({ one }) => ({

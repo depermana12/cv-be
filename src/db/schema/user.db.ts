@@ -1,22 +1,24 @@
 import { relations } from "drizzle-orm";
 import {
-  mysqlTable,
-  mysqlEnum,
-  int,
+  pgTable,
+  pgEnum,
+  integer,
   varchar,
   timestamp,
   boolean,
   date,
   index,
   text,
-} from "drizzle-orm/mysql-core";
+} from "drizzle-orm/pg-core";
 import { cv } from "./cv.db";
 import { jobApplications } from "./jobApplication.db";
 
-export const users = mysqlTable(
+export const genderEnum = pgEnum("gender", ["male", "female"]);
+
+export const users = pgTable(
   "users",
   {
-    id: int("id").primaryKey().autoincrement(),
+    id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
     username: varchar("username", { length: 50 }).notNull().unique(),
     email: varchar("email", { length: 100 }).notNull().unique(),
     password: varchar("password", { length: 255 }).notNull(),
@@ -25,9 +27,11 @@ export const users = mysqlTable(
     birthDate: date("birth_date"),
     firstName: varchar("first_name", { length: 50 }),
     lastName: varchar("last_name", { length: 50 }),
-    gender: mysqlEnum("gender", ["male", "female"]),
+    gender: genderEnum("gender"),
     createdAt: timestamp("created_at").defaultNow(),
-    updatedAt: timestamp("updated_at").defaultNow().onUpdateNow(),
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .$onUpdateFn(() => new Date()),
   },
   (table) => [
     index("idx_users_username").on(table.username),

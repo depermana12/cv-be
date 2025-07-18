@@ -1,6 +1,7 @@
 import "dotenv/config";
-import { drizzle, MySql2Database } from "drizzle-orm/mysql2";
-import mysql from "mysql2/promise";
+import { drizzle } from "drizzle-orm/node-postgres";
+import { NodePgDatabase } from "drizzle-orm/node-postgres";
+import { Pool } from "pg";
 import { config } from "../config/index.js";
 
 import * as user from "./schema/user.db";
@@ -14,8 +15,8 @@ import * as work from "./schema/work.db";
 import * as organization from "./schema/organization.db";
 import * as project from "./schema/project.db";
 import * as skill from "./schema/skill.db";
-import * as softSkill from "./schema/soft-skill.db";
 import * as course from "./schema/course.db";
+import * as contact from "./schema/contact.db";
 import * as jobApplication from "./schema/jobApplication.db";
 
 export const schema = {
@@ -30,8 +31,8 @@ export const schema = {
   ...organization,
   ...project,
   ...skill,
-  ...softSkill,
   ...course,
+  ...contact,
   ...jobApplication,
 };
 
@@ -39,39 +40,13 @@ const getDatabaseUrl = () => {
   return config.database.url;
 };
 
-/**
- * Singleton pool drizzle mysql with globalThis store
- * extending global object to add __drizzleDbInstance and __drizzlePool
- * This allows to reuse single database connection and db instance after the first call
- */
-export type Database = MySql2Database<typeof schema>;
+export type Database = NodePgDatabase<typeof schema>;
 
-const globalAny = global as typeof globalThis & {
-  __drizzleDbInstance?: Database;
-  __drizzlePool?: mysql.Pool;
-};
+export const getDb = () => {
+  const connectionUrl = getDatabaseUrl();
+  const pool = new Pool({
+    connectionString: connectionUrl,
+  });
 
-export const getDb = async () => {
-  if (!globalAny.__drizzleDbInstance) {
-    const connectionUrl = getDatabaseUrl();
-
-    const pool = mysql.createPool({
-      uri: connectionUrl,
-      connectionLimit: 10,
-      waitForConnections: true,
-      idleTimeout: 60000,
-      enableKeepAlive: true,
-      keepAliveInitialDelay: 0,
-    });
-
-    const db = drizzle(pool, {
-      schema,
-      mode: "default",
-    });
-
-    globalAny.__drizzlePool = pool;
-    globalAny.__drizzleDbInstance = db;
-  }
-
-  return globalAny.__drizzleDbInstance;
+  return drizzle(pool, { schema });
 };
