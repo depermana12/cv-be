@@ -8,19 +8,25 @@ import type {
   SkillUpdate,
 } from "../db/types/skill.type";
 import type { Database } from "../db/index";
+
 export class SkillRepository extends CvChildRepository<
   typeof skills,
   SkillInsert,
   SkillSelect,
-  SkillUpdate
+  "id"
 > {
   constructor(db: Database) {
-    super(skills, db);
+    super(skills, db, "id");
   }
-  async getCategoriesByCv(cvId: number): Promise<string[]> {
+
+  async getSkill(cvId: number, skillId: number): Promise<SkillSelect | null> {
+    return this.getByIdInCv(cvId, skillId);
+  }
+
+  async getCategoriesForCv(cvId: number): Promise<string[]> {
     const rows = await this.db
       .selectDistinct({ category: skills.category })
-      .from(this.table)
+      .from(skills)
       .where(eq(skills.cvId, cvId));
     return rows.map((row: { category: string }) => row.category);
   }
@@ -36,15 +42,35 @@ export class SkillRepository extends CvChildRepository<
       whereClause.push(like(sql`lower(${skills.name})`, searchTerm));
     }
 
-    return this.db.query.skills.findMany({
-      where: and(...whereClause),
-      orderBy: options?.sortBy
-        ? [
-            options.sortOrder === "desc"
-              ? desc(skills[options.sortBy])
-              : asc(skills[options.sortBy]),
-          ]
-        : [],
-    });
+    return this.db
+      .select()
+      .from(skills)
+      .where(and(...whereClause))
+      .orderBy(
+        options?.sortBy
+          ? options.sortOrder === "desc"
+            ? desc(skills[options.sortBy])
+            : asc(skills[options.sortBy])
+          : asc(skills.id),
+      );
+  }
+
+  async createSkill(
+    cvId: number,
+    skillData: SkillInsert,
+  ): Promise<SkillSelect> {
+    return this.createInCv(cvId, skillData);
+  }
+
+  async updateSkill(
+    cvId: number,
+    skillId: number,
+    skillData: SkillUpdate,
+  ): Promise<SkillSelect> {
+    return this.updateInCv(cvId, skillId, skillData);
+  }
+
+  async deleteSkill(cvId: number, skillId: number): Promise<boolean> {
+    return this.deleteInCv(cvId, skillId);
   }
 }
