@@ -1,4 +1,5 @@
 import { and, asc, desc, eq, like, sql } from "drizzle-orm";
+import { BaseRepository } from "./base.repo";
 import { cv } from "../db/schema/cv.db";
 import type {
   CvInsert,
@@ -10,40 +11,43 @@ import type {
 import type { Database } from "../db/index";
 
 export interface ICvRepository {
-  createCv(cvData: CvInsert): Promise<{ id: number }>;
-  getCvByIdAndUserId(cvId: number, userId: number): Promise<CvSelect | null>;
-  getAllCvByUserId(
+  createCv(cvData: CvInsert): Promise<CvSelect>;
+  getCvForUser(cvId: number, userId: number): Promise<CvSelect | null>;
+  getAllCvForUser(
     userId: number,
     options?: CvQueryOptions,
   ): Promise<PaginatedCvResponse>;
-  updateCvByIdAndUserId(
+  updateCvForUser(
     cvId: number,
     userId: number,
     newCvData: CvUpdate,
-  ): Promise<boolean>;
-  deleteCvByIdAndUserId(cvId: number, userId: number): Promise<boolean>;
+  ): Promise<CvSelect>;
+  deleteCvForUser(cvId: number, userId: number): Promise<boolean>;
 }
 
-export class CvRepository implements ICvRepository {
-  constructor(private readonly db: Database) {}
-
-  async createCv(cvData: CvInsert): Promise<{ id: number }> {
-    const [result] = await this.db.insert(cv).values(cvData).$returningId();
-    return { id: result.id };
+export class CvRepository
+  extends BaseRepository<typeof cv, CvInsert, CvSelect, "id">
+  implements ICvRepository
+{
+  constructor(db: Database) {
+    super(cv, db, "id");
   }
 
-  async getCvByIdAndUserId(
-    cvId: number,
-    userId: number,
-  ): Promise<CvSelect | null> {
-    const result = await this.db.query.cv.findFirst({
-      where: and(eq(cv.id, cvId), eq(cv.userId, userId)),
-    });
-
-    return result ?? null;
+  async createCv(cvData: CvInsert): Promise<CvSelect> {
+    return this.create(cvData);
   }
 
-  async getAllCvByUserId(
+  async getCvForUser(cvId: number, userId: number): Promise<CvSelect | null> {
+    const records = await this.db
+      .select()
+      .from(cv)
+      .where(and(eq(cv.id, cvId), eq(cv.userId, userId)))
+      .limit(1);
+
+    return (records[0] as CvSelect) ?? null;
+  }
+
+  async getAllCvForUser(
     userId: number,
     options?: CvQueryOptions,
   ): Promise<PaginatedCvResponse> {
@@ -55,47 +59,55 @@ export class CvRepository implements ICvRepository {
       );
     }
 
-    const data = await this.db.query.cv.findMany({
-      where: and(...whereClause),
-      orderBy: options?.sortBy
-        ? [
-            options.sortOrder === "desc"
-              ? desc(cv[options.sortBy])
-              : asc(cv[options.sortBy]),
-          ]
-        : [desc(cv.createdAt)],
-      limit: options?.limit ?? 10,
-      offset: options?.offset ?? 0,
-    });
+    const data = await this.db
+      .select()
+      .from(cv)
+      .where(and(...whereClause))
+      .orderBy(
+        options?.sortBy
+          ? options.sortOrder === "desc"
+            ? desc(cv[options.sortBy])
+            : asc(cv[options.sortBy])
+          : desc(cv.createdAt),
+      )
+      .limit(options?.limit ?? 10)
+      .offset(options?.offset ?? 0);
 
-    const count = await this.db.$count(cv, and(...whereClause));
+    const countResult = await this.db
+      .select({ count: sql<number>`count(*)` })
+      .from(cv)
+      .where(and(...whereClause));
+
+    const count = countResult[0]?.count ?? 0;
 
     return {
-      data,
+      data: data as CvSelect[],
       total: count,
       limit: options?.limit ?? 10,
       offset: options?.offset ?? 0,
     };
   }
 
-  async updateCvByIdAndUserId(
+  async updateCvForUser(
     cvId: number,
     userId: number,
     newCvData: CvUpdate,
-  ): Promise<boolean> {
-    const result = await this.db
+  ): Promise<CvSelect> {
+    const records = await this.db
       .update(cv)
       .set(newCvData)
-      .where(and(eq(cv.id, cvId), eq(cv.userId, userId)));
+      .where(and(eq(cv.id, cvId), eq(cv.userId, userId)))
+      .returning();
 
-    return result.length > 0;
+    return (records as CvSelect[])[0];
   }
 
-  async deleteCvByIdAndUserId(cvId: number, userId: number): Promise<boolean> {
-    const result = await this.db
+  async deleteCvForUser(cvId: number, userId: number): Promise<boolean> {
+    const records = await this.db
       .delete(cv)
-      .where(and(eq(cv.id, cvId), eq(cv.userId, userId)));
+      .where(and(eq(cv.id, cvId), eq(cv.userId, userId)))
+      .returning();
 
-    return result.length > 0;
+    return records.length > 0;
   }
 }
