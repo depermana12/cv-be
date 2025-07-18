@@ -12,11 +12,11 @@ export interface IJobApplicationStatus {
   addStatus(
     applicationId: number,
     status: JobApplicationStatusInsert,
-  ): Promise<{ id: number }>;
+  ): Promise<JobApplicationStatusSelect>;
   updateStatus(
-    applicationId: number,
+    id: number,
     newStatus: JobApplicationStatusUpdate,
-  ): Promise<boolean>;
+  ): Promise<JobApplicationStatusSelect | null>;
   deleteStatuses(applicationId: number): Promise<boolean>;
 }
 
@@ -24,34 +24,45 @@ export class JobApplicationStatusRepository implements IJobApplicationStatus {
   private readonly table = jobApplicationStatuses;
   constructor(private readonly db: Database) {}
 
-  async getStatuses(applicationId: number) {
-    return this.db.query.jobApplicationStatuses.findMany({
-      where: eq(jobApplicationStatuses.applicationId, applicationId),
-      orderBy: [desc(jobApplicationStatuses.changedAt)],
-    });
+  async getStatuses(
+    applicationId: number,
+  ): Promise<JobApplicationStatusSelect[]> {
+    return this.db
+      .select()
+      .from(this.table)
+      .where(eq(this.table.applicationId, applicationId))
+      .orderBy(desc(this.table.changedAt));
   }
 
-  async addStatus(applicationId: number, status: JobApplicationStatusInsert) {
+  async addStatus(
+    applicationId: number,
+    status: JobApplicationStatusInsert,
+  ): Promise<JobApplicationStatusSelect> {
     const [inserted] = await this.db
       .insert(this.table)
       .values({ ...status, applicationId })
-      .$returningId();
+      .returning();
 
-    return { id: inserted.id };
+    return inserted;
   }
-  async updateStatus(id: number, newStatus: JobApplicationStatusUpdate) {
-    const [updated] = await this.db
+  async updateStatus(
+    id: number,
+    newStatus: JobApplicationStatusUpdate,
+  ): Promise<JobApplicationStatusSelect | null> {
+    const result = await this.db
       .update(this.table)
       .set(newStatus)
-      .where(eq(this.table.id, id));
+      .where(eq(this.table.id, id))
+      .returning();
 
-    return updated.affectedRows > 0;
+    return result.length > 0 ? result[0] : null;
   }
-  async deleteStatuses(applicationId: number) {
-    const [deleted] = await this.db
+  async deleteStatuses(applicationId: number): Promise<boolean> {
+    const result = await this.db
       .delete(this.table)
-      .where(eq(this.table.applicationId, applicationId));
+      .where(eq(this.table.applicationId, applicationId))
+      .returning();
 
-    return deleted.affectedRows > 0;
+    return result.length > 0;
   }
 }
