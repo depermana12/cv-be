@@ -16,3 +16,5 @@ export type UpdateUserProfileSafe = Partial<
     | "updatedAt"
   >
 >;
+
+export type SafeUser = Omit<UserSelect, "password">;
