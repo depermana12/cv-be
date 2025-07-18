@@ -1,97 +1,71 @@
-import type { CvChildRepository } from "../repositories/cvChild.repo";
+import type { CvChildCrudRepository } from "../repositories/cvChild.repo";
 import { BadRequestError } from "../errors/bad-request.error";
 import { NotFoundError } from "../errors/not-found.error";
 
-/**
- * Base Abstract class for CV child services.
- * @template TSelect - The type of data to select.
- * @template TInsert - The type of data to insert.
- * @template TUpdate - The type of data to update.
- *
- */
-export abstract class CvChildService<
-  TSelect,
-  TInsert,
-  TUpdate = Partial<TInsert>,
-> {
-  /**
-   * Constructor for the CvChildService class.
-   * @param {CvChildRepository<any, TInsert, TSelect, TUpdate>} repository - The repository instance.
-   */
-  constructor(
-    protected readonly repository: CvChildRepository<
-      any,
-      TInsert,
-      TSelect,
-      TUpdate
-    >,
-  ) {}
+export abstract class CvChildService<TS, TI> {
+  constructor(protected readonly repository: CvChildCrudRepository<TS, TI>) {}
 
-  async createForCv(cvId: number, data: TInsert): Promise<TSelect> {
-    const inserted = await this.repository.createForCv(cvId, data);
-    if (!inserted) {
-      throw new BadRequestError(`[Service] failed to create in CV: ${cvId}`);
+  async createInCv(cvId: number, data: TI): Promise<TS> {
+    const result = await this.repository.createInCv(cvId, data);
+    if (!result) {
+      throw new BadRequestError(`Failed to create record in CV: ${cvId}`);
     }
-    return this.findByCvId(cvId, inserted.id);
+    return result;
   }
 
-  /**
-   * Get all entries from the database by CV ID.
-   * @param {number} cvId - The ID of the CV.
-   * @returns {Promise<TSelect[]>} - An array of entries.
-   * @description This method retrieves all entries associated with a specific CV ID.
-   */
-  async findAllByCvId(cvId: number): Promise<TSelect[]> {
-    return this.repository.getAllByIdInCv(cvId);
-  }
-
-  /**
-   * Get an entry from the database by CV ID and entry ID.
-   * @param cvId - The ID of the parent which is CV.
-   * @param id - The ID of the entry to retrieve.
-   * @returns The entry if found, or throws NotFoundError if not found.
-   */
-  async findByCvId(cvId: number, id: number): Promise<TSelect> {
-    const result = await this.repository.getByIdInCv(cvId, id);
+  async getByIdInCv(cvId: number, childId: number): Promise<TS> {
+    const result = await this.repository.getByIdInCv(cvId, childId);
     if (!result) {
       throw new NotFoundError(
-        `[Service] Item with ID ${id} not found in CV: ${cvId}`,
+        `Record with ID ${childId} not found in CV: ${cvId}`,
       );
     }
     return result;
   }
 
-  /**
-   * Create a new entry in the database associated with a specific CV ID.
-   * @param cvId - The ID of the parent which is CV.
-   * @param data - The data to insert.
-   * @returns The created entry.
-   */
-  async updateForCv(cvId: number, id: number, data: TUpdate): Promise<TSelect> {
-    const result = await this.repository.updateInCv(cvId, id, data);
-    if (!result) {
-      throw new BadRequestError(`[Service] failed to update: ${id}`);
+  async getAllInCv(cvId: number): Promise<TS[]> {
+    return this.repository.getAllInCv(cvId);
+  }
+
+  async updateInCv(
+    cvId: number,
+    childId: number,
+    data: Partial<TI>,
+  ): Promise<TS> {
+    const exists = await this.repository.getByIdInCv(cvId, childId);
+    if (!exists) {
+      throw new NotFoundError(
+        `Record with ID ${childId} not found in CV: ${cvId}`,
+      );
     }
-    return this.findByCvId(cvId, id);
+
+    const result = await this.repository.updateInCv(cvId, childId, data);
+    if (!result) {
+      throw new BadRequestError(
+        `Failed to update record with ID ${childId} in CV: ${cvId}`,
+      );
+    }
+    return result;
   }
 
-  /**
-   * Delete an entry from the database by CV ID and entry ID.
-   * @param cvId - The ID of the parent which is CV.
-   * @param id - The ID of the entry which is child to delete.
-   * @returns A boolean indicating success or failure.
-   */
-  async deleteFromCv(cvId: number, id: number): Promise<boolean> {
-    return this.repository.deleteByIdInCv(cvId, id);
+  async deleteInCv(cvId: number, childId: number): Promise<boolean> {
+    const exists = await this.repository.getByIdInCv(cvId, childId);
+    if (!exists) {
+      throw new NotFoundError(
+        `Record with ID ${childId} not found in CV: ${cvId}`,
+      );
+    }
+
+    const result = await this.repository.deleteInCv(cvId, childId);
+    if (!result) {
+      throw new BadRequestError(
+        `Failed to delete record with ID ${childId} in CV: ${cvId}`,
+      );
+    }
+    return result;
   }
 
-  /**
-   * Check if an entry exists in the database by CV ID and entry ID.
-   * @param cvId - The ID of the parent which is CV.
-   * @param id - The ID of the entry to check.
-   * @returns A boolean indicating whether the entry exists.
-   */
-  async belongsToCv(cvId: number, id: number): Promise<boolean> {
-    return this.repository.existsInCv(cvId, id);
+  async existsInCv(cvId: number, childId: number): Promise<boolean> {
+    return this.repository.existsInCv(cvId, childId);
   }
 }
