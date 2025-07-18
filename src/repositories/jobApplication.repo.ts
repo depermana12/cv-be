@@ -11,129 +11,110 @@ import { BaseRepository } from "./base.repo";
 import type { Database } from "../db/index";
 
 export interface IJobApplication {
-  createJobApplication(data: JobApplicationInsert): Promise<{ id: number }>;
-  getJobApplicationByIdAndUserId(
+  create(data: JobApplicationInsert): Promise<JobApplicationSelect>;
+  getByIdAndUser(
     id: number,
     userId: number,
   ): Promise<JobApplicationSelect | null>;
-  getAllJobApplicationsByUserId(
+  getAllByUser(
     userId: number,
     options?: JobApplicationQueryOptions,
   ): Promise<PaginatedJobApplicationResponse>;
-  updateJobApplicationByIdAndUserId(
+  updateByIdAndUser(
     id: number,
     userId: number,
-    newData: JobApplicationUpdate,
-  ): Promise<boolean>;
-  deleteJobApplicationByIdAndUserId(
-    id: number,
-    userId: number,
-  ): Promise<boolean>;
+    data: JobApplicationUpdate,
+  ): Promise<JobApplicationSelect | null>;
+  deleteByIdAndUser(id: number, userId: number): Promise<boolean>;
 }
 
-export class JobApplicationRepository
-  extends BaseRepository<
-    typeof jobApplications,
-    JobApplicationInsert,
-    JobApplicationSelect,
-    JobApplicationUpdate
-  >
-  implements IJobApplication
-{
-  constructor(db: Database) {
-    super(jobApplications, db);
+export class JobApplicationRepository implements IJobApplication {
+  private readonly table = jobApplications;
+  constructor(private readonly db: Database) {}
+
+  async create(data: JobApplicationInsert): Promise<JobApplicationSelect> {
+    const [result] = await this.db.insert(this.table).values(data).returning();
+    return result;
   }
 
-  async createJobApplication(
-    data: JobApplicationInsert,
-  ): Promise<{ id: number }> {
-    const [result] = await this.db
-      .insert(jobApplications)
-      .values(data)
-      .$returningId();
-    return { id: result.id };
-  }
-
-  async getJobApplicationByIdAndUserId(
+  async getByIdAndUser(
     id: number,
     userId: number,
   ): Promise<JobApplicationSelect | null> {
-    const result = await this.db.query.jobApplications.findFirst({
-      where: and(
-        eq(jobApplications.id, id),
-        eq(jobApplications.userId, userId),
-      ),
-    });
+    const [result] = await this.db
+      .select()
+      .from(this.table)
+      .where(and(eq(this.table.id, id), eq(this.table.userId, userId)))
+      .limit(1);
     return result ?? null;
   }
 
-  async getAllJobApplicationsByUserId(
+  async getAllByUser(
     userId: number,
     options?: JobApplicationQueryOptions,
   ): Promise<PaginatedJobApplicationResponse> {
-    const whereClause = [eq(jobApplications.userId, userId)];
+    const whereClause = [eq(this.table.userId, userId)];
 
     if (options?.search) {
       const searchTerm = `%${options.search.toLowerCase()}%`;
       whereClause.push(
-        sql`(lower(${jobApplications.companyName}) like ${searchTerm} or lower(${jobApplications.jobTitle}) like ${searchTerm})`,
+        sql`(lower(${this.table.companyName}) like ${searchTerm} or lower(${this.table.jobTitle}) like ${searchTerm})`,
       );
     }
 
     if (options?.appliedAtFrom) {
-      whereClause.push(gte(jobApplications.appliedAt, options.appliedAtFrom));
+      whereClause.push(gte(this.table.appliedAt, options.appliedAtFrom));
     }
 
     if (options?.appliedAtTo) {
-      whereClause.push(lte(jobApplications.appliedAt, options.appliedAtTo));
+      whereClause.push(lte(this.table.appliedAt, options.appliedAtTo));
     }
 
-    const data = await this.db.query.jobApplications.findMany({
-      where: and(...whereClause),
-      orderBy: options?.sortBy
-        ? [
-            options.sortOrder === "desc"
-              ? desc(jobApplications[options.sortBy])
-              : asc(jobApplications[options.sortBy]),
-          ]
-        : [desc(jobApplications.createdAt)],
-      limit: options?.limit ?? 10,
-      offset: options?.offset ?? 0,
-    });
+    const data = await this.db
+      .select()
+      .from(this.table)
+      .where(and(...whereClause))
+      .orderBy(
+        options?.sortBy
+          ? options.sortOrder === "desc"
+            ? desc(this.table[options.sortBy])
+            : asc(this.table[options.sortBy])
+          : desc(this.table.createdAt),
+      )
+      .limit(options?.limit ?? 10)
+      .offset(options?.offset ?? 0);
 
-    const count = await this.db.$count(jobApplications, and(...whereClause));
+    const [countResult] = await this.db
+      .select({ count: sql<number>`count(*)` })
+      .from(this.table)
+      .where(and(...whereClause));
 
     return {
       data,
-      total: count,
+      total: countResult.count,
       limit: options?.limit ?? 10,
       offset: options?.offset ?? 0,
     };
   }
 
-  async updateJobApplicationByIdAndUserId(
+  async updateByIdAndUser(
     id: number,
     userId: number,
-    newData: JobApplicationUpdate,
-  ): Promise<boolean> {
+    data: JobApplicationUpdate,
+  ): Promise<JobApplicationSelect | null> {
     const result = await this.db
-      .update(jobApplications)
-      .set(newData)
-      .where(
-        and(eq(jobApplications.id, id), eq(jobApplications.userId, userId)),
-      );
-    return result.length > 0;
+      .update(this.table)
+      .set(data)
+      .where(and(eq(this.table.id, id), eq(this.table.userId, userId)))
+      .returning();
+    return result.length > 0 ? result[0] : null;
   }
 
-  async deleteJobApplicationByIdAndUserId(
-    id: number,
-    userId: number,
-  ): Promise<boolean> {
+  async deleteByIdAndUser(id: number, userId: number): Promise<boolean> {
     const result = await this.db
-      .delete(jobApplications)
-      .where(
-        and(eq(jobApplications.id, id), eq(jobApplications.userId, userId)),
-      );
+      .delete(this.table)
+      .where(and(eq(this.table.id, id), eq(this.table.userId, userId)))
+      .returning();
     return result.length > 0;
   }
 }
