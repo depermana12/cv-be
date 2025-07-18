@@ -8,36 +8,64 @@ import type {
   LanguageUpdate,
 } from "../db/types/language.type";
 import type { Database } from "../db/index";
+
 export class LanguageRepository extends CvChildRepository<
   typeof languages,
   LanguageInsert,
   LanguageSelect,
-  LanguageUpdate
+  "id"
 > {
   constructor(db: Database) {
-    super(languages, db);
+    super(languages, db, "id");
+  }
+
+  async getLanguage(
+    cvId: number,
+    languageId: number,
+  ): Promise<LanguageSelect | null> {
+    return this.getByIdInCv(cvId, languageId);
   }
 
   async getAllLanguages(
     cvId: number,
-    search?: LanguageQueryOptions,
+    options?: LanguageQueryOptions,
   ): Promise<LanguageSelect[]> {
     const whereClause = [eq(languages.cvId, cvId)];
 
-    if (search?.search) {
-      const searchTerm = `%${search.search.toLowerCase()}%`;
+    if (options?.search) {
+      const searchTerm = `%${options.search.toLowerCase()}%`;
       whereClause.push(like(sql`lower(${languages.language})`, searchTerm));
     }
 
-    return this.db.query.languages.findMany({
-      where: and(...whereClause),
-      orderBy: search?.sortBy
-        ? [
-            search.sortOrder === "desc"
-              ? desc(languages[search.sortBy])
-              : asc(languages[search.sortBy]),
-          ]
-        : [],
-    });
+    return this.db
+      .select()
+      .from(languages)
+      .where(and(...whereClause))
+      .orderBy(
+        options?.sortBy
+          ? options.sortOrder === "desc"
+            ? desc(languages[options.sortBy])
+            : asc(languages[options.sortBy])
+          : asc(languages.id),
+      );
+  }
+
+  async createLanguage(
+    cvId: number,
+    languageData: LanguageInsert,
+  ): Promise<LanguageSelect> {
+    return this.createInCv(cvId, languageData);
+  }
+
+  async updateLanguage(
+    cvId: number,
+    languageId: number,
+    languageData: LanguageUpdate,
+  ): Promise<LanguageSelect> {
+    return this.updateInCv(cvId, languageId, languageData);
+  }
+
+  async deleteLanguage(cvId: number, languageId: number): Promise<boolean> {
+    return this.deleteInCv(cvId, languageId);
   }
 }
