@@ -33,11 +33,11 @@ export class CvRepository
     super(cv, db, "id");
   }
 
-  async createCv(cvData: CvInsert): Promise<CvSelect> {
+  async createCv(cvData: CvInsert) {
     return this.create(cvData);
   }
 
-  async getCvForUser(cvId: number, userId: number): Promise<CvSelect | null> {
+  async getCvForUser(cvId: number, userId: number) {
     const records = await this.db
       .select()
       .from(cv)
@@ -47,10 +47,7 @@ export class CvRepository
     return (records[0] as CvSelect) ?? null;
   }
 
-  async getAllCvForUser(
-    userId: number,
-    options?: CvQueryOptions,
-  ): Promise<PaginatedCvResponse> {
+  async getAllCvForUser(userId: number, options?: CvQueryOptions) {
     const whereClause = [eq(cv.userId, userId)];
 
     if (options?.search) {
@@ -88,11 +85,7 @@ export class CvRepository
     };
   }
 
-  async updateCvForUser(
-    cvId: number,
-    userId: number,
-    newCvData: CvUpdate,
-  ): Promise<CvSelect> {
+  async updateCvForUser(cvId: number, userId: number, newCvData: CvUpdate) {
     const records = await this.db
       .update(cv)
       .set(newCvData)
@@ -102,7 +95,7 @@ export class CvRepository
     return (records as CvSelect[])[0];
   }
 
-  async deleteCvForUser(cvId: number, userId: number): Promise<boolean> {
+  async deleteCvForUser(cvId: number, userId: number) {
     const records = await this.db
       .delete(cv)
       .where(and(eq(cv.id, cvId), eq(cv.userId, userId)))
