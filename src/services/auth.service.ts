@@ -34,6 +34,10 @@ export class AuthService implements IAuthService {
     private readonly tokenService: ITokenService,
   ) {}
 
+  // =============================
+  // USER REGISTRATION & LOGIN
+  // =============================
+
   async registerUser(
     userRegistration: AuthUserRegister,
   ): Promise<AuthUserSafe & AuthTokens> {
@@ -54,20 +58,15 @@ export class AuthService implements IAuthService {
       throw new ValidationError("failed to create user");
     }
 
-    const user = await this.userRepository.getById(createdUser.id);
-    if (!user) {
-      throw new ValidationError("failed to retrieve created user");
-    }
-
     const payload: UserPayload = {
-      id: user.id.toString(),
-      email: user.email,
+      id: createdUser.id.toString(),
+      email: createdUser.email,
     };
 
     const { accessToken, refreshToken } =
       await this.tokenService.generateAuthTokens(payload);
 
-    return { ...user, accessToken, refreshToken };
+    return { ...createdUser, accessToken, refreshToken };
   }
 
   async userLogin(
@@ -83,7 +82,7 @@ export class AuthService implements IAuthService {
       throw new ValidationError("invalid email or password");
     }
 
-    const { password, ...userWithoutPassword } = user;
+    const { password, ...userSafe } = user;
 
     const payload: UserPayload = {
       id: user.id.toString(),
@@ -93,8 +92,12 @@ export class AuthService implements IAuthService {
     const { accessToken, refreshToken } =
       await this.tokenService.generateAuthTokens(payload);
 
-    return { ...userWithoutPassword, accessToken, refreshToken };
+    return { ...userSafe, accessToken, refreshToken };
   }
+
+  // =============================
+  // PASSWORD UTILITIES
+  // =============================
 
   private async hashPassword(password: string): Promise<string> {
     try {
@@ -104,18 +107,22 @@ export class AuthService implements IAuthService {
     }
   }
 
+  // =============================
+  // USER LOOKUP & EMAIL VERIFICATION
+  // =============================
+
   async getByEmail(email: string): Promise<AuthUserSafe> {
     const user = await this.userRepository.getByEmail(email.toLowerCase());
     if (!user) {
       throw new NotFoundError("user record not found");
     }
-    const { password, ...userObjWithoutPassword } = user;
+    const { password, ...userSafe } = user;
 
-    return userObjWithoutPassword;
+    return userSafe;
   }
 
   async isEmailVerified(id: number): Promise<{ verified: boolean }> {
-    const user = await this.userRepository.getById(id);
+    const user = await this.userRepository.getByIdSafe(id);
     if (!user) {
       throw new ValidationError("User not found");
     }
@@ -124,8 +131,13 @@ export class AuthService implements IAuthService {
   }
 
   async verifyUserEmail(id: number): Promise<boolean> {
-    return this.userRepository.verifyUserEmail(id);
+    const result = await this.userRepository.verifyUserEmail(id);
+    return !!result;
   }
+
+  // =============================
+  // TOKEN MANAGEMENT
+  // =============================
 
   async createResetPasswordToken(payload: UserPayload): Promise<string> {
     return this.tokenService.createResetPasswordToken(payload);
@@ -154,14 +166,19 @@ export class AuthService implements IAuthService {
   async generateAuthTokens(user: UserPayload): Promise<AuthTokens> {
     return this.tokenService.generateAuthTokens(user);
   }
-  async changeUserPassword(id: number, newPassword: string): Promise<void> {
+
+  // =============================
+  // PASSWORD MANAGEMENT
+  // =============================
+
+  async changeUserPassword(userId: number, newPassword: string): Promise<void> {
     const hashedNewPassword = await Bun.password.hash(newPassword);
-    const userExists = await this.userRepository.userExistsById(id);
+    const userExists = await this.userRepository.userExistsById(userId);
     if (!userExists) {
       throw new ValidationError("User not found");
     }
     const updated = await this.userRepository.updateUserPassword(
-      id,
+      userId,
       hashedNewPassword,
     );
     if (!updated) {
