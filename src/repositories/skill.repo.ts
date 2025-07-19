@@ -23,12 +23,11 @@ export class SkillRepository extends CvChildRepository<
     return this.getByIdInCv(cvId, skillId);
   }
 
-  async getCategoriesForCv(cvId: number): Promise<string[]> {
-    const rows = await this.db
+  async getCategoriesForCv(cvId: number): Promise<{ category: string }[]> {
+    return this.db
       .selectDistinct({ category: skills.category })
       .from(skills)
       .where(eq(skills.cvId, cvId));
-    return rows.map((row: { category: string }) => row.category);
   }
 
   async getAllSkills(
