@@ -1,18 +1,19 @@
 import { createHonoBindings } from "../lib/create-hono";
 import { zValidator } from "../utils/validator";
 import {
-  cvInsertSchema,
-  cvUpdateSchema,
-  cvQueryOptionsSchema,
+  createCvSchema,
+  updateCvSchema,
+  cvQuerySchema,
+  cvParamsSchema,
 } from "../schemas/cv.schema";
 import { cvService } from "../lib/container";
 
 export const cvRoutes = createHonoBindings()
-  .get("/", zValidator("query", cvQueryOptionsSchema), async (c) => {
-    const { id } = c.get("jwtPayload");
+  .get("/", zValidator("query", cvQuerySchema), async (c) => {
+    const { id: userId } = c.get("jwtPayload");
     const options = c.req.valid("query");
 
-    const cvs = await cvService.getAllCvs(Number(id), options);
+    const cvs = await cvService.getAllCvs(+userId, options);
 
     return c.json(
       {
@@ -28,11 +29,11 @@ export const cvRoutes = createHonoBindings()
       200,
     );
   })
-  .post("/", zValidator("json", cvInsertSchema), async (c) => {
+  .post("/", zValidator("json", createCvSchema), async (c) => {
     const validatedBody = c.req.valid("json");
-    const { id } = c.get("jwtPayload");
+    const { id: userId } = c.get("jwtPayload");
 
-    const newCv = await cvService.createCv(validatedBody, Number(id));
+    const newCv = await cvService.createCv(validatedBody, +userId);
 
     return c.json(
       {
@@ -44,11 +45,11 @@ export const cvRoutes = createHonoBindings()
     );
   })
 
-  .get("/:id", async (c) => {
+  .get("/:id", zValidator("param", cvParamsSchema), async (c) => {
     const { id: userId } = c.get("jwtPayload");
-    const cvId = Number(c.req.param("id"));
+    const { id: cvId } = c.req.valid("param");
 
-    const cv = await cvService.getCvById(cvId, Number(userId));
+    const cv = await cvService.getCvById(cvId, +userId);
 
     return c.json(
       {
@@ -60,32 +61,33 @@ export const cvRoutes = createHonoBindings()
     );
   })
 
-  .patch("/:id", zValidator("json", cvUpdateSchema), async (c) => {
+  .patch(
+    "/:id",
+    zValidator("param", cvParamsSchema),
+    zValidator("json", updateCvSchema),
+    async (c) => {
+      const { id: userId } = c.get("jwtPayload");
+      const { id: cvId } = c.req.valid("param");
+      const validatedBody = c.req.valid("json");
+
+      const updatedCv = await cvService.updateCv(cvId, +userId, validatedBody);
+
+      return c.json(
+        {
+          success: true,
+          message: `record ID: ${cvId} updated successfully`,
+          data: updatedCv,
+        },
+        200,
+      );
+    },
+  )
+
+  .delete("/:id", zValidator("param", cvParamsSchema), async (c) => {
     const { id: userId } = c.get("jwtPayload");
-    const cvId = Number(c.req.param("id"));
-    const validatedBody = c.req.valid("json");
+    const { id: cvId } = c.req.valid("param");
 
-    const updatedCv = await cvService.updateCv(
-      cvId,
-      Number(userId),
-      validatedBody,
-    );
-
-    return c.json(
-      {
-        success: true,
-        message: `record ID: ${cvId} updated successfully`,
-        data: updatedCv,
-      },
-      200,
-    );
-  })
-
-  .delete("/:id", async (c) => {
-    const { id: userId } = c.get("jwtPayload");
-    const cvId = Number(c.req.param("id"));
-
-    const deleted = await cvService.deleteCv(cvId, Number(userId));
+    const deleted = await cvService.deleteCv(cvId, +userId);
 
     return c.json({
       success: true,
