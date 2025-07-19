@@ -7,30 +7,48 @@ import type {
   OrganizationUpdate,
   OrganizationQueryOptions,
 } from "../db/types/organization.type";
+
+export interface IOrganizationRepository {
+  getOrganization(
+    cvId: number,
+    organizationId: number,
+  ): Promise<OrganizationSelect | null>;
+  getAllOrganizations(
+    cvId: number,
+    options?: OrganizationQueryOptions,
+  ): Promise<OrganizationSelect[]>;
+  createOrganization(
+    cvId: number,
+    organizationData: OrganizationInsert,
+  ): Promise<OrganizationSelect>;
+  updateOrganization(
+    cvId: number,
+    organizationId: number,
+    organizationData: OrganizationUpdate,
+  ): Promise<OrganizationSelect>;
+  deleteOrganization(cvId: number, organizationId: number): Promise<boolean>;
+}
 import { organizations } from "../db/schema/organization.db";
 import type { Database } from "../db/index";
 
-export class OrganizationRepository extends CvChildRepository<
-  typeof organizations,
-  OrganizationInsert,
-  OrganizationSelect,
-  "id"
-> {
+export class OrganizationRepository
+  extends CvChildRepository<
+    typeof organizations,
+    OrganizationInsert,
+    OrganizationSelect,
+    "id"
+  >
+  implements IOrganizationRepository
+{
   constructor(db: Database) {
     super(organizations, db, "id");
   }
 
-  async getOrganization(
-    cvId: number,
-    organizationId: number,
-  ): Promise<OrganizationSelect | null> {
+  async getOrganization(cvId: number, organizationId: number) {
     return this.getByIdInCv(cvId, organizationId);
   }
 
-  async getAllOrganizations(
-    cvId: number,
-    options?: OrganizationQueryOptions,
-  ): Promise<OrganizationSelect[]> {
+  async getAllOrganizations(cvId: number, options?: OrganizationQueryOptions) {
     const whereClause = [eq(organizations.cvId, cvId)];
 
     if (options?.search) {
@@ -55,10 +73,7 @@ export class OrganizationRepository extends CvChildRepository<
       );
   }
 
-  async createOrganization(
-    cvId: number,
-    organizationData: OrganizationInsert,
-  ): Promise<OrganizationSelect> {
+  async createOrganization(cvId: number, organizationData: OrganizationInsert) {
     return this.createInCv(cvId, organizationData);
   }
 
@@ -66,14 +81,11 @@ export class OrganizationRepository extends CvChildRepository<
     cvId: number,
     organizationId: number,
     organizationData: OrganizationUpdate,
-  ): Promise<OrganizationSelect> {
+  ) {
     return this.updateInCv(cvId, organizationId, organizationData);
   }
 
-  async deleteOrganization(
-    cvId: number,
-    organizationId: number,
-  ): Promise<boolean> {
+  async deleteOrganization(cvId: number, organizationId: number) {
     return this.deleteInCv(cvId, organizationId);
   }
 }
