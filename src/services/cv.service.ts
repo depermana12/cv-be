@@ -3,6 +3,7 @@ import type {
   CvInsert,
   CvQueryOptions,
   CvSelect,
+  CvStats,
   CvUpdate,
   PaginatedCvResponse,
 } from "../db/types/cv.type";
@@ -21,6 +22,12 @@ export interface ICvService {
     newCvData: CvUpdate,
   ): Promise<CvSelect>;
   deleteCv(cvId: number, userId: number): Promise<boolean>;
+
+  getCvBySlug(slug: string): Promise<CvSelect>;
+  viewCv(cvId: number): Promise<CvSelect>;
+  downloadCv(cvId: number): Promise<CvSelect>;
+  getPopularCvs(limit?: number): Promise<CvSelect[]>;
+  getUserStats(userId: number): Promise<CvStats>;
 }
 
 export class CvService implements ICvService {
@@ -69,5 +76,43 @@ export class CvService implements ICvService {
 
   async deleteCv(cvId: number, userId: number) {
     return this.cvRepository.deleteCvForUser(cvId, userId);
+  }
+
+  async getCvBySlug(slug: string) {
+    const cv = await this.cvRepository.getCvBySlug(slug);
+    if (!cv) {
+      throw new NotFoundError(`[Service] CV with slug '${slug}' not found`);
+    }
+    return cv;
+  }
+
+  async viewCv(cvId: number) {
+    const cv = await this.cvRepository.getCvBySlug(cvId.toString());
+    if (!cv) {
+      throw new NotFoundError(`[Service] CV with ID ${cvId} not found`);
+    }
+
+    await this.cvRepository.incrementViews(cvId);
+
+    return { ...cv, views: cv.views + 1 };
+  }
+
+  async downloadCv(cvId: number) {
+    const cv = await this.cvRepository.getCvBySlug(cvId.toString());
+    if (!cv) {
+      throw new NotFoundError(`[Service] CV with ID ${cvId} not found`);
+    }
+
+    await this.cvRepository.incrementDownloads(cvId);
+
+    return { ...cv, downloads: cv.downloads + 1 };
+  }
+
+  async getPopularCvs(limit = 10) {
+    return this.cvRepository.getPopularCvs(limit);
+  }
+
+  async getUserStats(userId: number) {
+    return this.cvRepository.getUserCvStats(userId);
   }
 }

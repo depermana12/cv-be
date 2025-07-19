@@ -10,6 +10,9 @@ export type CvQueryOptions = {
   sortOrder?: "asc" | "desc";
   limit?: number;
   offset?: number;
+  isPublic?: boolean;
+  from?: Date;
+  to?: Date;
 };
 
 export type PaginatedCvResponse = {
@@ -17,4 +20,10 @@ export type PaginatedCvResponse = {
   total: number;
   limit: number;
   offset: number;
+};
+
+export type CvStats = {
+  totalViews: number;
+  totalDownloads: number;
+  totalCvs: number;
 };
