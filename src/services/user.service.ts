@@ -1,4 +1,5 @@
 import { NotFoundError } from "../errors/not-found.error";
+import { ValidationError } from "../errors/validation.error";
 import type { IUserRepository } from "../repositories/user.repo";
 
 import type { AuthUserSafe, UserStats } from "../db/types/auth.type";
@@ -14,6 +15,8 @@ export interface IUserService {
     id: number,
     newUserData: UpdateUserProfileSafe,
   ): Promise<AuthUserSafe>;
+  updateUserEmail(id: number, newEmail: string): Promise<AuthUserSafe>;
+  updateUserUsername(id: number, newUsername: string): Promise<AuthUserSafe>;
   isUserEmailVerified(id: number): Promise<{ verified: boolean }>;
   isUsernameExists(username: string): Promise<boolean>;
   getUserStats(id: number): Promise<UserStats>;
@@ -25,15 +28,19 @@ export class UserService implements IUserService {
     private readonly jobApplicationService: IJobApplicationService,
   ) {}
 
-  async getUserByIdSafe(id: number): Promise<AuthUserSafe> {
-    const user = await this.userRepository.getById(id);
+  // =============================
+  // USER DATA RETRIEVAL
+  // =============================
+
+  async getUserByIdSafe(id: number) {
+    const user = await this.userRepository.getByIdSafe(id);
     if (!user) {
       throw new NotFoundError("user record not found");
     }
     return user;
   }
 
-  async getUserByEmail(email: string): Promise<AuthUserSafe> {
+  async getUserByEmail(email: string) {
     const user = await this.userRepository.getByEmail(email.toLowerCase());
     if (!user) {
       throw new NotFoundError("user record not found");
@@ -43,7 +50,7 @@ export class UserService implements IUserService {
     return userObjWithoutPassword;
   }
 
-  async getUserByEmailSafe(email: string): Promise<AuthUserSafe> {
+  async getUserByEmailSafe(email: string) {
     const user = await this.userRepository.getByEmailSafe(email.toLowerCase());
     if (!user) {
       throw new NotFoundError("user record not found");
@@ -52,10 +59,11 @@ export class UserService implements IUserService {
     return user;
   }
 
-  async updateUserProfile(
-    id: number,
-    newUserData: UpdateUserProfileSafe,
-  ): Promise<AuthUserSafe> {
+  // =============================
+  // USER PROFILE MANAGEMENT
+  // =============================
+
+  async updateUserProfile(id: number, newUserData: UpdateUserProfileSafe) {
     const updatedUser = await this.userRepository.updateUser(id, newUserData);
     if (!updatedUser) {
       throw new NotFoundError("user record not found");
@@ -63,30 +71,75 @@ export class UserService implements IUserService {
 
     return this.getUserByIdSafe(id);
   }
-  // async updateUser(
-  //   id: number,
-  //   newUserData: UpdateUserProfileSafe,
-  // ): Promise<AuthUserSafe> {
-  //   if (newUserData.username) {
-  //     const existingUser = await this.isUsernameExists(
-  //       newUserData.username.toLowerCase(),
-  //     );
-  //     if (existingUser) {
-  //       throw new ValidationError("username already taken");
-  //     }
-  //   }
 
-  //   const updatedUser = await this.userRepository.updateUser(id, newUserData);
-  //   if (!updatedUser) {
-  //     throw new NotFoundError("user record not found");
-  //   }
+  async updateUserEmail(id: number, newEmail: string) {
+    const updatedUser = await this.userRepository.updateEmail(
+      id,
+      newEmail.toLowerCase(),
+    );
+    if (!updatedUser) {
+      throw new NotFoundError("user record not found");
+    }
+    return updatedUser;
+  }
 
-  //   return this.getUserByIdSafe(id);
-  // }
+  async updateUserUsername(id: number, newUsername: string) {
+    const usernameExists = await this.isUsernameExists(
+      newUsername.toLowerCase(),
+    );
+    if (usernameExists) {
+      throw new ValidationError("username already taken");
+    }
 
-  //----------------------------------
-  // Utility methods
-  //----------------------------------
+    const updatedUser = await this.userRepository.updateUsername(
+      id,
+      newUsername.toLowerCase(),
+    );
+    if (!updatedUser) {
+      throw new NotFoundError("user record not found");
+    }
+    return updatedUser;
+  }
+
+  // =============================
+  // USER VALIDATION & STATUS
+  // =============================
+
+  async isUserEmailVerified(id: number) {
+    const user = await this.getUserByIdSafe(id);
+    return { verified: user.isEmailVerified || false };
+  }
+
+  async isUsernameExists(username: string) {
+    const user = await this.userRepository.isUsernameExists(
+      username.toLowerCase(),
+    );
+    return !!user;
+  }
+
+  // =============================
+  // USER STATISTICS & ANALYTICS
+  // =============================
+
+  async getUserStats(id: number) {
+    const user = await this.getUserByIdSafe(id);
+    const accountAge = this.calculateAccountAge(user.createdAt);
+    const isEmailVerified = await this.isUserEmailVerified(id);
+    const cvCount = await this.getUserCvCount(id);
+    const totalJobApplications = await this.getUserJobApplicationsCount(id);
+
+    return {
+      user,
+      accountAge,
+      isEmailVerified: isEmailVerified.verified,
+      cvCreated: cvCount,
+      totalJobApplications,
+    };
+  }
+
+  // =============================
+  // PRIVATE UTILITY METHODS
+  // =============================
 
   /**
    * Converts a milliseconds timestamp to the age of the user account in days.
@@ -120,33 +173,5 @@ export class UserService implements IUserService {
       offset: 0,
     });
     return result.total;
-  }
-
-  async isUserEmailVerified(id: number): Promise<{ verified: boolean }> {
-    const user = await this.getUserByIdSafe(id);
-    return { verified: user.isEmailVerified || false };
-  }
-
-  async isUsernameExists(username: string): Promise<boolean> {
-    const user = await this.userRepository.isUsernameExists(
-      username.toLowerCase(),
-    );
-    return !!user;
-  }
-
-  async getUserStats(id: number): Promise<UserStats> {
-    const user = await this.getUserByIdSafe(id);
-    const accountAge = this.calculateAccountAge(user.createdAt);
-    const isEmailVerified = await this.isUserEmailVerified(id);
-    const cvCount = await this.getUserCvCount(id);
-    const totalJobApplications = await this.getUserJobApplicationsCount(id);
-
-    return {
-      user,
-      accountAge,
-      isEmailVerified: isEmailVerified.verified,
-      cvCreated: cvCount,
-      totalJobApplications,
-    };
   }
 }
