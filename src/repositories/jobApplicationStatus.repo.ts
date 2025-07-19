@@ -24,9 +24,7 @@ export class JobApplicationStatusRepository implements IJobApplicationStatus {
   private readonly table = jobApplicationStatuses;
   constructor(private readonly db: Database) {}
 
-  async getStatuses(
-    applicationId: number,
-  ): Promise<JobApplicationStatusSelect[]> {
+  async getStatuses(applicationId: number) {
     return this.db
       .select()
       .from(this.table)
@@ -34,10 +32,7 @@ export class JobApplicationStatusRepository implements IJobApplicationStatus {
       .orderBy(desc(this.table.changedAt));
   }
 
-  async addStatus(
-    applicationId: number,
-    status: JobApplicationStatusInsert,
-  ): Promise<JobApplicationStatusSelect> {
+  async addStatus(applicationId: number, status: JobApplicationStatusInsert) {
     const [inserted] = await this.db
       .insert(this.table)
       .values({ ...status, applicationId })
@@ -45,10 +40,7 @@ export class JobApplicationStatusRepository implements IJobApplicationStatus {
 
     return inserted;
   }
-  async updateStatus(
-    id: number,
-    newStatus: JobApplicationStatusUpdate,
-  ): Promise<JobApplicationStatusSelect | null> {
+  async updateStatus(id: number, newStatus: JobApplicationStatusUpdate) {
     const result = await this.db
       .update(this.table)
       .set(newStatus)
@@ -57,7 +49,7 @@ export class JobApplicationStatusRepository implements IJobApplicationStatus {
 
     return result.length > 0 ? result[0] : null;
   }
-  async deleteStatuses(applicationId: number): Promise<boolean> {
+  async deleteStatuses(applicationId: number) {
     const result = await this.db
       .delete(this.table)
       .where(eq(this.table.applicationId, applicationId))
