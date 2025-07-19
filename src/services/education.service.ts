@@ -2,26 +2,16 @@ import { CvChildService } from "./cvChild.service";
 import type { EducationRepository } from "../repositories/education.repo";
 import type {
   EducationInsert,
-  EducationQueryOptions,
   EducationSelect,
+  EducationUpdate,
 } from "../db/types/education.type";
 
 export interface IEducationService {
-  createEducation(
-    cvId: number,
-    educationData: Omit<EducationInsert, "cvId">,
-  ): Promise<EducationSelect>;
-  getEducation(cvId: number, educationId: number): Promise<EducationSelect>;
-  getAllEducations(
-    cvId: number,
-    options?: EducationQueryOptions,
-  ): Promise<EducationSelect[]>;
   updateEducation(
     cvId: number,
     educationId: number,
-    newEducationData: Omit<EducationInsert, "cvId">,
+    newEducationData: EducationUpdate,
   ): Promise<EducationSelect>;
-  deleteEducation(cvId: number, educationId: number): Promise<boolean>;
 }
 
 export class EducationService
@@ -32,30 +22,12 @@ export class EducationService
     super(educationRepository);
   }
 
-  async createEducation(
-    cvId: number,
-    educationData: Omit<EducationInsert, "cvId">,
-  ) {
-    return this.createInCv(cvId, { ...educationData, cvId });
-  }
-
-  async getEducation(cvId: number, educationId: number) {
-    return this.getByIdInCv(cvId, educationId);
-  }
-
-  async getAllEducations(cvId: number, options?: EducationQueryOptions) {
-    return this.educationRepository.getAllEducations(cvId, options);
-  }
-
+  // Custom method: specific updateData type (removes cvId from updateData)
   async updateEducation(
     cvId: number,
     educationId: number,
-    newEducationData: Omit<EducationInsert, "cvId">,
+    newEducationData: EducationUpdate,
   ) {
     return this.updateInCv(cvId, educationId, newEducationData);
-  }
-
-  async deleteEducation(cvId: number, educationId: number) {
-    return this.deleteInCv(cvId, educationId);
   }
 }

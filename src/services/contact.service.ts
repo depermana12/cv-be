@@ -1,13 +1,16 @@
-import type { ContactInsert, ContactSelect } from "../db/types/contact.type";
+import type {
+  ContactInsert,
+  ContactSelect,
+  ContactUpdate,
+} from "../db/types/contact.type";
 import { CvChildService } from "./cvChild.service";
 import { ContactRepository } from "../repositories/contact.repo";
-import { NotFoundError } from "../errors/not-found.error";
 
 export interface IContactService {
   updateContact(
     cvId: number,
     contactId: number,
-    updateData: Omit<ContactInsert, "cvId">,
+    updateData: ContactUpdate,
   ): Promise<ContactSelect>;
 }
 
@@ -23,7 +26,7 @@ export class ContactService
   async updateContact(
     cvId: number,
     contactId: number,
-    updateData: Omit<ContactInsert, "cvId">,
+    updateData: ContactUpdate,
   ) {
     return this.updateInCv(cvId, contactId, updateData);
   }

@@ -1,27 +1,17 @@
 import type {
   ProjectInsert,
-  ProjectQueryOptions,
   ProjectSelect,
+  ProjectUpdate,
 } from "../db/types/project.type";
 import { CvChildService } from "./cvChild.service";
 import { ProjectRepository } from "../repositories/project.repo";
 
 export interface IProjectService {
-  createProject(
-    cvId: number,
-    projectData: Omit<ProjectInsert, "cvId">,
-  ): Promise<ProjectSelect>;
-  getProject(cvId: number, projectId: number): Promise<ProjectSelect>;
-  getAllProjects(
-    cvId: number,
-    options?: ProjectQueryOptions,
-  ): Promise<ProjectSelect[]>;
   updateProject(
     cvId: number,
     projectId: number,
-    updateData: Omit<ProjectInsert, "cvId">,
+    updateData: ProjectUpdate,
   ): Promise<ProjectSelect>;
-  deleteProject(cvId: number, projectId: number): Promise<boolean>;
 }
 
 export class ProjectService
@@ -32,27 +22,12 @@ export class ProjectService
     super(projectRepository);
   }
 
-  async createProject(cvId: number, projectData: Omit<ProjectInsert, "cvId">) {
-    return this.createInCv(cvId, { ...projectData, cvId });
-  }
-
-  async getProject(cvId: number, projectId: number) {
-    return this.getByIdInCv(cvId, projectId);
-  }
-
-  async getAllProjects(cvId: number, options?: ProjectQueryOptions) {
-    return this.projectRepository.getAllProjects(cvId, options);
-  }
-
+  // Custom method: specific updateData type (removes cvId from updateData)
   async updateProject(
     cvId: number,
     projectId: number,
-    updateData: Omit<ProjectInsert, "cvId">,
+    updateData: ProjectUpdate,
   ) {
     return this.updateInCv(cvId, projectId, updateData);
-  }
-
-  async deleteProject(cvId: number, projectId: number) {
-    return this.deleteInCv(cvId, projectId);
   }
 }
