@@ -38,21 +38,15 @@ export class OrganizationService
   async createOrganization(
     cvId: number,
     organizationData: Omit<OrganizationInsert, "cvId">,
-  ): Promise<OrganizationSelect> {
+  ) {
     return this.createInCv(cvId, { ...organizationData, cvId });
   }
 
-  async getOrganization(
-    cvId: number,
-    organizationId: number,
-  ): Promise<OrganizationSelect> {
+  async getOrganization(cvId: number, organizationId: number) {
     return this.getByIdInCv(cvId, organizationId);
   }
 
-  async getAllOrganizations(
-    cvId: number,
-    options?: OrganizationQueryOptions,
-  ): Promise<OrganizationSelect[]> {
+  async getAllOrganizations(cvId: number, options?: OrganizationQueryOptions) {
     return this.organizationRepository.getAllOrganizations(cvId, options);
   }
 
@@ -60,14 +54,11 @@ export class OrganizationService
     cvId: number,
     organizationId: number,
     updateData: Omit<OrganizationInsert, "cvId">,
-  ): Promise<OrganizationSelect> {
+  ) {
     return this.updateInCv(cvId, organizationId, updateData);
   }
 
-  async deleteOrganization(
-    cvId: number,
-    organizationId: number,
-  ): Promise<boolean> {
+  async deleteOrganization(cvId: number, organizationId: number) {
     return this.deleteInCv(cvId, organizationId);
   }
 }

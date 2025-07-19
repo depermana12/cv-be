@@ -32,21 +32,15 @@ export class ProjectService
     super(projectRepository);
   }
 
-  async createProject(
-    cvId: number,
-    projectData: Omit<ProjectInsert, "cvId">,
-  ): Promise<ProjectSelect> {
+  async createProject(cvId: number, projectData: Omit<ProjectInsert, "cvId">) {
     return this.createInCv(cvId, { ...projectData, cvId });
   }
 
-  async getProject(cvId: number, projectId: number): Promise<ProjectSelect> {
+  async getProject(cvId: number, projectId: number) {
     return this.getByIdInCv(cvId, projectId);
   }
 
-  async getAllProjects(
-    cvId: number,
-    options?: ProjectQueryOptions,
-  ): Promise<ProjectSelect[]> {
+  async getAllProjects(cvId: number, options?: ProjectQueryOptions) {
     return this.projectRepository.getAllProjects(cvId, options);
   }
 
@@ -54,11 +48,11 @@ export class ProjectService
     cvId: number,
     projectId: number,
     updateData: Omit<ProjectInsert, "cvId">,
-  ): Promise<ProjectSelect> {
+  ) {
     return this.updateInCv(cvId, projectId, updateData);
   }
 
-  async deleteProject(cvId: number, projectId: number): Promise<boolean> {
+  async deleteProject(cvId: number, projectId: number) {
     return this.deleteInCv(cvId, projectId);
   }
 }

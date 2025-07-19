@@ -30,7 +30,7 @@ export class CvService implements ICvService {
     cvId: number,
     userId: number,
   ): Promise<CvSelect> {
-    const cv = await this.cvRepository.getCvByIdAndUserId(cvId, userId);
+    const cv = await this.cvRepository.getCvForUser(cvId, userId);
     if (!cv) {
       throw new NotFoundError(
         `[Service] CV with ID ${cvId} not found for user ${userId}`,
@@ -39,33 +39,22 @@ export class CvService implements ICvService {
     return cv;
   }
 
-  async createCv(
-    cvData: Omit<CvInsert, "userId">,
-    userId: number,
-  ): Promise<CvSelect> {
+  async createCv(cvData: Omit<CvInsert, "userId">, userId: number) {
     const { id } = await this.cvRepository.createCv({ ...cvData, userId });
-
     return this.getCvById(id, userId);
   }
 
-  async getCvById(cvId: number, userId: number): Promise<CvSelect> {
+  async getCvById(cvId: number, userId: number) {
     return this.assertCvOwnedByUser(cvId, userId);
   }
 
-  async getAllCvs(
-    userId: number,
-    options?: CvQueryOptions,
-  ): Promise<PaginatedCvResponse> {
-    return this.cvRepository.getAllCvByUserId(userId, options);
+  async getAllCvs(userId: number, options?: CvQueryOptions) {
+    return this.cvRepository.getAllCvForUser(userId, options);
   }
 
-  async updateCv(
-    cvId: number,
-    userId: number,
-    newCvData: CvUpdate,
-  ): Promise<CvSelect> {
+  async updateCv(cvId: number, userId: number, newCvData: CvUpdate) {
     const cv = await this.assertCvOwnedByUser(cvId, userId);
-    const updated = await this.cvRepository.updateCvByIdAndUserId(
+    const updated = await this.cvRepository.updateCvForUser(
       cv.id,
       userId,
       newCvData,
@@ -78,7 +67,7 @@ export class CvService implements ICvService {
     return this.getCvById(cvId, userId);
   }
 
-  async deleteCv(cvId: number, userId: number): Promise<boolean> {
-    return this.cvRepository.deleteCvByIdAndUserId(cvId, userId);
+  async deleteCv(cvId: number, userId: number) {
+    return this.cvRepository.deleteCvForUser(cvId, userId);
   }
 }

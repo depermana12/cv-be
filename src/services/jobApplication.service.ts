@@ -45,7 +45,7 @@ export class JobApplicationService {
     id: number,
     userId: number,
   ): Promise<JobApplicationSelect> {
-    const app = await this.repo.getJobApplicationByIdAndUserId(id, userId);
+    const app = await this.repo.getByIdAndUser(id, userId);
     if (!app) {
       throw new NotFoundError(
         `[Service] Job Application with ID ${id} not found for user ${userId}`,
@@ -57,8 +57,8 @@ export class JobApplicationService {
   async createJobApplication(
     data: Omit<JobApplicationInsert, "userId">,
     userId: number,
-  ): Promise<JobApplicationSelect> {
-    const { id } = await this.repo.createJobApplication({
+  ) {
+    const { id } = await this.repo.create({
       ...data,
       userId,
     });
@@ -72,18 +72,15 @@ export class JobApplicationService {
     return this.getJobApplicationById(id, userId);
   }
 
-  async getJobApplicationById(
-    id: number,
-    userId: number,
-  ): Promise<JobApplicationSelect> {
+  async getJobApplicationById(id: number, userId: number) {
     return this.assertOwned(id, userId);
   }
 
   async getAllJobApplications(
     userId: number,
     options?: JobApplicationQueryOptions,
-  ): Promise<PaginatedJobApplicationResponse> {
-    return this.repo.getAllJobApplicationsByUserId(userId, options);
+  ) {
+    return this.repo.getAllByUser(userId, options);
   }
 
   async updateJobApplication(
@@ -91,7 +88,7 @@ export class JobApplicationService {
     userId: number,
     newData: JobApplicationUpdate,
     statusChangeAt?: Date,
-  ): Promise<JobApplicationSelect> {
+  ) {
     const job = await this.assertOwned(id, userId);
 
     const hasStatusChanged = newData.status && newData.status !== job.status;
@@ -105,11 +102,7 @@ export class JobApplicationService {
       });
     }
 
-    const updated = await this.repo.updateJobApplicationByIdAndUserId(
-      id,
-      userId,
-      newData,
-    );
+    const updated = await this.repo.updateByIdAndUser(id, userId, newData);
     if (!updated) {
       throw new NotFoundError(
         `[Service] Job Application with ID ${id} not found for user ${userId}`,
@@ -123,7 +116,7 @@ export class JobApplicationService {
     return this.statusRepo.getStatuses(applicationId);
   }
 
-  async deleteJobApplication(id: number, userId: number): Promise<boolean> {
-    return this.repo.deleteJobApplicationByIdAndUserId(id, userId);
+  async deleteJobApplication(id: number, userId: number) {
+    return this.repo.deleteByIdAndUser(id, userId);
   }
 }
