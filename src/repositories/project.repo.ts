@@ -8,29 +8,39 @@ import type {
   ProjectUpdate,
   ProjectQueryOptions,
 } from "../db/types/project.type";
+
+export interface IProjectRepository {
+  getProject(cvId: number, projectId: number): Promise<ProjectSelect | null>;
+  getAllProjects(
+    cvId: number,
+    options?: ProjectQueryOptions,
+  ): Promise<ProjectSelect[]>;
+  createProject(
+    cvId: number,
+    projectData: ProjectInsert,
+  ): Promise<ProjectSelect>;
+  updateProject(
+    cvId: number,
+    projectId: number,
+    projectData: ProjectUpdate,
+  ): Promise<ProjectSelect>;
+  deleteProject(cvId: number, projectId: number): Promise<boolean>;
+}
 import type { Database } from "../db/index";
 
-export class ProjectRepository extends CvChildRepository<
-  typeof projects,
-  ProjectInsert,
-  ProjectSelect,
-  "id"
-> {
+export class ProjectRepository
+  extends CvChildRepository<typeof projects, ProjectInsert, ProjectSelect, "id">
+  implements IProjectRepository
+{
   constructor(db: Database) {
     super(projects, db, "id");
   }
 
-  async getProject(
-    cvId: number,
-    projectId: number,
-  ): Promise<ProjectSelect | null> {
+  async getProject(cvId: number, projectId: number) {
     return this.getByIdInCv(cvId, projectId);
   }
 
-  async getAllProjects(
-    cvId: number,
-    options?: ProjectQueryOptions,
-  ): Promise<ProjectSelect[]> {
+  async getAllProjects(cvId: number, options?: ProjectQueryOptions) {
     const whereClause = [eq(projects.cvId, cvId)];
 
     if (options?.search) {
@@ -51,10 +61,7 @@ export class ProjectRepository extends CvChildRepository<
       );
   }
 
-  async createProject(
-    cvId: number,
-    projectData: ProjectInsert,
-  ): Promise<ProjectSelect> {
+  async createProject(cvId: number, projectData: ProjectInsert) {
     return this.createInCv(cvId, projectData);
   }
 
@@ -62,11 +69,11 @@ export class ProjectRepository extends CvChildRepository<
     cvId: number,
     projectId: number,
     projectData: ProjectUpdate,
-  ): Promise<ProjectSelect> {
+  ) {
     return this.updateInCv(cvId, projectId, projectData);
   }
 
-  async deleteProject(cvId: number, projectId: number): Promise<boolean> {
+  async deleteProject(cvId: number, projectId: number) {
     return this.deleteInCv(cvId, projectId);
   }
 }
