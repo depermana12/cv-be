@@ -26,37 +26,50 @@ export class TokenService implements ITokenService {
     if (!secret) throw new Error("JWT secret is not defined");
   }
 
+  // =============================
+  // PRIVATE UTILITIES
+  // =============================
+
   private nowInSeconds(): number {
     return Math.floor(Date.now() / 1000);
   }
 
-  /**
-   * Creates a JWT token with the given payload.
-   * @param payload - The payload to include in the token.
-   * @returns A signed JWT token.
-   */
-  async createToken(payload: UserPayload): Promise<string> {
+  private async createToken(payload: UserPayload): Promise<string> {
     return sign(payload, this.secret);
   }
+
+  // =============================
+  // TOKEN DECODING & VERIFICATION
+  // =============================
 
   /**
    * Decodes a JWT token without verifying its signature.
    * Use only for non-sensitive, non-authenticated operations.
-   * @param token - The JWT token to decode.
-   * @returns The decoded payload.
    */
-  async decodeToken(token: string): Promise<UserPayload> {
+  async decodeToken(token: string) {
     const { header, payload } = decode(token);
     return payload as UserPayload;
   }
 
   /**
+   * Verifies a JWT token and returns the decoded payload.
+   * @throws ValidationError if the token is invalid or expired.
+   */
+  async verifyToken<T extends object>(token: string) {
+    return (await verify(token, this.secret)) as T;
+  }
+
+  // =============================
+  // AUTH TOKEN CREATION (ACCESS & REFRESH)
+  // =============================
+
+  /**
    * Creates an access token for the user.
-   * The token is valid for 7 days.
+   * The token is valid for 1 hour.
    * @param user - The user payload to include in the token.
    * @returns A signed JWT token for access.
    */
-  async createAccessToken(user: UserPayload): Promise<string> {
+  async createAccessToken(user: UserPayload) {
     const now = this.nowInSeconds();
     const payload: UserPayload = {
       id: user.id,
@@ -69,15 +82,12 @@ export class TokenService implements ITokenService {
 
   /**
    * Creates a refresh token for the user.
-   * The token is valid for 30 days.
+   * The token is valid for 14 days by default, or 1 day if `rememberMe` is false.
    * @param user - The user payload to include in the token.
    * @param rememberMe - If true, the token will be valid for 14 days; otherwise, it will be valid for 1 day.
    * @returns A signed JWT token for refresh.
    */
-  async createRefreshToken(
-    user: UserPayload,
-    rememberMe = false,
-  ): Promise<string> {
+  async createRefreshToken(user: UserPayload, rememberMe = false) {
     const now = this.nowInSeconds();
     const exp = rememberMe
       ? now + this.refreshTokenExpirationSeconds // 14 days
@@ -97,19 +107,23 @@ export class TokenService implements ITokenService {
    * @param user - The user payload to include in the tokens.
    * @returns An object containing both access and refresh tokens.
    */
-  async generateAuthTokens(user: UserPayload): Promise<AuthTokens> {
+  async generateAuthTokens(user: UserPayload) {
     const accessToken = await this.createAccessToken(user);
     const refreshToken = await this.createRefreshToken(user);
     return { accessToken, refreshToken };
   }
 
+  // =============================
+  // SPECIAL PURPOSE TOKEN CREATION
+  // =============================
+
   /**
    * Creates a reset password token for the user.
-   * The token is valid for 10 minutes.
+   * The token is valid for 15 minutes.
    * @param user - The user payload to include in the token.
    * @returns A signed JWT token for password reset.
    */
-  async createResetPasswordToken(user: UserPayload): Promise<string> {
+  async createResetPasswordToken(user: UserPayload) {
     const now = this.nowInSeconds();
     const payload: UserPayload = {
       id: user.id,
@@ -126,7 +140,7 @@ export class TokenService implements ITokenService {
    * @param user - The user payload to include in the token.
    * @returns A signed JWT token for email verification.
    */
-  async createEmailVerificationToken(user: UserPayload): Promise<string> {
+  async createEmailVerificationToken(user: UserPayload) {
     const now = this.nowInSeconds();
     const payload: UserPayload = {
       id: user.id,
@@ -137,17 +151,11 @@ export class TokenService implements ITokenService {
     return this.createToken(payload);
   }
 
-  /**
-   * Verifies a JWT refresh token and returns the decoded payload.
-   * @param token - The JWT token to verify.
-   * @returns The decoded payload if the token is valid.
-   * @throws ValidationError if the token is invalid or expired.
-   */
-  async verifyToken<T extends object>(token: string): Promise<T> {
-    return (await verify(token, this.secret)) as T;
-  }
+  // =============================
+  // TOKEN VALIDATION
+  // =============================
 
-  async validateRefreshToken(token: string): Promise<UserPayload> {
+  async validateRefreshToken(token: string) {
     const payload = await this.verifyToken<UserPayload>(token);
 
     if (!payload.exp) {
@@ -167,7 +175,7 @@ export class TokenService implements ITokenService {
    * @returns The decoded user payload if the token is valid.
    * @throws ValidationError if the token is invalid or expired.
    */
-  async validateResetPasswordToken(token: string): Promise<UserPayload> {
+  async validateResetPasswordToken(token: string) {
     const payload = await this.verifyToken<UserPayload>(token);
 
     if (!payload.exp) {
@@ -188,7 +196,7 @@ export class TokenService implements ITokenService {
    * @returns The decoded user payload if the token is valid.
    * @throws ValidationError if the token is invalid or expired.
    */
-  async validateEmailVerificationToken(token: string): Promise<UserPayload> {
+  async validateEmailVerificationToken(token: string) {
     const payload = await this.verifyToken<UserPayload>(token);
 
     if (!payload.exp) {
