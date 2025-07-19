@@ -5,9 +5,3 @@ export type ProjectInsert = typeof projects.$inferInsert;
 export type ProjectUpdate = Partial<
   Omit<typeof projects.$inferInsert, "id" | "cvId">
 >;
-
-export type ProjectQueryOptions = {
-  search?: string;
-  sortBy?: keyof ProjectSelect;
-  sortOrder?: "asc" | "desc";
-};

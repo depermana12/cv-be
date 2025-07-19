@@ -5,9 +5,3 @@ export type OrganizationInsert = typeof organizations.$inferInsert;
 export type OrganizationUpdate = Partial<
   Omit<OrganizationInsert, "id" | "cvId">
 >;
-
-export type OrganizationQueryOptions = {
-  search?: string;
-  sortBy?: keyof OrganizationSelect;
-  sortOrder?: "asc" | "desc";
-};
