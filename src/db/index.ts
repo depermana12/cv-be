@@ -6,33 +6,28 @@ import { config } from "../config/index.js";
 
 import * as user from "./schema/user.db";
 import * as cv from "./schema/cv.db";
-import * as profile from "./schema/profile.db";
-import * as language from "./schema/language.db";
+import * as contact from "./schema/contact.db.js";
 import * as education from "./schema/education.db";
-import * as location from "./schema/location.db";
-import * as social from "./schema/social.db";
 import * as work from "./schema/work.db";
-import * as organization from "./schema/organization.db";
 import * as project from "./schema/project.db";
-import * as skill from "./schema/skill.db";
+import * as organization from "./schema/organization.db";
 import * as course from "./schema/course.db";
-import * as contact from "./schema/contact.db";
+import * as skill from "./schema/skill.db";
+import * as language from "./schema/language.db";
+// import * as coverLetter from "./schema/coverLetter.db";
 import * as jobApplication from "./schema/jobApplication.db";
 
 export const schema = {
   ...user,
   ...cv,
-  ...profile,
-  ...language,
-  ...education,
-  ...location,
-  ...social,
-  ...work,
-  ...organization,
-  ...project,
-  ...skill,
-  ...course,
   ...contact,
+  ...education,
+  ...work,
+  ...project,
+  ...organization,
+  ...course,
+  ...skill,
+  ...language,
   ...jobApplication,
 };
 
