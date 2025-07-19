@@ -12,6 +12,8 @@ export interface CvChildCrudRepository<TS, TI> {
   createInCv(cvId: number, data: TI): Promise<TS>;
   // get a child record by ID, but only if it belongs to the specified CV
   getByIdInCv(cvId: number, childId: number): Promise<TS | null>;
+
+  // use the get all for cv, because we care all the child that belongs to the cv
   // get all child records for a specific CV
   getAllInCv(cvId: number): Promise<TS[]>;
   // update a child record by ID, but only if it belongs to the specified CV
