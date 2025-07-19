@@ -7,7 +7,6 @@ import type {
   JobApplicationQueryOptions,
   PaginatedJobApplicationResponse,
 } from "../db/types/jobApplication.type";
-import { BaseRepository } from "./base.repo";
 import type { Database } from "../db/index";
 
 export interface IJobApplication {
@@ -32,15 +31,12 @@ export class JobApplicationRepository implements IJobApplication {
   private readonly table = jobApplications;
   constructor(private readonly db: Database) {}
 
-  async create(data: JobApplicationInsert): Promise<JobApplicationSelect> {
+  async create(data: JobApplicationInsert) {
     const [result] = await this.db.insert(this.table).values(data).returning();
     return result;
   }
 
-  async getByIdAndUser(
-    id: number,
-    userId: number,
-  ): Promise<JobApplicationSelect | null> {
+  async getByIdAndUser(id: number, userId: number) {
     const [result] = await this.db
       .select()
       .from(this.table)
@@ -49,10 +45,7 @@ export class JobApplicationRepository implements IJobApplication {
     return result ?? null;
   }
 
-  async getAllByUser(
-    userId: number,
-    options?: JobApplicationQueryOptions,
-  ): Promise<PaginatedJobApplicationResponse> {
+  async getAllByUser(userId: number, options?: JobApplicationQueryOptions) {
     const whereClause = [eq(this.table.userId, userId)];
 
     if (options?.search) {
@@ -101,7 +94,7 @@ export class JobApplicationRepository implements IJobApplication {
     id: number,
     userId: number,
     data: JobApplicationUpdate,
-  ): Promise<JobApplicationSelect | null> {
+  ) {
     const result = await this.db
       .update(this.table)
       .set(data)
@@ -110,7 +103,7 @@ export class JobApplicationRepository implements IJobApplication {
     return result.length > 0 ? result[0] : null;
   }
 
-  async deleteByIdAndUser(id: number, userId: number): Promise<boolean> {
+  async deleteByIdAndUser(id: number, userId: number) {
     const result = await this.db
       .delete(this.table)
       .where(and(eq(this.table.id, id), eq(this.table.userId, userId)))
