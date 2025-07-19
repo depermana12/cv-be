@@ -7,33 +7,44 @@ import type {
   SkillSelect,
   SkillUpdate,
 } from "../db/types/skill.type";
+
+export interface ISkillRepository {
+  getSkill(cvId: number, skillId: number): Promise<SkillSelect | null>;
+  getCategoriesForCv(cvId: number): Promise<{ category: string }[]>;
+  getAllSkills(
+    cvId: number,
+    options?: SkillQueryOptions,
+  ): Promise<SkillSelect[]>;
+  createSkill(cvId: number, skillData: SkillInsert): Promise<SkillSelect>;
+  updateSkill(
+    cvId: number,
+    skillId: number,
+    skillData: SkillUpdate,
+  ): Promise<SkillSelect>;
+  deleteSkill(cvId: number, skillId: number): Promise<boolean>;
+}
 import type { Database } from "../db/index";
 
-export class SkillRepository extends CvChildRepository<
-  typeof skills,
-  SkillInsert,
-  SkillSelect,
-  "id"
-> {
+export class SkillRepository
+  extends CvChildRepository<typeof skills, SkillInsert, SkillSelect, "id">
+  implements ISkillRepository
+{
   constructor(db: Database) {
     super(skills, db, "id");
   }
 
-  async getSkill(cvId: number, skillId: number): Promise<SkillSelect | null> {
+  async getSkill(cvId: number, skillId: number) {
     return this.getByIdInCv(cvId, skillId);
   }
 
-  async getCategoriesForCv(cvId: number): Promise<{ category: string }[]> {
+  async getCategoriesForCv(cvId: number) {
     return this.db
       .selectDistinct({ category: skills.category })
       .from(skills)
       .where(eq(skills.cvId, cvId));
   }
 
-  async getAllSkills(
-    cvId: number,
-    options?: SkillQueryOptions,
-  ): Promise<SkillSelect[]> {
+  async getAllSkills(cvId: number, options?: SkillQueryOptions) {
     const whereClause = [eq(skills.cvId, cvId)];
 
     if (options?.search) {
@@ -54,22 +65,15 @@ export class SkillRepository extends CvChildRepository<
       );
   }
 
-  async createSkill(
-    cvId: number,
-    skillData: SkillInsert,
-  ): Promise<SkillSelect> {
+  async createSkill(cvId: number, skillData: SkillInsert) {
     return this.createInCv(cvId, skillData);
   }
 
-  async updateSkill(
-    cvId: number,
-    skillId: number,
-    skillData: SkillUpdate,
-  ): Promise<SkillSelect> {
+  async updateSkill(cvId: number, skillId: number, skillData: SkillUpdate) {
     return this.updateInCv(cvId, skillId, skillData);
   }
 
-  async deleteSkill(cvId: number, skillId: number): Promise<boolean> {
+  async deleteSkill(cvId: number, skillId: number) {
     return this.deleteInCv(cvId, skillId);
   }
 }
