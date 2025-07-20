@@ -1,13 +1,13 @@
 import { zValidator } from "../utils/validator";
-import { userUpdateSchema } from "../schemas/user.schema";
+import { updateUserSchema } from "../schemas/user.schema";
 import { userService } from "../lib/container";
 import { createHonoBindings } from "../lib/create-hono";
 
 export const userRoutes = createHonoBindings()
   .get("/me", async (c) => {
-    const { id } = c.get("jwtPayload");
+    const { id: userId } = c.get("jwtPayload");
 
-    const me = await userService.getUserByIdSafe(Number(id));
+    const me = await userService.getUserByIdSafe(+userId);
 
     return c.json(
       {
@@ -19,9 +19,9 @@ export const userRoutes = createHonoBindings()
     );
   })
   .get("/me/stats", async (c) => {
-    const { id } = c.get("jwtPayload");
+    const { id: userId } = c.get("jwtPayload");
 
-    const userStats = await userService.getUserStats(Number(id));
+    const userStats = await userService.getUserStats(+userId);
 
     return c.json({
       success: true,
@@ -29,13 +29,13 @@ export const userRoutes = createHonoBindings()
       data: userStats,
     });
   })
-  .patch("/me", zValidator("json", userUpdateSchema), async (c) => {
-    const { id } = c.get("jwtPayload");
-    const updateData = c.req.valid("json");
+  .patch("/me", zValidator("json", updateUserSchema), async (c) => {
+    const { id: userId } = c.get("jwtPayload");
+    const validatedBody = c.req.valid("json");
 
     const updatedUser = await userService.updateUserProfile(
-      Number(id),
-      updateData,
+      +userId,
+      validatedBody,
     );
 
     return c.json({
@@ -44,32 +44,25 @@ export const userRoutes = createHonoBindings()
       data: updatedUser,
     });
   })
-
-  .get("/check-username/:username", async (c) => {
-    const username = c.req.param("username");
-
-    const exists = await userService.isUsernameExists(username);
-
-    return c.json({
-      success: true,
-      message: "username availability checked",
-      data: {
-        username,
-        available: !exists,
-        exists,
-      },
-    });
-  })
   .get("/me/email-verification-status", async (c) => {
-    const { id } = c.get("jwtPayload");
+    const { id: userId } = c.get("jwtPayload");
 
-    const verificationStatus = await userService.isUserEmailVerified(
-      Number(id),
-    );
+    const verificationStatus = await userService.isUserEmailVerified(+userId);
 
     return c.json({
       success: true,
       message: "email verification status retrieved",
       data: verificationStatus,
+    });
+  })
+  .delete("/me", async (c) => {
+    const { id: userId } = c.get("jwtPayload");
+
+    const deleted = await userService.deleteUser(+userId);
+
+    return c.json({
+      success: true,
+      message: "user account deleted successfully",
+      data: { deleted },
     });
   });

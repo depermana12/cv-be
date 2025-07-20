@@ -20,6 +20,7 @@ export interface IUserService {
   isUserEmailVerified(id: number): Promise<{ verified: boolean }>;
   isUsernameExists(username: string): Promise<boolean>;
   getUserStats(id: number): Promise<UserStats>;
+  deleteUser(id: number): Promise<boolean>;
 }
 export class UserService implements IUserService {
   constructor(
@@ -135,6 +136,23 @@ export class UserService implements IUserService {
       cvCreated: cvCount,
       totalJobApplications,
     };
+  }
+
+  // =============================
+  // USER ACCOUNT MANAGEMENT
+  // =============================
+
+  async deleteUser(id: number): Promise<boolean> {
+    // First verify the user exists
+    await this.getUserByIdSafe(id);
+
+    // Delete the user account
+    const deleted = await this.userRepository.deleteUser(id);
+    if (!deleted) {
+      throw new NotFoundError("Failed to delete user account");
+    }
+
+    return deleted;
   }
 
   // =============================
