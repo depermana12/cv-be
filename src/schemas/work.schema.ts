@@ -1,41 +1,51 @@
 import { z } from "zod";
 
-const idSchema = z.number().int().positive();
-
-export const workBaseSchema = z.object({
-  company: z.string().max(100, { message: "Must be 100 characters or fewer" }),
-  position: z.string().max(100, { message: "Must be 100 characters or fewer" }),
-  startDate: z.coerce.date({ invalid_type_error: "Invalid start date" }),
-  endDate: z.coerce.date({ invalid_type_error: "Invalid end date" }).optional(),
-  url: z.string().url({ message: "Invalid URL format" }).optional(),
-  isCurrent: z.boolean().optional().default(false),
+// Create work validation schema
+export const createWorkSchema = z.object({
+  company: z
+    .string()
+    .max(100, { message: "Company name must be 100 characters or fewer" }),
+  position: z
+    .string()
+    .max(100, { message: "Position must be 100 characters or fewer" }),
+  startDate: z.coerce
+    .date({ invalid_type_error: "Invalid start date format" })
+    .optional(),
+  endDate: z.coerce
+    .date({ invalid_type_error: "Invalid end date format" })
+    .optional(),
+  url: z
+    .string()
+    .url({ message: "Please provide a valid URL" })
+    .max(255, { message: "URL must be 255 characters or fewer" })
+    .optional(),
+  isCurrent: z.boolean().optional(),
+  descriptions: z.array(z.string()).optional(),
+  location: z
+    .string()
+    .max(100, { message: "Location must be 100 characters or fewer" })
+    .optional(),
 });
 
-export const workResponseSchema = workBaseSchema.extend({
-  id: idSchema,
-  cvId: idSchema,
+// Update work validation schema
+export const updateWorkSchema = createWorkSchema.partial();
+
+// Parameters schema for CV ID and Work ID
+export const workParamsSchema = z.object({
+  cvId: z.coerce
+    .number()
+    .int()
+    .positive({ message: "CV ID must be a positive integer" }),
+  workId: z.coerce
+    .number()
+    .int()
+    .positive({ message: "Work ID must be a positive integer" }),
 });
 
-export const workDescResponseSchema = z.object({
-  id: idSchema,
-  workId: idSchema,
-  description: z.string(),
-});
-
-// API operation schemas
-export const workDescCreateSchema = workDescResponseSchema.omit({
-  id: true,
-  workId: true,
-});
-export const workDescUpdateSchema = workDescCreateSchema.partial();
-export const workCreateSchema = workBaseSchema.extend({
-  descriptions: z.array(workDescCreateSchema).optional().default([]),
-});
-export const workUpdateSchema = workBaseSchema.partial().extend({
-  descriptions: z.array(workDescCreateSchema).optional(),
-});
-export const workQueryOptionsSchema = z.object({
-  search: z.string().optional(),
-  sortBy: z.enum(["company", "position", "startDate", "endDate"]).optional(),
-  sortOrder: z.enum(["asc", "desc"]).optional(),
+// Parameters schema for CV ID only (for create/get all works)
+export const cvIdParamsSchema = z.object({
+  cvId: z.coerce
+    .number()
+    .int()
+    .positive({ message: "CV ID must be a positive integer" }),
 });

@@ -1,83 +1,99 @@
 import { z } from "zod";
 
-const idSchema = z.number().int().positive();
-
-export const jobApplicationSelectSchema = z.object({
-  id: idSchema,
-  userId: idSchema,
-  cvId: idSchema.nullable(),
+// Create job application validation schema
+export const createJobApplicationSchema = z.object({
+  cvId: z.coerce
+    .number()
+    .int()
+    .positive({ message: "CV ID must be a positive integer" })
+    .optional(),
   jobPortal: z
     .string()
-    .max(100, { message: "Job portal must be 100 characters or less" }),
+    .max(100, { message: "Job portal must be 100 characters or fewer" }),
   jobUrl: z
     .string()
-    .max(255, { message: "Job URL must be 255 characters or less" })
-    // .optional()
-    .nullable(),
+    .max(255, { message: "Job URL must be 255 characters or fewer" })
+    .optional(),
   companyName: z
     .string()
-    .min(8, { message: "Company name must be at least 8 characters" })
-    .max(255, { message: "Company name must be 255 characters or less" }),
+    .min(1, { message: "Company name is required" })
+    .max(255, { message: "Company name must be 255 characters or fewer" }),
   jobTitle: z
     .string()
-    .min(8, { message: "Job title must be at least 8 charachters" })
-    .max(255, { message: "Job title must be 255 characters or less" }),
-  jobType: z.enum([
-    "Full-time",
-    "Part-time",
-    "Contract",
-    "Internship",
-    "Freelance",
-    "Volunteer",
-  ]),
-  position: z.enum([
-    "Manager",
-    "Lead",
-    "Senior",
-    "Mid-level",
-    "Junior",
-    "Intern",
-    "Entry-level",
-    "Staff",
-    "Other",
-  ]),
-  location: z.string().max(255, {
-    message: "Location must be 255 characters or less",
+    .min(1, { message: "Job title is required" })
+    .max(255, { message: "Job title must be 255 characters or fewer" }),
+  jobType: z.enum(
+    [
+      "Full-time",
+      "Part-time",
+      "Contract",
+      "Internship",
+      "Freelance",
+      "Volunteer",
+    ],
+    { message: "Please select a valid job type" },
+  ),
+  position: z.enum(
+    [
+      "Manager",
+      "Lead",
+      "Senior",
+      "Mid-level",
+      "Junior",
+      "Intern",
+      "Entry-level",
+      "Staff",
+      "Other",
+    ],
+    { message: "Please select a valid position level" },
+  ),
+  location: z
+    .string()
+    .max(255, { message: "Location must be 255 characters or fewer" })
+    .optional(),
+  locationType: z.enum(["Remote", "On-site", "Hybrid"], {
+    message: "Please select a valid location type",
   }),
-  locationType: z.enum(["Remote", "On-site", "Hybrid"]),
   status: z
     .enum(
       ["applied", "interview", "offer", "rejected", "accepted", "ghosted"],
-      { message: "Invalid status" },
+      {
+        message: "Please select a valid status",
+      },
     )
     .default("applied"),
-  notes: z.string().nullable(),
-  appliedAt: z.coerce.date(),
-  createdAt: z.coerce.date(),
-  updatedAt: z.coerce.date(),
+  notes: z.string().optional(),
+  appliedAt: z.coerce.date({
+    invalid_type_error: "Invalid applied date format",
+  }),
 });
 
-export const jobApplicationCreateSchema = jobApplicationSelectSchema.omit({
-  id: true,
-  userId: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
-export const jobApplicationUpdateSchema = jobApplicationCreateSchema
+// Update job application validation schema
+export const updateJobApplicationSchema = createJobApplicationSchema
   .partial()
   .extend({ statusChangedAt: z.coerce.date().optional() });
 
-export const idParamSchema = z.object({
-  id: z
-    .string()
-    .regex(/^\d+$/)
-    .transform(Number)
-    .refine((n) => n > 0, {
-      message: "ID must be a positive number",
-    }),
+// Parameters schema for Job Application ID only
+export const jobApplicationParamsSchema = z.object({
+  id: z.coerce
+    .number()
+    .int()
+    .positive({ message: "Job Application ID must be a positive integer" }),
 });
 
+// Parameters schema for Job Application ID and Status ID
+export const jobApplicationStatusParamsSchema = z.object({
+  id: z.coerce
+    .number()
+    .int()
+    .positive({ message: "Job Application ID must be a positive integer" }),
+  statusId: z.coerce
+    .number()
+    .int()
+    .positive({ message: "Status ID must be a positive integer" }),
+});
+
+// Query options schema (keeping as requested)
 export const jobApplicationQueryOptionsSchema = z.object({
   search: z.string().optional(),
   sortBy: z.enum(["position", "companyName", "status", "appliedAt"]).optional(),
@@ -87,17 +103,3 @@ export const jobApplicationQueryOptionsSchema = z.object({
   appliedAtFrom: z.coerce.date().optional(),
   appliedAtTo: z.coerce.date().optional(),
 });
-
-export type JobApplicationSelect = z.infer<typeof jobApplicationSelectSchema>;
-export type JobApplicationCreate = z.infer<typeof jobApplicationCreateSchema>;
-export type JobApplicationUpdate = z.infer<typeof jobApplicationUpdateSchema>;
-export type JobApplicationQueryOptions = z.infer<
-  typeof jobApplicationQueryOptionsSchema
->;
-
-export type JobApplicationQueryResponse = {
-  data: JobApplicationSelect[];
-  total: number;
-  limit: number;
-  offset: number;
-};

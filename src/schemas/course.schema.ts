@@ -1,42 +1,42 @@
 import { z } from "zod";
 
-const idSchema = z.number().int().positive();
-export const courseBaseSchema = z.object({
-  provider: z.string().max(100, { message: "Must be 100 characters or fewer" }),
+// Create course validation schema
+export const createCourseSchema = z.object({
+  provider: z
+    .string()
+    .max(100, { message: "Provider must be 100 characters or fewer" }),
   courseName: z
     .string()
-    .max(200, { message: "Must be 200 characters or fewer" }),
-  startDate: z.coerce.date(),
-  endDate: z.coerce.date(),
-});
-export const courseResponseSchema = courseBaseSchema.extend({
-  id: idSchema,
-  cvId: idSchema,
-});
-
-export const courseDescResponseSchema = z.object({
-  id: idSchema,
-  courseId: idSchema,
-  description: z.string(),
+    .max(200, { message: "Course name must be 200 characters or fewer" })
+    .optional(),
+  startDate: z.coerce
+    .date({ invalid_type_error: "Invalid start date format" })
+    .optional(),
+  endDate: z.coerce
+    .date({ invalid_type_error: "Invalid end date format" })
+    .optional(),
+  descriptions: z.array(z.string()).optional(),
 });
 
-// API operation schemas
-export const courseDescInsertSchema = courseDescResponseSchema.omit({
-  id: true,
-  courseId: true,
-});
-export const courseDescUpdateSchema = courseDescInsertSchema.partial();
+// Update course validation schema
+export const updateCourseSchema = createCourseSchema.partial();
 
-export const courseCreateSchema = courseBaseSchema.extend({
-  descriptions: z.array(courseDescInsertSchema).optional().default([]),
+// Parameters schema for CV ID and Course ID
+export const courseParamsSchema = z.object({
+  cvId: z.coerce
+    .number()
+    .int()
+    .positive({ message: "CV ID must be a positive integer" }),
+  courseId: z.coerce
+    .number()
+    .int()
+    .positive({ message: "Course ID must be a positive integer" }),
 });
 
-export const courseUpdateSchema = courseBaseSchema.partial().extend({
-  descriptions: z.array(courseDescUpdateSchema).optional(),
-});
-
-export const courseQueryOptionsSchema = z.object({
-  search: z.string().optional(),
-  sortBy: z.enum(["courseName", "provider", "startDate", "endDate"]).optional(),
-  sortOrder: z.enum(["asc", "desc"]).default("asc").optional(),
+// Parameters schema for CV ID only (for create/get all courses)
+export const cvIdParamsSchema = z.object({
+  cvId: z.coerce
+    .number()
+    .int()
+    .positive({ message: "CV ID must be a positive integer" }),
 });

@@ -1,28 +1,44 @@
 import { z } from "zod";
 
-const idSchema = z.number().int().positive();
-
-export const skillSelectSchema = z.object({
-  id: idSchema,
-  cvId: idSchema,
-  category: z.string().max(50, { message: "Must be 50 characters or fewer" }),
-  name: z.string().max(100, { message: "Must be 100 characters or fewer" }),
+// Create skill validation schema
+export const createSkillSchema = z.object({
+  type: z.enum(["technical", "soft", "language", "tool"], {
+    message: "Please select a valid skill type",
+  }),
+  category: z
+    .string()
+    .max(100, { message: "Category must be 100 characters or fewer" }),
+  name: z
+    .string()
+    .max(100, { message: "Skill name must be 100 characters or fewer" }),
+  proficiency: z
+    .enum(["beginner", "intermediate", "advanced", "expert"], {
+      message: "Please select a valid proficiency level",
+    })
+    .optional(),
+  keywords: z.array(z.string()).optional(),
+  description: z.string().optional(),
 });
 
-export const skillInsertSchema = skillSelectSchema.omit({
-  id: true,
-  cvId: true,
+// Update skill validation schema
+export const updateSkillSchema = createSkillSchema.partial();
+
+// Parameters schema for CV ID and Skill ID
+export const skillParamsSchema = z.object({
+  cvId: z.coerce
+    .number()
+    .int()
+    .positive({ message: "CV ID must be a positive integer" }),
+  skillId: z.coerce
+    .number()
+    .int()
+    .positive({ message: "Skill ID must be a positive integer" }),
 });
 
-export const skillUpdateSchema = skillInsertSchema.partial();
-
-export const skillQueryOptionsSchema = z.object({
-  search: z.string().optional(),
-  sortBy: z.enum(["name", "category"]).optional(),
-  sortOrder: z.enum(["asc", "desc"]).optional(),
+// Parameters schema for CV ID only (for create/get all skills)
+export const cvIdParamsSchema = z.object({
+  cvId: z.coerce
+    .number()
+    .int()
+    .positive({ message: "CV ID must be a positive integer" }),
 });
-
-export type SkillSelect = z.infer<typeof skillSelectSchema>;
-export type SkillInsert = z.infer<typeof skillInsertSchema>;
-export type SkillUpdate = z.infer<typeof skillUpdateSchema>;
-export type SkillQueryOptions = z.infer<typeof skillQueryOptionsSchema>;

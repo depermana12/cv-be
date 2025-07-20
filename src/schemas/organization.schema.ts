@@ -1,44 +1,45 @@
 import { z } from "zod";
 
-const idSchema = z.number().int().positive();
-
-export const organizationBaseSchema = z.object({
+// Create organization validation schema
+export const createOrganizationSchema = z.object({
   organization: z
     .string()
-    .max(100, { message: "Must be 100 characters or fewer" }),
-  role: z.string().max(100, { message: "Must be 100 characters or fewer" }),
-  startDate: z.coerce.date({ invalid_type_error: "Invalid start date" }),
-  endDate: z.coerce.date({ invalid_type_error: "Invalid end date" }).optional(),
+    .max(100, { message: "Organization name must be 100 characters or fewer" }),
+  role: z
+    .string()
+    .max(100, { message: "Role must be 100 characters or fewer" }),
+  startDate: z.coerce
+    .date({ invalid_type_error: "Invalid start date format" })
+    .optional(),
+  endDate: z.coerce
+    .date({ invalid_type_error: "Invalid end date format" })
+    .optional(),
+  descriptions: z.array(z.string()).optional(),
+  location: z
+    .string()
+    .max(100, { message: "Location must be 100 characters or fewer" })
+    .optional(),
 });
 
-export const orgResponseSchema = organizationBaseSchema.extend({
-  id: idSchema,
-  cvId: idSchema,
+// Update organization validation schema
+export const updateOrganizationSchema = createOrganizationSchema.partial();
+
+// Parameters schema for CV ID and Organization ID
+export const organizationParamsSchema = z.object({
+  cvId: z.coerce
+    .number()
+    .int()
+    .positive({ message: "CV ID must be a positive integer" }),
+  organizationId: z.coerce
+    .number()
+    .int()
+    .positive({ message: "Organization ID must be a positive integer" }),
 });
 
-export const orgDescResponseSchema = z.object({
-  id: idSchema,
-  organizationId: idSchema,
-  description: z.string(),
-});
-
-// API operation schemas
-export const orgDescCreateSchema = orgDescResponseSchema.omit({
-  id: true,
-  organizationId: true,
-});
-export const orgDescUpdateSchema = orgDescCreateSchema.partial();
-
-export const orgCreateSchema = organizationBaseSchema.extend({
-  descriptions: z.array(orgDescCreateSchema).optional().default([]),
-});
-
-export const orgUpdateSchema = organizationBaseSchema.partial().extend({
-  descriptions: z.array(orgDescUpdateSchema).optional(),
-});
-
-export const orgQueryOptionsSchema = z.object({
-  search: z.string().optional(),
-  sortBy: z.enum(["organization", "role", "startDate", "endDate"]).optional(),
-  sortOrder: z.enum(["asc", "desc"]).optional(),
+// Parameters schema for CV ID only (for create/get all organizations)
+export const cvIdParamsSchema = z.object({
+  cvId: z.coerce
+    .number()
+    .int()
+    .positive({ message: "CV ID must be a positive integer" }),
 });

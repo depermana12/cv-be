@@ -64,10 +64,6 @@ export const createContactSchema = z.object({
   socialLinks: z
     .array(z.string().url({ message: "Each social link must be a valid URL" }))
     .optional(),
-  displayOrder: z
-    .number()
-    .int({ message: "Display order must be an integer" })
-    .optional(),
 });
 
 // Update contact validation schema

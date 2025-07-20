@@ -1,63 +1,50 @@
 import { z } from "zod";
 
-/**
- *  This schema is used to validate the user data registration.
- *  please do not confuse if in auth schema there is no registration,
- *  this schema is used for user registration.
- */
-
-export const userSchema = z.object({
-  id: z.number(),
-  username: z
-    .string()
-    .min(3, { message: "Username must be at least 3 characters" })
-    .max(50),
-  email: z.string().email({ message: "Invalid email address" }).max(100),
-  password: z
-    .string()
-    .min(8, { message: "Password must be at least 8 characters" })
-    .max(255),
-  isEmailVerified: z.boolean().optional(),
-  profileImage: z.string().optional().nullable(),
+// Update user profile validation schema
+export const updateUserSchema = z.object({
+  profileImage: z.string().optional(),
   birthDate: z.coerce
-    .date({ invalid_type_error: "Invalid birth date" })
-    .optional()
-    .nullable(),
+    .date({ invalid_type_error: "Invalid birth date format" })
+    .optional(),
   firstName: z
     .string()
     .max(50, { message: "First name must be 50 characters or fewer" })
-    .optional()
-    .nullable(),
+    .optional(),
   lastName: z
     .string()
     .max(50, { message: "Last name must be 50 characters or fewer" })
-    .optional()
-    .nullable(),
-  gender: z.enum(["male", "female"]).optional().nullable(),
-  createdAt: z.date(),
-  updatedAt: z.date(),
+    .optional(),
+  gender: z
+    .enum(["male", "female"], { message: "Please select a valid gender" })
+    .optional(),
 });
 
-export const userInsertSchema = userSchema.omit({
-  id: true,
-  isEmailVerified: true,
-  createdAt: true,
-  updatedAt: true,
+// Update user credentials validation schema (sensitive data)
+export const updateUserCredentialsSchema = z.object({
+  username: z
+    .string()
+    .min(3, { message: "Username must be at least 3 characters" })
+    .max(50, { message: "Username must be 50 characters or fewer" })
+    .optional(),
+  email: z
+    .string()
+    .email({ message: "Please provide a valid email address" })
+    .max(100, { message: "Email must be 100 characters or fewer" })
+    .optional(),
 });
 
-export const userUpdateSchema = userSchema
-  .pick({
-    profileImage: true,
-    birthDate: true,
-    firstName: true,
-    lastName: true,
-    gender: true,
-  })
-  .partial();
+// Parameter schema for user operations
+export const userParamsSchema = z.object({
+  userId: z.coerce
+    .number()
+    .int()
+    .positive({ message: "User ID must be a positive integer" }),
+});
 
-export const userCredentialsUpdateSchema = userSchema
-  .pick({
-    username: true,
-    email: true,
-  })
-  .partial();
+// Username availability check schema
+export const checkUsernameSchema = z.object({
+  username: z
+    .string()
+    .min(3, { message: "Username must be at least 3 characters" })
+    .max(50, { message: "Username must be 50 characters or fewer" }),
+});

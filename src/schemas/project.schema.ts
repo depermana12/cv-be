@@ -1,92 +1,44 @@
 import { z } from "zod";
 
-const idSchema = z.number().int().positive();
-
-export const projectSelectSchema = z.object({
-  name: z.string().max(100, { message: "Must be 100 characters or fewer" }),
-  description: z.string().optional(),
-  startDate: z.coerce.date({ invalid_type_error: "Invalid start date" }),
-  endDate: z.coerce.date({ invalid_type_error: "Invalid end date" }).optional(),
-  url: z.string().url({ message: "Invalid URL format" }).optional(),
-  descriptions: z
-    .array(
-      z.object({
-        description: z.string().min(1),
-      }),
-    )
-    .optional()
-    .default([]),
-  technologies: z
-    .array(
-      z.object({
-        category: z.string().max(50),
-        technology: z.string().max(100),
-      }),
-    )
-    .optional()
-    .default([]),
-});
-
-export const projectInsertSchema = projectSelectSchema;
-
-export const projectUpdateSchema = projectInsertSchema.partial();
-
-export const projectDescSelectSchema = z.object({
-  id: idSchema,
-  projectId: idSchema,
-  description: z.string().min(1, { message: "Description is required" }),
-});
-export const projectDescInsertSchema = projectDescSelectSchema.omit({
-  id: true,
-  projectId: true,
-});
-
-export const projectTechSelectSchema = z.object({
-  id: idSchema,
-  projectId: idSchema,
-  category: z.string().max(50, { message: "Must be 50 characters or fewer" }),
-  technology: z
+// Create project validation schema
+export const createProjectSchema = z.object({
+  name: z
     .string()
-    .max(100, { message: "Must be 100 characters or fewer" }),
-});
-export const projectTechInsertSchema = projectTechSelectSchema.omit({
-  id: true,
-  projectId: true,
-});
-
-export const projectFullInsertSchema = projectInsertSchema.extend({
-  descriptions: z.array(projectDescInsertSchema).optional(),
-  technologies: z.array(projectTechInsertSchema).optional(),
-});
-
-export const projectFullUpdateSchema = z.object({
-  project: projectUpdateSchema.optional(),
-  descriptions: z.array(projectDescInsertSchema).optional(),
-  technologies: z.array(projectTechInsertSchema).optional(),
+    .max(100, { message: "Project name must be 100 characters or fewer" }),
+  startDate: z.coerce
+    .date({ invalid_type_error: "Invalid start date format" })
+    .optional(),
+  endDate: z.coerce
+    .date({ invalid_type_error: "Invalid end date format" })
+    .optional(),
+  url: z
+    .string()
+    .url({ message: "Please provide a valid URL" })
+    .max(255, { message: "URL must be 255 characters or fewer" })
+    .optional(),
+  descriptions: z.array(z.string()).optional(),
+  technologies: z.array(z.string()).optional(),
 });
 
-export const projectTechQueryOptionsSchema = z.object({
-  search: z.string().optional(),
-  sortBy: z.enum(["category", "technology"]).optional(),
-  sortOrder: z.enum(["asc", "desc"]).optional(),
+// Update project validation schema
+export const updateProjectSchema = createProjectSchema.partial();
+
+// Parameters schema for CV ID and Project ID
+export const projectParamsSchema = z.object({
+  cvId: z.coerce
+    .number()
+    .int()
+    .positive({ message: "CV ID must be a positive integer" }),
+  projectId: z.coerce
+    .number()
+    .int()
+    .positive({ message: "Project ID must be a positive integer" }),
 });
 
-export const projectQueryOptionsSchema = z.object({
-  search: z.string().optional(),
-  sortBy: z.enum(["name", "startDate", "endDate"]).optional(),
-  sortOrder: z.enum(["asc", "desc"]).optional(),
+// Parameters schema for CV ID only (for create/get all projects)
+export const cvIdParamsSchema = z.object({
+  cvId: z.coerce
+    .number()
+    .int()
+    .positive({ message: "CV ID must be a positive integer" }),
 });
-
-// Type exports
-export type ProjectSelect = z.infer<typeof projectSelectSchema>;
-export type ProjectInsert = z.infer<typeof projectInsertSchema>;
-export type ProjectUpdate = z.infer<typeof projectUpdateSchema>;
-export type ProjectDescSelect = z.infer<typeof projectDescSelectSchema>;
-export type ProjectDescInsert = z.infer<typeof projectDescInsertSchema>;
-
-export type ProjectQueryOptions = z.infer<typeof projectQueryOptionsSchema>;
-export type ProjectTechQueryOptions = z.infer<
-  typeof projectTechQueryOptionsSchema
->;
-export type ProjectFullInsert = z.infer<typeof projectFullInsertSchema>;
-export type ProjectFullUpdate = z.infer<typeof projectFullUpdateSchema>;

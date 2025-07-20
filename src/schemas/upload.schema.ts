@@ -33,7 +33,3 @@ export const fileUploadSchema = z.object({
     }),
   folder: z.string().optional().default("uploads"),
 });
-
-export type PresignedUpload = z.infer<typeof presignedUploadSchema>;
-export type ListObjects = z.infer<typeof listObjectsSchema>;
-export type FileUpload = z.infer<typeof fileUploadSchema>;

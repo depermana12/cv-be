@@ -1,41 +1,63 @@
 import { z } from "zod";
 
-const idSchema = z.number().int().positive();
-
-export const educationSelectSchema = z.object({
-  id: idSchema,
-  cvId: idSchema,
+// Create education validation schema
+export const createEducationSchema = z.object({
   institution: z
     .string()
-    .max(100, { message: "Must be 100 characters or fewer" }),
-  degree: z.string().max(100, { message: "Must be 100 characters or fewer" }),
+    .max(100, { message: "Institution must be 100 characters or fewer" }),
+  degree: z.enum(
+    ["high_school", "diploma", "bachelor", "master", "doctorate"],
+    {
+      message: "Please select a valid degree type",
+    },
+  ),
   fieldOfStudy: z
     .string()
-    .max(100, { message: "Must be 100 characters or fewer" }),
-  startDate: z.coerce.date({ invalid_type_error: "Invalid date format" }),
-  endDate: z.coerce.date({ invalid_type_error: "Invalid date format" }),
+    .max(100, { message: "Field of study must be 100 characters or fewer" })
+    .optional(),
+  startDate: z.coerce
+    .date({ invalid_type_error: "Invalid start date format" })
+    .optional(),
+  endDate: z.coerce
+    .date({ invalid_type_error: "Invalid end date format" })
+    .optional(),
   gpa: z
-    .union([z.string(), z.null()])
-    .refine((val) => val === null || /^\d{1,1}(\.\d{1,2})?$/.test(val), {
+    .string()
+    .regex(/^\d{1,1}(\.\d{1,2})?$/, {
       message: "GPA must be a decimal with up to 2 decimal places",
-    }),
-  url: z.string().url({ message: "Invalid URL format" }),
+    })
+    .optional(),
+  url: z
+    .string()
+    .url({ message: "Please provide a valid URL" })
+    .max(255, { message: "URL must be 255 characters or fewer" })
+    .optional(),
+  location: z
+    .string()
+    .max(100, { message: "Location must be 100 characters or fewer" })
+    .optional(),
+  description: z.array(z.string()).optional(),
 });
 
-export const educationInsertSchema = educationSelectSchema.omit({
-  id: true,
-  cvId: true,
+// Update education validation schema
+export const updateEducationSchema = createEducationSchema.partial();
+
+// Parameters schema for CV ID and Education ID
+export const educationParamsSchema = z.object({
+  cvId: z.coerce
+    .number()
+    .int()
+    .positive({ message: "CV ID must be a positive integer" }),
+  educationId: z.coerce
+    .number()
+    .int()
+    .positive({ message: "Education ID must be a positive integer" }),
 });
 
-export const educationUpdateSchema = educationInsertSchema.partial();
-
-export const educationQueryOptionsSchema = z.object({
-  search: z.string().optional(),
-  sortBy: z.enum(["institution", "degree", "startDate", "endDate"]).optional(),
-  sortOrder: z.enum(["asc", "desc"]).default("asc").optional(),
+// Parameters schema for CV ID only (for create/get all educations)
+export const cvIdParamsSchema = z.object({
+  cvId: z.coerce
+    .number()
+    .int()
+    .positive({ message: "CV ID must be a positive integer" }),
 });
-
-export type EducationSelect = z.infer<typeof educationSelectSchema>;
-export type EducationInsert = z.infer<typeof educationInsertSchema>;
-export type EducationUpdate = z.infer<typeof educationUpdateSchema>;
-export type EducationQueryOptions = z.infer<typeof educationQueryOptionsSchema>;
