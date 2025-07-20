@@ -51,3 +51,24 @@ export const cvParamsSchema = z.object({
     .int()
     .positive({ message: "CV ID must be a positive integer" }),
 });
+
+// parameters schema for CV slug with username
+export const cvSlugParamsSchema = z.object({
+  username: z
+    .string()
+    .min(3, { message: "Username must be at least 3 characters" })
+    .max(50, { message: "Username must be 50 characters or fewer" })
+    .regex(/^[a-zA-Z0-9_-]+$/, {
+      message:
+        "Username can only contain letters, numbers, underscores, and hyphens",
+    }),
+  slug: z
+    .string()
+    .min(1, { message: "Slug is required" })
+    .max(255, { message: "Slug must be 255 characters or fewer" }),
+});
+
+// query schema for popular CVs
+export const popularCvQuerySchema = z.object({
+  limit: z.coerce.number().min(1).max(50).default(10).optional(),
+});

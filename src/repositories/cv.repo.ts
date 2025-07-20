@@ -12,12 +12,14 @@ import {
 } from "drizzle-orm";
 import { BaseRepository } from "./base.repo";
 import { cv } from "../db/schema/cv.db";
+import { users } from "../db/schema/user.db";
 import type {
   CvInsert,
   CvQueryOptions,
   CvSelect,
   CvStats,
   CvUpdate,
+  CvMinimalSelect,
   PaginatedCvResponse,
 } from "../db/types/cv.type";
 import type { Database } from "../db/index";
@@ -25,6 +27,7 @@ import type { Database } from "../db/index";
 export interface ICvRepository {
   createCv(cvData: CvInsert): Promise<CvSelect>;
   getCvForUser(cvId: number, userId: number): Promise<CvSelect | null>;
+  getCvById(cvId: number): Promise<CvSelect | null>;
   getAllCvForUser(
     userId: number,
     options?: CvQueryOptions,
@@ -36,7 +39,10 @@ export interface ICvRepository {
   ): Promise<CvSelect>;
   deleteCvForUser(cvId: number, userId: number): Promise<boolean>;
 
-  getCvBySlug(slug: string): Promise<CvSelect | null>;
+  getCvByUsernameAndSlug(
+    username: string,
+    slug: string,
+  ): Promise<CvMinimalSelect | null>;
   incrementViews(cvId: number): Promise<void>;
   incrementDownloads(cvId: number): Promise<void>;
   checkSlugAvailability(slug: string, excludeCvId?: number): Promise<boolean>;
@@ -61,6 +67,16 @@ export class CvRepository
       .select()
       .from(cv)
       .where(and(eq(cv.id, cvId), eq(cv.userId, userId)))
+      .limit(1);
+
+    return (records[0] as CvSelect) ?? null;
+  }
+
+  async getCvById(cvId: number) {
+    const records = await this.db
+      .select()
+      .from(cv)
+      .where(eq(cv.id, cvId))
       .limit(1);
 
     return (records[0] as CvSelect) ?? null;
@@ -133,14 +149,29 @@ export class CvRepository
     return records.length > 0;
   }
 
-  async getCvBySlug(slug: string) {
+  async getCvByUsernameAndSlug(username: string, slug: string) {
     const records = await this.db
-      .select()
+      .select({
+        id: cv.id,
+        title: cv.title,
+        description: cv.description,
+        isPublic: cv.isPublic,
+        views: cv.views,
+        createdAt: cv.createdAt,
+        updatedAt: cv.updatedAt,
+      })
       .from(cv)
-      .where(and(eq(cv.slug, slug), eq(cv.isPublic, true)))
+      .innerJoin(users, eq(cv.userId, users.id))
+      .where(
+        and(
+          eq(users.username, username),
+          eq(cv.slug, slug),
+          eq(cv.isPublic, true),
+        ),
+      )
       .limit(1);
 
-    return (records[0] as CvSelect) ?? null;
+    return (records[0] as CvMinimalSelect) ?? null;
   }
 
   async incrementViews(cvId: number) {

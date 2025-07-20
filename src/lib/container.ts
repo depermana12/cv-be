@@ -65,7 +65,17 @@ const analyticsRepository = new AnalyticsRepository(db);
 // =====================
 
 // CV & Children Services
-export const cvService = new CvService(cvRepository);
+export const cvService = new CvService(
+  cvRepository,
+  contactRepository,
+  educationRepository,
+  workRepository,
+  projectRepository,
+  organizationRepository,
+  courseRepository,
+  skillRepository,
+  languageRepository,
+);
 export const contactService = new ContactService(contactRepository);
 export const educationService = new EducationService(educationRepository);
 export const workService = new WorkService(workRepository);

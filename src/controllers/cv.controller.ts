@@ -1,14 +1,19 @@
 import { createHonoBindings } from "../lib/create-hono";
 import { zValidator } from "../utils/validator";
+import { jwt } from "../middlewares/auth";
 import {
   createCvSchema,
   updateCvSchema,
   cvQuerySchema,
   cvParamsSchema,
+  cvSlugParamsSchema,
+  popularCvQuerySchema,
 } from "../schemas/cv.schema";
 import { cvService } from "../lib/container";
 
 export const cvRoutes = createHonoBindings()
+  // Protected routes (require authentication)
+  .use("/*", jwt())
   .get("/", zValidator("query", cvQuerySchema), async (c) => {
     const { id: userId } = c.get("jwtPayload");
     const options = c.req.valid("query");
@@ -44,7 +49,6 @@ export const cvRoutes = createHonoBindings()
       201,
     );
   })
-
   .get("/:id", zValidator("param", cvParamsSchema), async (c) => {
     const { id: userId } = c.get("jwtPayload");
     const { id: cvId } = c.req.valid("param");
@@ -60,7 +64,6 @@ export const cvRoutes = createHonoBindings()
       200,
     );
   })
-
   .patch(
     "/:id",
     zValidator("param", cvParamsSchema),
@@ -82,7 +85,6 @@ export const cvRoutes = createHonoBindings()
       );
     },
   )
-
   .delete("/:id", zValidator("param", cvParamsSchema), async (c) => {
     const { id: userId } = c.get("jwtPayload");
     const { id: cvId } = c.req.valid("param");
@@ -91,7 +93,58 @@ export const cvRoutes = createHonoBindings()
 
     return c.json({
       success: true,
-      message: `record id: ${cvId} deleted successfully`,
-      data: deleted ? "Record deleted" : "Record not found",
+      message: `CV with ID ${cvId} deleted successfully`,
+      data: deleted,
+    });
+  })
+  .get("/me/stats", async (c) => {
+    const { id: userId } = c.get("jwtPayload");
+
+    const stats = await cvService.getUserStats(+userId);
+
+    return c.json({
+      success: true,
+      message: "User CV statistics retrieved successfully",
+      data: stats,
+    });
+  });
+
+// Public routes for cv with isPublic (no authentication required)
+export const publicCvRoutes = createHonoBindings()
+  .get(
+    "/:username/:slug",
+    zValidator("param", cvSlugParamsSchema),
+    async (c) => {
+      const { username, slug } = c.req.valid("param");
+
+      const cv = await cvService.getCvByUsernameAndSlug(username, slug);
+
+      return c.json({
+        success: true,
+        message: `CV '${slug}' for user '${username}' retrieved successfully`,
+        data: cv,
+      });
+    },
+  )
+  .get("/:id/download", zValidator("param", cvParamsSchema), async (c) => {
+    const { id: cvId } = c.req.valid("param");
+
+    const cv = await cvService.downloadCv(cvId);
+
+    return c.json({
+      success: true,
+      message: `CV download tracked successfully`,
+      data: cv,
+    });
+  })
+  .get("/popular", zValidator("query", popularCvQuerySchema), async (c) => {
+    const { limit } = c.req.valid("query");
+
+    const popularCvs = await cvService.getPopularCvs(limit);
+
+    return c.json({
+      success: true,
+      message: `Retrieved ${popularCvs.length} popular CVs`,
+      data: popularCvs,
     });
   });

@@ -1,6 +1,7 @@
 import { PgTable, type TableConfig } from "drizzle-orm/pg-core";
 import {
   and,
+  asc,
   eq,
   type InferInsertModel,
   type InferSelectModel,
@@ -66,7 +67,8 @@ export abstract class CvChildRepository<
     return (await this.db
       .select()
       .from(this.table as any)
-      .where(eq((this.table as any).cvId, cvId))) as TS[];
+      .where(eq((this.table as any).cvId, cvId))
+      .orderBy(asc((this.table as any).displayOrder))) as TS[];
   }
 
   async getByIdInCv(cvId: number, childId: number): Promise<TS | null> {

@@ -5,9 +5,21 @@ import type {
   CvSelect,
   CvStats,
   CvUpdate,
+  CvMinimalSelect,
   PaginatedCvResponse,
+  CompleteCvResponse,
 } from "../db/types/cv.type";
 import { NotFoundError } from "../errors/not-found.error";
+
+// Import concrete child repository classes
+import type { ContactRepository } from "../repositories/contact.repo";
+import type { EducationRepository } from "../repositories/education.repo";
+import type { WorkRepository } from "../repositories/work.repo";
+import type { ProjectRepository } from "../repositories/project.repo";
+import type { OrganizationRepository } from "../repositories/organization.repo";
+import type { CourseRepository } from "../repositories/course.repo";
+import type { SkillRepository } from "../repositories/skill.repo";
+import type { LanguageRepository } from "../repositories/language.repo";
 
 export interface ICvService {
   createCv(cvData: Omit<CvInsert, "userId">, userId: number): Promise<CvSelect>;
@@ -23,15 +35,27 @@ export interface ICvService {
   ): Promise<CvSelect>;
   deleteCv(cvId: number, userId: number): Promise<boolean>;
 
-  getCvBySlug(slug: string): Promise<CvSelect>;
-  viewCv(cvId: number): Promise<CvSelect>;
+  getCvByUsernameAndSlug(
+    username: string,
+    slug: string,
+  ): Promise<CompleteCvResponse>;
   downloadCv(cvId: number): Promise<CvSelect>;
   getPopularCvs(limit?: number): Promise<CvSelect[]>;
   getUserStats(userId: number): Promise<CvStats>;
 }
 
 export class CvService implements ICvService {
-  constructor(private readonly cvRepository: ICvRepository) {}
+  constructor(
+    private readonly cvRepository: ICvRepository,
+    private readonly contactRepository: ContactRepository,
+    private readonly educationRepository: EducationRepository,
+    private readonly workRepository: WorkRepository,
+    private readonly projectRepository: ProjectRepository,
+    private readonly organizationRepository: OrganizationRepository,
+    private readonly courseRepository: CourseRepository,
+    private readonly skillRepository: SkillRepository,
+    private readonly languageRepository: LanguageRepository,
+  ) {}
 
   private async assertCvOwnedByUser(
     cvId: number,
@@ -75,32 +99,87 @@ export class CvService implements ICvService {
   }
 
   async deleteCv(cvId: number, userId: number) {
+    const cv = await this.cvRepository.getCvForUser(cvId, userId);
+    if (!cv) {
+      throw new NotFoundError(
+        `[Service] CV with ID ${cvId} not found for user ${userId}`,
+      );
+    }
     return this.cvRepository.deleteCvForUser(cvId, userId);
   }
 
-  async getCvBySlug(slug: string) {
-    const cv = await this.cvRepository.getCvBySlug(slug);
+  async getCvByUsernameAndSlug(username: string, slug: string) {
+    const cv = await this.cvRepository.getCvByUsernameAndSlug(username, slug);
     if (!cv) {
-      throw new NotFoundError(`[Service] CV with slug '${slug}' not found`);
-    }
-    return cv;
-  }
-
-  async viewCv(cvId: number) {
-    const cv = await this.cvRepository.getCvBySlug(cvId.toString());
-    if (!cv) {
-      throw new NotFoundError(`[Service] CV with ID ${cvId} not found`);
+      throw new NotFoundError(
+        `[Service] CV with slug '${slug}' not found for user '${username}'`,
+      );
     }
 
-    await this.cvRepository.incrementViews(cvId);
+    // Only allow access to public CVs
+    if (!cv.isPublic) {
+      throw new NotFoundError(
+        `[Service] CV with slug '${slug}' for user '${username}' is not publicly available`,
+      );
+    }
 
-    return { ...cv, views: cv.views + 1 };
+    // Increment view count when CV is accessed
+    await this.cvRepository.incrementViews(cv.id);
+
+    // Fetch all CV children sections
+    const [
+      contacts,
+      educations,
+      works,
+      projects,
+      organizations,
+      courses,
+      skills,
+      languages,
+    ] = await Promise.all([
+      this.contactRepository.getAllInCv(cv.id),
+      this.educationRepository.getAllInCv(cv.id),
+      this.workRepository.getAllInCv(cv.id),
+      this.projectRepository.getAllInCv(cv.id),
+      this.organizationRepository.getAllInCv(cv.id),
+      this.courseRepository.getAllInCv(cv.id),
+      this.skillRepository.getAllInCv(cv.id),
+      this.languageRepository.getAllInCv(cv.id),
+    ]);
+
+    // Return complete CV with all sections
+    return {
+      // Core CV info (minimal)
+      id: cv.id,
+      title: cv.title,
+      description: cv.description,
+      createdAt: cv.createdAt,
+      updatedAt: cv.updatedAt,
+      views: cv.views + 1, // Include the incremented view count
+
+      // CV sections (all ordered by displayOrder ASC from backend)
+      contacts,
+      educations,
+      works,
+      projects,
+      organizations,
+      courses,
+      skills,
+      languages,
+    } as CompleteCvResponse;
   }
 
   async downloadCv(cvId: number) {
-    const cv = await this.cvRepository.getCvBySlug(cvId.toString());
+    const cv = await this.cvRepository.getCvById(cvId);
     if (!cv) {
       throw new NotFoundError(`[Service] CV with ID ${cvId} not found`);
+    }
+
+    // Only allow downloading of public CVs
+    if (!cv.isPublic) {
+      throw new NotFoundError(
+        `[Service] CV with ID ${cvId} is not publicly available`,
+      );
     }
 
     await this.cvRepository.incrementDownloads(cvId);
