@@ -1,12 +1,12 @@
-import { createHonoBindings } from "../lib/create-hono";
-import { zValidator } from "../utils/validator";
-import { languageService } from "../lib/container";
+import { createHonoBindings } from "../../lib/create-hono";
+import { zValidator } from "../../utils/validator";
+import { languageService } from "../../lib/container";
 import {
   createLanguageSchema,
   updateLanguageSchema,
   cvIdParamsSchema,
   languageParamsSchema,
-} from "../schemas/language.schema";
+} from "../../schemas/language.schema";
 
 export const languageRoutes = createHonoBindings()
   .get("/:cvId/languages", zValidator("param", cvIdParamsSchema), async (c) => {

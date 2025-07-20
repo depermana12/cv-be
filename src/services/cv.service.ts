@@ -12,14 +12,14 @@ import type {
 import { NotFoundError } from "../errors/not-found.error";
 
 // Import concrete child repository classes
-import type { ContactRepository } from "../repositories/contact.repo";
-import type { EducationRepository } from "../repositories/education.repo";
-import type { WorkRepository } from "../repositories/work.repo";
-import type { ProjectRepository } from "../repositories/project.repo";
-import type { OrganizationRepository } from "../repositories/organization.repo";
-import type { CourseRepository } from "../repositories/course.repo";
-import type { SkillRepository } from "../repositories/skill.repo";
-import type { LanguageRepository } from "../repositories/language.repo";
+import type { ContactRepository } from "../repositories/cvChildren/contact.repo";
+import type { EducationRepository } from "../repositories/cvChildren/education.repo";
+import type { WorkRepository } from "../repositories/cvChildren/work.repo";
+import type { ProjectRepository } from "../repositories/cvChildren/project.repo";
+import type { OrganizationRepository } from "../repositories/cvChildren/organization.repo";
+import type { CourseRepository } from "../repositories/cvChildren/course.repo";
+import type { SkillRepository } from "../repositories/cvChildren/skill.repo";
+import type { LanguageRepository } from "../repositories/cvChildren/language.repo";
 
 export interface ICvService {
   createCv(cvData: Omit<CvInsert, "userId">, userId: number): Promise<CvSelect>;

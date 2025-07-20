@@ -1,12 +1,12 @@
-import { createHonoBindings } from "../lib/create-hono";
-import { zValidator } from "../utils/validator";
-import { projectService } from "../lib/container";
+import { createHonoBindings } from "../../lib/create-hono";
+import { zValidator } from "../../utils/validator";
+import { projectService } from "../../lib/container";
 import {
   createProjectSchema,
   updateProjectSchema,
   cvIdParamsSchema,
   projectParamsSchema,
-} from "../schemas/project.schema";
+} from "../../schemas/project.schema";
 
 export const projectRoutes = createHonoBindings()
   .get("/:cvId/projects", zValidator("param", cvIdParamsSchema), async (c) => {

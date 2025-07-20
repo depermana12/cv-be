@@ -1,12 +1,12 @@
-import { createHonoBindings } from "../lib/create-hono";
-import { zValidator } from "../utils/validator";
-import { skillService } from "../lib/container";
+import { createHonoBindings } from "../../lib/create-hono";
+import { zValidator } from "../../utils/validator";
+import { skillService } from "../../lib/container";
 import {
   createSkillSchema,
   updateSkillSchema,
   cvIdParamsSchema,
   skillParamsSchema,
-} from "../schemas/skill.schema";
+} from "../../schemas/skill.schema";
 
 export const skillRoutes = createHonoBindings()
   .get("/:cvId/skills", zValidator("param", cvIdParamsSchema), async (c) => {

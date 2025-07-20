@@ -1,12 +1,12 @@
-import { createHonoBindings } from "../lib/create-hono";
-import { zValidator } from "../utils/validator";
-import { organizationService } from "../lib/container";
+import { createHonoBindings } from "../../lib/create-hono";
+import { zValidator } from "../../utils/validator";
+import { organizationService } from "../../lib/container";
 import {
   createOrganizationSchema,
   updateOrganizationSchema,
   cvIdParamsSchema,
   organizationParamsSchema,
-} from "../schemas/organization.schema";
+} from "../../schemas/organization.schema";
 
 export const organizationRoutes = createHonoBindings()
   .get(

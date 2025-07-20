@@ -1,9 +1,9 @@
-import { CvChildService } from "./cvChild.service";
+import { CvChildService } from "../cvChild.service";
 import type {
   OrganizationInsert,
   OrganizationSelect,
-} from "../db/types/organization.type";
-import { OrganizationRepository } from "../repositories/organization.repo";
+} from "../../db/types/organization.type";
+import { OrganizationRepository } from "../../repositories/cvChildren/organization.repo";
 
 export class OrganizationService extends CvChildService<
   OrganizationSelect,

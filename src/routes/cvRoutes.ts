@@ -1,13 +1,13 @@
 import { Hono } from "hono";
 
-import { courseRoutes } from "../controllers/course.controller";
-import { educationRoutes } from "../controllers/education.controller";
-import { languageRoutes } from "../controllers/language.controller";
-import { organizationRoutes } from "../controllers/organization.controller";
-import { projectRoutes } from "../controllers/project.controller";
-import { skillRoutes } from "../controllers/skill.controller";
-import { workRoutes } from "../controllers/work.controller";
-import { contactRoutes } from "../controllers/contact.controller";
+import { courseRoutes } from "../controllers/cvChildren/course.controller";
+import { educationRoutes } from "../controllers/cvChildren/education.controller";
+import { languageRoutes } from "../controllers/cvChildren/language.controller";
+import { organizationRoutes } from "../controllers/cvChildren/organization.controller";
+import { projectRoutes } from "../controllers/cvChildren/project.controller";
+import { skillRoutes } from "../controllers/cvChildren/skill.controller";
+import { workRoutes } from "../controllers/cvChildren/work.controller";
+import { contactRoutes } from "../controllers/cvChildren/contact.controller";
 
 const cvChildRoutes = new Hono();
 

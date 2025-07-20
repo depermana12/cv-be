@@ -1,12 +1,12 @@
-import { createHonoBindings } from "../lib/create-hono";
-import { zValidator } from "../utils/validator";
-import { educationService } from "../lib/container";
+import { createHonoBindings } from "../../lib/create-hono";
+import { zValidator } from "../../utils/validator";
+import { educationService } from "../../lib/container";
 import {
   createEducationSchema,
   updateEducationSchema,
   cvIdParamsSchema,
   educationParamsSchema,
-} from "../schemas/education.schema";
+} from "../../schemas/education.schema";
 
 export const educationRoutes = createHonoBindings()
   .get(

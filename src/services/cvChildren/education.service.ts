@@ -1,9 +1,9 @@
-import { CvChildService } from "./cvChild.service";
-import type { EducationRepository } from "../repositories/education.repo";
+import { CvChildService } from "../cvChild.service";
 import type {
   EducationInsert,
   EducationSelect,
-} from "../db/types/education.type";
+} from "../../db/types/education.type";
+import { EducationRepository } from "../../repositories/cvChildren/education.repo";
 
 export class EducationService extends CvChildService<
   EducationSelect,

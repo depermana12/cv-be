@@ -1,8 +1,8 @@
 import { eq } from "drizzle-orm";
-import { CvChildRepository } from "./cvChild.repo";
-import { skills } from "../db/schema/skill.db";
-import type { SkillInsert, SkillSelect } from "../db/types/skill.type";
-import type { Database } from "../db/index";
+import { CvChildRepository } from "../cvChild.repo";
+import { skills } from "../../db/schema/skill.db";
+import type { SkillInsert, SkillSelect } from "../../db/types/skill.type";
+import type { Database } from "../../db/index";
 
 export interface ISkillRepository {
   getCategoriesForCv(cvId: number): Promise<{ category: string }[]>;

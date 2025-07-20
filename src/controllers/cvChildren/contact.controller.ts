@@ -1,12 +1,12 @@
-import { createHonoBindings } from "../lib/create-hono";
-import { zValidator } from "../utils/validator";
-import { contactService } from "../lib/container";
+import { createHonoBindings } from "../../lib/create-hono";
+import { zValidator } from "../../utils/validator";
+import { contactService } from "../../lib/container";
 import {
   createContactSchema,
   updateContactSchema,
   cvIdParamsSchema,
   contactParamsSchema,
-} from "../schemas/contact.schema";
+} from "../../schemas/contact.schema";
 
 export const contactRoutes = createHonoBindings()
   .get("/:cvId/contacts", zValidator("param", cvIdParamsSchema), async (c) => {

@@ -1,6 +1,6 @@
-import type { SkillInsert, SkillSelect } from "../db/types/skill.type";
-import { CvChildService } from "./cvChild.service";
-import { SkillRepository } from "../repositories/skill.repo";
+import { CvChildService } from "../cvChild.service";
+import type { SkillInsert, SkillSelect } from "../../db/types/skill.type";
+import { SkillRepository } from "../../repositories/cvChildren/skill.repo";
 
 export interface ISkillService {
   getUniqueCategories(cvId: number): Promise<string[]>;
