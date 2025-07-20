@@ -40,11 +40,3 @@ export const userParamsSchema = z.object({
     .int()
     .positive({ message: "User ID must be a positive integer" }),
 });
-
-// Username availability check schema
-export const checkUsernameSchema = z.object({
-  username: z
-    .string()
-    .min(3, { message: "Username must be at least 3 characters" })
-    .max(50, { message: "Username must be 50 characters or fewer" }),
-});
