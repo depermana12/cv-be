@@ -12,7 +12,7 @@ export const contactRoutes = createHonoBindings()
   .get("/:cvId/contacts", zValidator("param", cvIdParamsSchema), async (c) => {
     const { cvId } = c.req.valid("param");
 
-    const contacts = await contactService.getAllInCv(cvId);
+    const contacts = await contactService.getAll(cvId);
 
     return c.json({
       success: true,
@@ -26,7 +26,7 @@ export const contactRoutes = createHonoBindings()
     async (c) => {
       const { cvId, contactId } = c.req.valid("param");
 
-      const contact = await contactService.getByIdInCv(cvId, contactId);
+      const contact = await contactService.getOne(cvId, contactId);
 
       return c.json({
         success: true,
@@ -43,10 +43,7 @@ export const contactRoutes = createHonoBindings()
       const { cvId } = c.req.valid("param");
       const contactData = c.req.valid("json");
 
-      const contact = await contactService.createInCv(cvId, {
-        ...contactData,
-        cvId,
-      });
+      const contact = await contactService.create(cvId, contactData);
 
       return c.json(
         {
@@ -66,7 +63,7 @@ export const contactRoutes = createHonoBindings()
       const { cvId, contactId } = c.req.valid("param");
       const updateData = c.req.valid("json");
 
-      const contact = await contactService.updateContact(
+      const contact = await contactService.update(
         cvId,
         contactId,
         updateData,
@@ -85,7 +82,7 @@ export const contactRoutes = createHonoBindings()
     async (c) => {
       const { cvId, contactId } = c.req.valid("param");
 
-      const deleted = await contactService.deleteInCv(cvId, contactId);
+      const deleted = await contactService.delete(cvId, contactId);
 
       return c.json({
         success: true,

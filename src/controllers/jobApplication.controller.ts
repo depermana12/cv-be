@@ -1,9 +1,9 @@
 import { zValidator } from "../utils/validator";
 import {
-  jobApplicationCreateSchema,
-  jobApplicationUpdateSchema,
+  createJobApplicationSchema,
+  jobApplicationParamsSchema,
   jobApplicationQueryOptionsSchema,
-  idParamSchema,
+  updateJobApplicationSchema,
 } from "../schemas/jobApplication.schema";
 import { jobApplicationService } from "../lib/container";
 import { createHonoBindings } from "../lib/create-hono";
@@ -36,7 +36,7 @@ export const jobApplicationRoutes = createHonoBindings()
       );
     },
   )
-  .get("/:id", zValidator("param", idParamSchema), async (c) => {
+  .get("/:id", zValidator("param", jobApplicationParamsSchema), async (c) => {
     const { id: userId } = c.get("jwtPayload");
     const { id: jobId } = c.req.valid("param");
 
@@ -54,7 +54,7 @@ export const jobApplicationRoutes = createHonoBindings()
       200,
     );
   })
-  .post("/", zValidator("json", jobApplicationCreateSchema), async (c) => {
+  .post("/", zValidator("json", createJobApplicationSchema), async (c) => {
     const { id: userId } = c.get("jwtPayload");
     const data = c.req.valid("json");
 
@@ -74,8 +74,8 @@ export const jobApplicationRoutes = createHonoBindings()
   })
   .patch(
     "/:id",
-    zValidator("param", idParamSchema),
-    zValidator("json", jobApplicationUpdateSchema),
+    zValidator("param", jobApplicationParamsSchema),
+    zValidator("json", updateJobApplicationSchema),
     async (c) => {
       const { id: userId } = c.get("jwtPayload");
       const { id: jobId } = c.req.valid("param");
@@ -100,39 +100,47 @@ export const jobApplicationRoutes = createHonoBindings()
       );
     },
   )
-  .delete("/:id", zValidator("param", idParamSchema), async (c) => {
-    const { id: userId } = c.get("jwtPayload");
-    const { id: jobId } = c.req.valid("param");
+  .delete(
+    "/:id",
+    zValidator("param", jobApplicationParamsSchema),
+    async (c) => {
+      const { id: userId } = c.get("jwtPayload");
+      const { id: jobId } = c.req.valid("param");
 
-    const deleted = await jobApplicationService.deleteJobApplication(
-      jobId,
-      +userId,
-    );
+      const deleted = await jobApplicationService.deleteJobApplication(
+        jobId,
+        +userId,
+      );
 
-    return c.json(
-      {
-        success: true,
-        message: `record id: ${jobId} deleted successfully`,
-        data: deleted ? "Record deleted" : "Record not found",
-      },
-      200,
-    );
-  })
-  .get("/:id/statuses", zValidator("param", idParamSchema), async (c) => {
-    const { id: userId } = c.get("jwtPayload");
-    const { id: jobId } = c.req.valid("param");
+      return c.json(
+        {
+          success: true,
+          message: `record id: ${jobId} deleted successfully`,
+          data: deleted ? "Record deleted" : "Record not found",
+        },
+        200,
+      );
+    },
+  )
+  .get(
+    "/:id/statuses",
+    zValidator("param", jobApplicationParamsSchema),
+    async (c) => {
+      const { id: userId } = c.get("jwtPayload");
+      const { id: jobId } = c.req.valid("param");
 
-    const timeline = await jobApplicationService.getStatusTimeline(
-      jobId,
-      +userId,
-    );
+      const timeline = await jobApplicationService.getStatusTimeline(
+        jobId,
+        +userId,
+      );
 
-    return c.json(
-      {
-        success: true,
-        message: `Status timeline for application ID ${jobId}`,
-        data: timeline,
-      },
-      200,
-    );
-  });
+      return c.json(
+        {
+          success: true,
+          message: `Status timeline for application ID ${jobId}`,
+          data: timeline,
+        },
+        200,
+      );
+    },
+  );

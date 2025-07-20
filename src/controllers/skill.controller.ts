@@ -1,96 +1,89 @@
-import { zValidator } from "../utils/validator";
-import {
-  skillInsertSchema,
-  skillUpdateSchema,
-  skillQueryOptionsSchema,
-} from "../schemas/skill.schema";
-import { skillService } from "../lib/container";
 import { createHonoBindings } from "../lib/create-hono";
+import { zValidator } from "../utils/validator";
+import { skillService } from "../lib/container";
+import {
+  createSkillSchema,
+  updateSkillSchema,
+  cvIdParamsSchema,
+  skillParamsSchema,
+} from "../schemas/skill.schema";
 
 export const skillRoutes = createHonoBindings()
-  .get("/:cvId/skills/categories", async (c) => {
-    const cvId = Number(c.req.param("cvId"));
+  .get("/:cvId/skills", zValidator("param", cvIdParamsSchema), async (c) => {
+    const { cvId } = c.req.valid("param");
 
-    const categories = await skillService.getUniqueCategories(cvId);
+    const skills = await skillService.getAll(cvId);
 
     return c.json({
       success: true,
-      message: `retrieved ${categories.length} skill categories for CV ${cvId}`,
-      data: categories,
+      message: "Skills retrieved successfully",
+      data: skills,
     });
   })
   .get(
-    "/:cvId/skills",
-    zValidator("query", skillQueryOptionsSchema),
+    "/:cvId/skills/:skillId",
+    zValidator("param", skillParamsSchema),
     async (c) => {
-      const cvId = Number(c.req.param("cvId"));
-      const options = c.req.valid("query");
+      const { cvId, skillId } = c.req.valid("param");
 
-      const skills = await skillService.getAllSkills(cvId, options);
+      const skill = await skillService.getOne(cvId, skillId);
 
       return c.json({
         success: true,
-        message: `retrieved ${skills.length} skill records successfully`,
-        data: skills,
+        message: "Skill retrieved successfully",
+        data: skill,
       });
     },
   )
-  .get("/:cvId/skills/:skillId", async (c) => {
-    const cvId = Number(c.req.param("cvId"));
-    const skillId = Number(c.req.param("skillId"));
+  .post(
+    "/:cvId/skills",
+    zValidator("param", cvIdParamsSchema),
+    zValidator("json", createSkillSchema),
+    async (c) => {
+      const { cvId } = c.req.valid("param");
+      const skillData = c.req.valid("json");
 
-    const skill = await skillService.getSkill(cvId, skillId);
+      const skill = await skillService.create(cvId, skillData);
 
-    return c.json({
-      success: true,
-      message: `skill record ${skillId} retrieved successfully`,
-      data: skill,
-    });
-  })
-  .post("/:cvId/skills", zValidator("json", skillInsertSchema), async (c) => {
-    const cvId = Number(c.req.param("cvId"));
-    const skillData = c.req.valid("json");
-
-    const newSkill = await skillService.createSkill(cvId, skillData);
-
-    return c.json(
-      {
-        success: true,
-        message: `skill record created with ID: ${newSkill.id}`,
-        data: newSkill,
-      },
-      201,
-    );
-  })
+      return c.json(
+        {
+          success: true,
+          message: "Skill created successfully",
+          data: skill,
+        },
+        201,
+      );
+    },
+  )
   .patch(
     "/:cvId/skills/:skillId",
-    zValidator("json", skillUpdateSchema),
+    zValidator("param", skillParamsSchema),
+    zValidator("json", updateSkillSchema),
     async (c) => {
-      const cvId = Number(c.req.param("cvId"));
-      const skillId = Number(c.req.param("skillId"));
+      const { cvId, skillId } = c.req.valid("param");
       const updateData = c.req.valid("json");
 
-      const updatedSkill = await skillService.updateSkill(
-        cvId,
-        skillId,
-        updateData,
-      );
+      const skill = await skillService.update(cvId, skillId, updateData);
 
       return c.json({
         success: true,
-        message: `skill record ${skillId} updated successfully`,
-        data: updatedSkill,
+        message: "Skill updated successfully",
+        data: skill,
       });
     },
   )
-  .delete("/:cvId/skills/:skillId", async (c) => {
-    const cvId = Number(c.req.param("cvId"));
-    const skillId = Number(c.req.param("skillId"));
+  .delete(
+    "/:cvId/skills/:skillId",
+    zValidator("param", skillParamsSchema),
+    async (c) => {
+      const { cvId, skillId } = c.req.valid("param");
 
-    await skillService.deleteSkill(cvId, skillId);
+      const deleted = await skillService.delete(cvId, skillId);
 
-    return c.json({
-      success: true,
-      message: `skill record ${skillId} deleted successfully`,
-    });
-  });
+      return c.json({
+        success: true,
+        message: "Skill deleted successfully",
+        data: deleted,
+      });
+    },
+  );

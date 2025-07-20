@@ -1,154 +1,89 @@
+import { createHonoBindings } from "../lib/create-hono";
 import { zValidator } from "../utils/validator";
 import { courseService } from "../lib/container";
 import {
-  courseDescInsertSchema,
-  courseDescUpdateSchema,
-  courseCreateSchema,
-  courseQueryOptionsSchema,
-  courseUpdateSchema,
+  createCourseSchema,
+  updateCourseSchema,
+  cvIdParamsSchema,
+  courseParamsSchema,
 } from "../schemas/course.schema";
-import { createHonoBindings } from "../lib/create-hono";
 
 export const courseRoutes = createHonoBindings()
+  .get("/:cvId/courses", zValidator("param", cvIdParamsSchema), async (c) => {
+    const { cvId } = c.req.valid("param");
+
+    const courses = await courseService.getAll(cvId);
+
+    return c.json({
+      success: true,
+      message: "Courses retrieved successfully",
+      data: courses,
+    });
+  })
   .get(
-    "/:cvId/courses",
-    zValidator("query", courseQueryOptionsSchema),
-    async (c) => {
-      const cvId = Number(c.req.param("cvId"));
-      const options = c.req.valid("query");
-      const courses = await courseService.getAllCourses(cvId, options);
-
-      return c.json({
-        success: true,
-        message: `retrieved ${courses.length} course records successfully`,
-        data: courses,
-      });
-    },
-  )
-  .get("/:cvId/courses/:courseId", async (c) => {
-    const cvId = Number(c.req.param("cvId"));
-    const courseId = Number(c.req.param("courseId"));
-
-    const course = await courseService.getCourse(cvId, courseId);
-
-    return c.json({
-      success: true,
-      message: `course record ${courseId} retrieved successfully`,
-      data: course,
-    });
-  })
-  .post("/:cvId/courses", zValidator("json", courseCreateSchema), async (c) => {
-    const cvId = Number(c.req.param("cvId"));
-    const courseData = c.req.valid("json");
-
-    const newCourse = await courseService.createCourse(cvId, courseData);
-
-    return c.json(
-      {
-        success: true,
-        message: `course record created with ID: ${newCourse.id}`,
-        data: newCourse,
-      },
-      201,
-    );
-  })
-  .patch(
     "/:cvId/courses/:courseId",
-    zValidator("json", courseUpdateSchema),
+    zValidator("param", courseParamsSchema),
     async (c) => {
-      const cvId = Number(c.req.param("cvId"));
-      const courseId = Number(c.req.param("courseId"));
-      const updateData = c.req.valid("json");
+      const { cvId, courseId } = c.req.valid("param");
 
-      const updatedCourse = await courseService.updateCourse(
-        cvId,
-        courseId,
-        updateData,
-      );
+      const course = await courseService.getOne(cvId, courseId);
 
       return c.json({
         success: true,
-        message: `course record ${courseId} updated successfully`,
-        data: updatedCourse,
+        message: "Course retrieved successfully",
+        data: course,
       });
     },
   )
-  .delete("/:cvId/courses/:courseId", async (c) => {
-    const cvId = Number(c.req.param("cvId"));
-    const courseId = Number(c.req.param("courseId"));
-
-    await courseService.deleteCourse(cvId, courseId);
-
-    return c.json({
-      success: true,
-      message: `course record ${courseId} deleted successfully`,
-    });
-  })
-  .get("/:cvId/courses/:courseId/descriptions", async (c) => {
-    const cvId = Number(c.req.param("cvId"));
-    const courseId = Number(c.req.param("courseId"));
-
-    const descriptions = await courseService.getAllDescriptions(cvId, courseId);
-
-    return c.json({
-      success: true,
-      message: `retrieved ${descriptions.length} description records`,
-      data: descriptions,
-    });
-  })
   .post(
-    "/:cvId/courses/:courseId/descriptions",
-    zValidator("json", courseDescInsertSchema),
+    "/:cvId/courses",
+    zValidator("param", cvIdParamsSchema),
+    zValidator("json", createCourseSchema),
     async (c) => {
-      const cvId = Number(c.req.param("cvId"));
-      const courseId = Number(c.req.param("courseId"));
-      const descriptionData = c.req.valid("json");
+      const { cvId } = c.req.valid("param");
+      const courseData = c.req.valid("json");
 
-      const newDescription = await courseService.addDescription(
-        cvId,
-        courseId,
-        descriptionData,
-      );
+      const course = await courseService.create(cvId, courseData);
 
       return c.json(
         {
           success: true,
-          message: `description added to course ${courseId}`,
-          data: newDescription,
+          message: "Course created successfully",
+          data: course,
         },
         201,
       );
     },
   )
   .patch(
-    "/:cvId/courses/descriptions/:descriptionId",
-    zValidator("json", courseDescUpdateSchema),
+    "/:cvId/courses/:courseId",
+    zValidator("param", courseParamsSchema),
+    zValidator("json", updateCourseSchema),
     async (c) => {
-      const cvId = Number(c.req.param("cvId"));
-      const descriptionId = Number(c.req.param("descriptionId"));
+      const { cvId, courseId } = c.req.valid("param");
       const updateData = c.req.valid("json");
 
-      const updatedDescription = await courseService.updateDescription(
-        cvId,
-        descriptionId,
-        updateData,
-      );
+      const course = await courseService.update(cvId, courseId, updateData);
 
       return c.json({
         success: true,
-        message: `description ${descriptionId} updated successfully`,
-        data: updatedDescription,
+        message: "Course updated successfully",
+        data: course,
       });
     },
   )
-  .delete("/:cvId/courses/descriptions/:descriptionId", async (c) => {
-    const cvId = Number(c.req.param("cvId"));
-    const descriptionId = Number(c.req.param("descriptionId"));
+  .delete(
+    "/:cvId/courses/:courseId",
+    zValidator("param", courseParamsSchema),
+    async (c) => {
+      const { cvId, courseId } = c.req.valid("param");
 
-    await courseService.deleteDescription(cvId, descriptionId);
+      const deleted = await courseService.delete(cvId, courseId);
 
-    return c.json({
-      success: true,
-      message: `description ${descriptionId} deleted successfully`,
-    });
-  });
+      return c.json({
+        success: true,
+        message: "Course deleted successfully",
+        data: deleted,
+      });
+    },
+  );

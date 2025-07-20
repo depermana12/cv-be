@@ -1,58 +1,55 @@
-import { zValidator } from "../utils/validator";
-import {
-  languageInsertSchema,
-  languageUpdateSchema,
-  languageQueryOptionsSchema,
-} from "../schemas/language.schema";
-import { languageService } from "../lib/container";
 import { createHonoBindings } from "../lib/create-hono";
+import { zValidator } from "../utils/validator";
+import { languageService } from "../lib/container";
+import {
+  createLanguageSchema,
+  updateLanguageSchema,
+  cvIdParamsSchema,
+  languageParamsSchema,
+} from "../schemas/language.schema";
 
 export const languageRoutes = createHonoBindings()
-  .get(
-    "/:cvId/languages",
-    zValidator("query", languageQueryOptionsSchema),
-    async (c) => {
-      const cvId = Number(c.req.param("cvId"));
-      const options = c.req.valid("query");
+  .get("/:cvId/languages", zValidator("param", cvIdParamsSchema), async (c) => {
+    const { cvId } = c.req.valid("param");
 
-      const languages = await languageService.getAllLanguages(cvId, options);
-
-      return c.json({
-        success: true,
-        message: `retrieved ${languages.length} language records successfully`,
-        data: languages,
-      });
-    },
-  )
-  .get("/:cvId/languages/:languageId", async (c) => {
-    const cvId = Number(c.req.param("cvId"));
-    const languageId = Number(c.req.param("languageId"));
-
-    const language = await languageService.getLanguage(cvId, languageId);
+    const languages = await languageService.getAll(cvId);
 
     return c.json({
       success: true,
-      message: `language record ${languageId} retrieved successfully`,
-      data: language,
+      message: "Languages retrieved successfully",
+      data: languages,
     });
   })
+  .get(
+    "/:cvId/languages/:languageId",
+    zValidator("param", languageParamsSchema),
+    async (c) => {
+      const { cvId, languageId } = c.req.valid("param");
+
+      const language = await languageService.getOne(cvId, languageId);
+
+      return c.json({
+        success: true,
+        message: "Language retrieved successfully",
+        data: language,
+      });
+    },
+  )
   .post(
     "/:cvId/languages",
-    zValidator("json", languageInsertSchema),
+    zValidator("param", cvIdParamsSchema),
+    zValidator("json", createLanguageSchema),
     async (c) => {
-      const cvId = Number(c.req.param("cvId"));
+      const { cvId } = c.req.valid("param");
       const languageData = c.req.valid("json");
 
-      const newLanguage = await languageService.createLanguage(
-        cvId,
-        languageData,
-      );
+      const language = await languageService.create(cvId, languageData);
 
       return c.json(
         {
           success: true,
-          message: `language record created with ID: ${newLanguage.id}`,
-          data: newLanguage,
+          message: "Language created successfully",
+          data: language,
         },
         201,
       );
@@ -60,13 +57,13 @@ export const languageRoutes = createHonoBindings()
   )
   .patch(
     "/:cvId/languages/:languageId",
-    zValidator("json", languageUpdateSchema),
+    zValidator("param", languageParamsSchema),
+    zValidator("json", updateLanguageSchema),
     async (c) => {
-      const cvId = Number(c.req.param("cvId"));
-      const languageId = Number(c.req.param("languageId"));
+      const { cvId, languageId } = c.req.valid("param");
       const updateData = c.req.valid("json");
 
-      const updatedLanguage = await languageService.updateLanguage(
+      const language = await languageService.update(
         cvId,
         languageId,
         updateData,
@@ -74,19 +71,23 @@ export const languageRoutes = createHonoBindings()
 
       return c.json({
         success: true,
-        message: `language record ${languageId} updated successfully`,
-        data: updatedLanguage,
+        message: "Language updated successfully",
+        data: language,
       });
     },
   )
-  .delete("/:cvId/languages/:languageId", async (c) => {
-    const cvId = Number(c.req.param("cvId"));
-    const languageId = Number(c.req.param("languageId"));
+  .delete(
+    "/:cvId/languages/:languageId",
+    zValidator("param", languageParamsSchema),
+    async (c) => {
+      const { cvId, languageId } = c.req.valid("param");
 
-    await languageService.deleteLanguage(cvId, languageId);
+      const deleted = await languageService.delete(cvId, languageId);
 
-    return c.json({
-      success: true,
-      message: `language record ${languageId} deleted successfully`,
-    });
-  });
+      return c.json({
+        success: true,
+        message: "Language deleted successfully",
+        data: deleted,
+      });
+    },
+  );
