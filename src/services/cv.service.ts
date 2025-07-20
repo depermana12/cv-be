@@ -137,14 +137,14 @@ export class CvService implements ICvService {
       skills,
       languages,
     ] = await Promise.all([
-      this.contactRepository.getAllInCv(cv.id),
-      this.educationRepository.getAllInCv(cv.id),
-      this.workRepository.getAllInCv(cv.id),
-      this.projectRepository.getAllInCv(cv.id),
-      this.organizationRepository.getAllInCv(cv.id),
-      this.courseRepository.getAllInCv(cv.id),
-      this.skillRepository.getAllInCv(cv.id),
-      this.languageRepository.getAllInCv(cv.id),
+      this.contactRepository.getAll(cv.id),
+      this.educationRepository.getAll(cv.id),
+      this.workRepository.getAll(cv.id),
+      this.projectRepository.getAll(cv.id),
+      this.organizationRepository.getAll(cv.id),
+      this.courseRepository.getAll(cv.id),
+      this.skillRepository.getAll(cv.id),
+      this.languageRepository.getAll(cv.id),
     ]);
 
     // Return complete CV with all sections
