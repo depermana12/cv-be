@@ -8,8 +8,8 @@ export const projects = pgTable("projects", {
     .notNull()
     .references(() => cv.id),
   name: varchar("name", { length: 100 }).notNull(),
-  startDate: date("start_date"),
-  endDate: date("end_date"),
+  startDate: date("start_date", { mode: "date" }),
+  endDate: date("end_date", { mode: "date" }),
   url: varchar("url", { length: 255 }),
   descriptions: text("descriptions").array(),
   technologies: text("technologies").array(),

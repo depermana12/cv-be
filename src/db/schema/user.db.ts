@@ -24,7 +24,7 @@ export const users = pgTable(
     password: varchar("password", { length: 255 }).notNull(),
     isEmailVerified: boolean("is_email_verified").default(false),
     profileImage: text("profile_image"),
-    birthDate: date("birth_date"),
+    birthDate: date("birth_date", { mode: "date" }),
     firstName: varchar("first_name", { length: 50 }),
     lastName: varchar("last_name", { length: 50 }),
     gender: genderEnum("gender"),

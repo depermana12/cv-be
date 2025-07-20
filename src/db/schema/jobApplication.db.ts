@@ -62,7 +62,7 @@ export const jobApplications = pgTable(
     locationType: locationTypeEnum("location_type").notNull(),
     status: statusEnum("status").default("applied").notNull(),
     notes: text("notes"),
-    appliedAt: timestamp("applied_at").notNull(),
+    appliedAt: timestamp("applied_at", { mode: "date" }).notNull(),
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at")
       .defaultNow()
@@ -77,7 +77,7 @@ export const jobApplicationStatuses = pgTable("job_application_statuses", {
     .notNull()
     .references(() => jobApplications.id, { onDelete: "cascade" }),
   status: statusEnum("status").notNull(),
-  changedAt: timestamp("changed_at").notNull(),
+  changedAt: timestamp("changed_at", { mode: "date" }).notNull(),
 });
 
 export const jobApplicationRelations = relations(

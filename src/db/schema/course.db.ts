@@ -9,8 +9,8 @@ export const courses = pgTable("courses", {
     .references(() => cv.id, { onDelete: "cascade" }),
   provider: varchar("provider", { length: 100 }).notNull(),
   courseName: varchar("course_name", { length: 200 }),
-  startDate: date("start_date"),
-  endDate: date("end_date"),
+  startDate: date("start_date", { mode: "date" }),
+  endDate: date("end_date", { mode: "date" }),
   descriptions: text("descriptions").array(),
   displayOrder: integer("display_order"),
 });
