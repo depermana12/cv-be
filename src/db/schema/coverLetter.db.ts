@@ -12,6 +12,14 @@ import { users } from "./user.db";
 import { cv } from "./cv.db";
 import { jobApplications } from "./jobApplication.db";
 
+export const toneEnum = pgEnum("tone", [
+  "professional",
+  "friendly",
+  "confident",
+  "enthusiastic",
+  "formal",
+]);
+
 /**
  * Cover Letter Templates - Reusable templates
  */
@@ -22,13 +30,7 @@ export const coverLetterTemplates = pgTable("cover_letter_templates", {
     .references(() => users.id, { onDelete: "cascade" }),
   name: varchar("name", { length: 100 }).notNull(),
   content: text("content").notNull(), // Template with placeholders like {{company}}, {{position}}
-  tone: pgEnum("tone", [
-    "professional",
-    "friendly",
-    "confident",
-    "enthusiastic",
-    "formal",
-  ])("tone").default("professional"),
+  tone: toneEnum("tone").default("professional"),
   isDefault: boolean("is_default").default(false),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at")
@@ -59,13 +61,7 @@ export const coverLetters = pgTable("cover_letters", {
   companyName: varchar("company_name", { length: 100 }),
   position: varchar("position", { length: 100 }),
   hiringManager: varchar("hiring_manager", { length: 100 }),
-  tone: pgEnum("tone", [
-    "professional",
-    "friendly",
-    "confident",
-    "enthusiastic",
-    "formal",
-  ])("tone").default("professional"),
+  tone: toneEnum("tone").default("professional"),
   wordCount: integer("word_count"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at")
