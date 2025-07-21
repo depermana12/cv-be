@@ -66,9 +66,6 @@ export const coverLetters = pgTable("cover_letters", {
     "enthusiastic",
     "formal",
   ])("tone").default("professional"),
-  status: pgEnum("cover_letter_status", ["draft", "active", "archived"])(
-    "status",
-  ).default("draft"),
   wordCount: integer("word_count"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at")

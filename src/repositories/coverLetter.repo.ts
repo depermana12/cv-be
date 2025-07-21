@@ -1,58 +1,62 @@
-import { eq, and, desc, count, sql } from "drizzle-orm";
+import { eq, and, desc, count } from "drizzle-orm";
 import type { Database } from "../db/index.js";
 import {
   coverLetters,
   coverLetterTemplates,
-  coverLetterSections,
 } from "../db/schema/coverLetter.db.js";
 import { cv } from "../db/schema/cv.db.js";
 import type {
+  CoverLetter,
   CoverLetterInsert,
   CoverLetterUpdate,
   CoverLetterQuery,
+  CoverLetterTemplate,
   CoverLetterTemplateInsert,
   CoverLetterTemplateUpdate,
   CoverLetterTemplateQuery,
-  BulkUpdateStatus,
-} from "../schemas/coverLetter.schema.js";
+  CoverLetterStats,
+  PaginatedCoverLetterTemplates,
+  PaginatedCoverLetters,
+} from "../db/types/coverLetter.type.js";
 
 export interface CoverLetterRepository {
   // Template methods
-  createTemplate(
-    data: CoverLetterTemplateInsert & { userId: number },
-  ): Promise<any>;
+  createTemplate(data: CoverLetterTemplateInsert): Promise<CoverLetterTemplate>;
   getTemplates(
     userId: number,
     query: CoverLetterTemplateQuery,
-  ): Promise<{ data: any[]; total: number; limit: number; offset: number }>;
-  getTemplateById(userId: number, templateId: number): Promise<any>;
+  ): Promise<PaginatedCoverLetterTemplates>;
+  getTemplateById(
+    userId: number,
+    templateId: number,
+  ): Promise<CoverLetterTemplate>;
   updateTemplate(
     userId: number,
     templateId: number,
     data: CoverLetterTemplateUpdate,
-  ): Promise<any>;
+  ): Promise<CoverLetterTemplate>;
   deleteTemplate(userId: number, templateId: number): Promise<void>;
 
   // Cover letter methods
-  createCoverLetter(
-    data: CoverLetterInsert & { userId: number; wordCount: number },
-  ): Promise<any>;
+  createCoverLetter(data: CoverLetterInsert): Promise<CoverLetter>;
   getCoverLetters(
     userId: number,
     query: CoverLetterQuery,
-  ): Promise<{ data: any[]; total: number; limit: number; offset: number }>;
-  getCoverLetterById(userId: number, coverLetterId: number): Promise<any>;
+  ): Promise<PaginatedCoverLetters>;
+  getCoverLetterById(
+    userId: number,
+    coverLetterId: number,
+  ): Promise<CoverLetter>;
   updateCoverLetter(
     userId: number,
     coverLetterId: number,
-    data: any,
-  ): Promise<any>;
+    data: CoverLetterUpdate,
+  ): Promise<CoverLetter>;
   deleteCoverLetter(userId: number, coverLetterId: number): Promise<void>;
 
   // Utility methods
   verifyCvOwnership(cvId: number, userId: number): Promise<boolean>;
-  bulkUpdateStatus(userId: number, data: BulkUpdateStatus): Promise<void>;
-  getCoverLetterStats(userId: number): Promise<any>;
+  getCoverLetterStats(userId: number): Promise<CoverLetterStats>;
 }
 
 export class CoverLetterRepositoryImpl implements CoverLetterRepository {
@@ -61,8 +65,8 @@ export class CoverLetterRepositoryImpl implements CoverLetterRepository {
   // ===== TEMPLATE METHODS =====
 
   async createTemplate(
-    data: CoverLetterTemplateInsert & { userId: number },
-  ): Promise<any> {
+    data: CoverLetterTemplateInsert,
+  ): Promise<CoverLetterTemplate> {
     const [template] = await this.db
       .insert(coverLetterTemplates)
       .values(data)
@@ -74,8 +78,8 @@ export class CoverLetterRepositoryImpl implements CoverLetterRepository {
   async getTemplates(
     userId: number,
     query: CoverLetterTemplateQuery,
-  ): Promise<{ data: any[]; total: number; limit: number; offset: number }> {
-    const { limit, offset, tone, isDefault } = query;
+  ): Promise<PaginatedCoverLetterTemplates> {
+    const { limit = 10, offset = 0, tone, isDefault } = query;
 
     let whereConditions = [eq(coverLetterTemplates.userId, userId)];
 
@@ -104,13 +108,18 @@ export class CoverLetterRepositoryImpl implements CoverLetterRepository {
 
     return {
       data: templates,
-      total,
-      limit,
-      offset,
+      pagination: {
+        total,
+        limit,
+        offset,
+      },
     };
   }
 
-  async getTemplateById(userId: number, templateId: number): Promise<any> {
+  async getTemplateById(
+    userId: number,
+    templateId: number,
+  ): Promise<CoverLetterTemplate> {
     const [template] = await this.db
       .select()
       .from(coverLetterTemplates)
@@ -128,7 +137,7 @@ export class CoverLetterRepositoryImpl implements CoverLetterRepository {
     userId: number,
     templateId: number,
     data: CoverLetterTemplateUpdate,
-  ): Promise<any> {
+  ): Promise<CoverLetterTemplate> {
     const [template] = await this.db
       .update(coverLetterTemplates)
       .set(data)
@@ -156,9 +165,7 @@ export class CoverLetterRepositoryImpl implements CoverLetterRepository {
 
   // ===== COVER LETTER METHODS =====
 
-  async createCoverLetter(
-    data: CoverLetterInsert & { userId: number; wordCount: number },
-  ): Promise<any> {
+  async createCoverLetter(data: CoverLetterInsert): Promise<CoverLetter> {
     const [coverLetter] = await this.db
       .insert(coverLetters)
       .values(data)
@@ -170,16 +177,13 @@ export class CoverLetterRepositoryImpl implements CoverLetterRepository {
   async getCoverLetters(
     userId: number,
     query: CoverLetterQuery,
-  ): Promise<{ data: any[]; total: number; limit: number; offset: number }> {
-    const { limit, offset, cvId, status, tone, applicationId } = query;
+  ): Promise<PaginatedCoverLetters> {
+    const { limit = 10, offset = 0, cvId, tone, applicationId } = query;
 
     let whereConditions = [eq(coverLetters.userId, userId)];
 
     if (cvId) {
       whereConditions.push(eq(coverLetters.cvId, cvId));
-    }
-    if (status) {
-      whereConditions.push(eq(coverLetters.status, status));
     }
     if (tone) {
       whereConditions.push(eq(coverLetters.tone, tone));
@@ -190,18 +194,7 @@ export class CoverLetterRepositoryImpl implements CoverLetterRepository {
 
     const [coverLettersList, [{ count: total }]] = await Promise.all([
       this.db
-        .select({
-          id: coverLetters.id,
-          title: coverLetters.title,
-          companyName: coverLetters.companyName,
-          position: coverLetters.position,
-          status: coverLetters.status,
-          tone: coverLetters.tone,
-          wordCount: coverLetters.wordCount,
-          cvId: coverLetters.cvId,
-          createdAt: coverLetters.createdAt,
-          updatedAt: coverLetters.updatedAt,
-        })
+        .select()
         .from(coverLetters)
         .where(and(...whereConditions))
         .limit(limit)
@@ -216,16 +209,18 @@ export class CoverLetterRepositoryImpl implements CoverLetterRepository {
 
     return {
       data: coverLettersList,
-      total,
-      limit,
-      offset,
+      pagination: {
+        total,
+        limit,
+        offset,
+      },
     };
   }
 
   async getCoverLetterById(
     userId: number,
     coverLetterId: number,
-  ): Promise<any> {
+  ): Promise<CoverLetter> {
     const [coverLetter] = await this.db
       .select()
       .from(coverLetters)
@@ -242,8 +237,8 @@ export class CoverLetterRepositoryImpl implements CoverLetterRepository {
   async updateCoverLetter(
     userId: number,
     coverLetterId: number,
-    data: any,
-  ): Promise<any> {
+    data: CoverLetterUpdate,
+  ): Promise<CoverLetter> {
     const [coverLetter] = await this.db
       .update(coverLetters)
       .set(data)
@@ -283,41 +278,16 @@ export class CoverLetterRepositoryImpl implements CoverLetterRepository {
     return !!cvExists;
   }
 
-  async bulkUpdateStatus(
-    userId: number,
-    data: BulkUpdateStatus,
-  ): Promise<void> {
-    const { coverLetterIds, status } = data;
-
-    await this.db
-      .update(coverLetters)
-      .set({ status })
-      .where(
-        and(
-          sql`${coverLetters.id} = ANY(${coverLetterIds})`,
-          eq(coverLetters.userId, userId),
-        ),
-      );
-  }
-
-  async getCoverLetterStats(userId: number): Promise<any> {
+  async getCoverLetterStats(userId: number): Promise<CoverLetterStats> {
     const [stats] = await this.db
       .select({
         totalCoverLetters: count(),
-        draftCount: count(
-          sql`CASE WHEN ${coverLetters.status} = 'draft' THEN 1 END`,
-        ),
-        activeCount: count(
-          sql`CASE WHEN ${coverLetters.status} = 'active' THEN 1 END`,
-        ),
-        archivedCount: count(
-          sql`CASE WHEN ${coverLetters.status} = 'archived' THEN 1 END`,
-        ),
-        avgWordCount: sql<number>`AVG(${coverLetters.wordCount})`,
       })
       .from(coverLetters)
       .where(eq(coverLetters.userId, userId));
 
-    return stats;
+    return {
+      totalCoverLetters: stats.totalCoverLetters,
+    };
   }
 }

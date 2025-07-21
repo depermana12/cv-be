@@ -10,7 +10,7 @@ import { SkillRepository } from "../repositories/cvChildren/skill.repo";
 import { UserRepository } from "../repositories/user.repo";
 import { WorkRepository } from "../repositories/cvChildren/work.repo";
 import { AnalyticsRepository } from "../repositories/analytics.repo";
-// import { CoverLetterRepositoryImpl } from "../repositories/coverLetter.repo";
+import { CoverLetterRepositoryImpl } from "../repositories/coverLetter.repo";
 
 import { AuthService } from "../services/auth.service";
 import { CourseService } from "../services/cvChildren/course.service";
@@ -24,7 +24,7 @@ import { SkillService } from "../services/cvChildren/skill.service";
 import { UserService } from "../services/user.service";
 import { WorkService } from "../services/cvChildren/work.service";
 import { AnalyticsService } from "../services/analytics.service";
-// import { CoverLetterService } from "../services/coverLetter.service";
+import { CoverLetterService } from "../services/coverLetter.service";
 import { JobApplicationRepository } from "../repositories/jobApplication.repo";
 import { JobApplicationService } from "../services/jobApplication.service";
 import { EmailService } from "../services/email.service";
@@ -58,7 +58,7 @@ const jobApplicationStatusRepository = new JobApplicationStatusRepository(db);
 
 // Analytics Repository
 const analyticsRepository = new AnalyticsRepository(db);
-// const coverLetterRepository = new CoverLetterRepositoryImpl(db);
+const coverLetterRepository = new CoverLetterRepositoryImpl(db);
 
 // =====================
 // SERVICES
@@ -109,4 +109,4 @@ export const emailService = new EmailService();
 
 // Analytics Service
 export const analyticsService = new AnalyticsService(analyticsRepository);
-// export const coverLetterService = new CoverLetterService(coverLetterRepository);
+export const coverLetterService = new CoverLetterService(coverLetterRepository);
