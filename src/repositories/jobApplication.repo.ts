@@ -49,9 +49,9 @@ export class JobApplicationRepository implements IJobApplication {
     const whereClause = [eq(this.table.userId, userId)];
 
     if (options?.search) {
-      const searchTerm = `%${options.search.toLowerCase()}%`;
+      const searchTerm = `%${options.search}%`;
       whereClause.push(
-        sql`(lower(${this.table.companyName}) like ${searchTerm} or lower(${this.table.jobTitle}) like ${searchTerm})`,
+        sql`(${this.table.companyName} ilike ${searchTerm} or ${this.table.jobTitle} ilike ${searchTerm})`,
       );
     }
 

@@ -5,7 +5,7 @@ import {
   desc,
   eq,
   gte,
-  like,
+  ilike,
   lte,
   ne,
   sql,
@@ -86,8 +86,8 @@ export class CvRepository
     const whereClause = [eq(cv.userId, userId)];
 
     if (options?.search) {
-      const searchTerm = `%${options.search.toLowerCase()}%`;
-      whereClause.push(like(sql`lower(${cv.title})`, searchTerm));
+      const searchTerm = `%${options.search}%`;
+      whereClause.push(ilike(cv.title, searchTerm));
     }
     if (options?.isPublic !== undefined) {
       whereClause.push(eq(cv.isPublic, options.isPublic));
