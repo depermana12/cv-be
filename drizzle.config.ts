@@ -1,5 +1,4 @@
 import "dotenv/config";
-import "./xpolyfill";
 import { defineConfig } from "drizzle-kit";
 import { config } from "./src/config/index";
 

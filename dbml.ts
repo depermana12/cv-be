@@ -1,11 +1,10 @@
 import { schema } from "./src/db/index";
-
-import { mysqlGenerate } from "drizzle-dbml-generator";
+import { pgGenerate } from "drizzle-dbml-generator";
 
 const out = "./schema.dbml";
 const relational = true;
 
-mysqlGenerate({
+pgGenerate({
   schema,
   out,
   relational,
