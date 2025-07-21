@@ -6,7 +6,8 @@ export const createJobApplicationSchema = z.object({
     .number()
     .int()
     .positive({ message: "CV ID must be a positive integer" })
-    .optional(),
+    .optional()
+    .nullable(),
   jobPortal: z
     .string()
     .max(100, { message: "Job portal must be 100 characters or fewer" }),
