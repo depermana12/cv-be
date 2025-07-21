@@ -6,6 +6,7 @@ import type {
   PortalPerformance,
   MonthlyProgress,
   TimeRange,
+  TimeToResponseResult,
 } from "../db/types/analytics.type";
 
 export interface IAnalyticsService {
@@ -19,7 +20,7 @@ export interface IAnalyticsService {
     days?: number,
   ): Promise<ApplicationTrends[]>;
   getPortalPerformance(userId: number): Promise<PortalPerformance[]>;
-  getAverageTimeToResponse(userId: number): Promise<number | null>;
+  getAverageTimeToResponse(userId: number): Promise<TimeToResponseResult>;
   getMonthlyProgress(
     userId: number,
     monthlyGoal?: number,
@@ -57,8 +58,8 @@ export class AnalyticsService implements IAnalyticsService {
       interviews: interviews,
       offers: offers,
       rejections: rejections,
-      responseRate: totalApps > 0 ? (interviews / totalApps) * 100 : 0,
-      successRate: totalApps > 0 ? (offers / totalApps) * 100 : 0,
+      responseRate: this.calculatePercentage(interviews, totalApps),
+      successRate: this.calculatePercentage(offers, totalApps),
     };
   }
 
@@ -68,7 +69,19 @@ export class AnalyticsService implements IAnalyticsService {
 
   // 2. Status Distribution for Pie Chart
   async getStatusDistribution(userId: number) {
-    return this.analyticsRepo.getStatusDistribution(userId);
+    const distribution = await this.analyticsRepo.getStatusDistribution(userId);
+
+    // Ensure we always return data even if no applications exist
+    if (distribution.length === 0) {
+      return [
+        {
+          status: "No applications yet",
+          count: 0,
+        },
+      ];
+    }
+
+    return distribution;
   }
 
   // 3. Applications Over Time (Line Chart)
@@ -85,12 +98,43 @@ export class AnalyticsService implements IAnalyticsService {
 
   // 4. Performance by Job Portal
   async getPortalPerformance(userId: number) {
-    return this.analyticsRepo.getPortalPerformance(userId);
+    const rawData = await this.analyticsRepo.getPortalPerformance(userId);
+
+    // Add calculated success rates for each portal
+    return rawData.map((portal) => ({
+      ...portal,
+      interviewRate: this.calculatePercentage(
+        portal.interviews,
+        portal.totalApplications,
+      ),
+      offerRate: this.calculatePercentage(
+        portal.offers,
+        portal.totalApplications,
+      ),
+    }));
   }
 
   // 5. Average Time to Response
-  async getAverageTimeToResponse(userId: number) {
-    return this.analyticsRepo.getAverageTimeToResponse(userId);
+  async getAverageTimeToResponse(
+    userId: number,
+  ): Promise<TimeToResponseResult> {
+    const result = await this.analyticsRepo.getAverageTimeToResponse(userId);
+
+    if (result === null) {
+      return {
+        avgDays: null,
+        hasData: false,
+        description: "No applications have reached interview stage yet",
+      };
+    }
+
+    const roundedDays = this.roundToTwoDecimals(result);
+
+    return {
+      avgDays: roundedDays,
+      hasData: true,
+      description: `Average time from application to interview: ${roundedDays} days`,
+    };
   }
 
   // =============================
@@ -111,12 +155,21 @@ export class AnalyticsService implements IAnalyticsService {
     return {
       goal: monthlyGoal,
       current: currentCount,
-      percentage: (currentCount / monthlyGoal) * 100,
-      remaining: monthlyGoal - currentCount,
+      percentage: this.calculatePercentage(currentCount, monthlyGoal),
+      remaining: Math.max(0, monthlyGoal - currentCount),
     };
   }
 
   // =============================
   // PRIVATE UTILITY METHODS
   // =============================
+
+  private roundToTwoDecimals(value: number): number {
+    return Math.round(value * 100) / 100;
+  }
+
+  private calculatePercentage(numerator: number, denominator: number): number {
+    if (denominator === 0) return 0;
+    return this.roundToTwoDecimals((numerator / denominator) * 100);
+  }
 }

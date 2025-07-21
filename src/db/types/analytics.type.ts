@@ -26,6 +26,16 @@ export type PortalPerformance = {
   totalApplications: number;
   interviews: number;
   offers: number;
+  // percentage calculations
+  interviewRate: number;
+  offerRate: number;
+};
+
+export type PortalPerformanceRaw = {
+  portal: string;
+  totalApplications: number;
+  interviews: number;
+  offers: number;
 };
 
 export type AverageTimeToResponse = {
@@ -51,6 +61,12 @@ export type MonthlyProgress = {
   current: number;
   percentage: number;
   remaining: number;
+};
+
+export type TimeToResponseResult = {
+  avgDays: number | null;
+  hasData: boolean;
+  description: string;
 };
 
 export type TimeRange = "week" | "month" | "all";

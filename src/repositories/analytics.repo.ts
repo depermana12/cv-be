@@ -10,7 +10,7 @@ import type {
   ApplicationCount,
   StatusDistribution,
   ApplicationTrends,
-  PortalPerformance,
+  PortalPerformanceRaw,
   AverageTimeToResponse,
   MonthlyApplicationCount,
   TimeRange,
@@ -28,7 +28,7 @@ export interface IAnalyticsRepository {
     userId: number,
     daysAgo: Date,
   ): Promise<ApplicationTrends[]>;
-  getPortalPerformance(userId: number): Promise<PortalPerformance[]>;
+  getPortalPerformance(userId: number): Promise<PortalPerformanceRaw[]>;
   getAverageTimeToResponse(userId: number): Promise<number | null>;
   getMonthlyApplicationCount(
     userId: number,
