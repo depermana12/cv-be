@@ -3,7 +3,11 @@ import { ValidationError } from "../errors/validation.error";
 import type { IUserRepository } from "../repositories/user.repo";
 
 import type { AuthUserSafe, UserStats } from "../db/types/auth.type";
-import type { UpdateUserProfileSafe } from "../db/types/user.type";
+import type {
+  UpdateUserProfileSafe,
+  UpdateUserPreferencesSafe,
+  UpdateUserSubscriptionSafe,
+} from "../db/types/user.type";
 import type { CvService } from "./cv.service";
 import type { IJobApplicationService } from "./jobApplication.service";
 
@@ -17,6 +21,14 @@ export interface IUserService {
   ): Promise<AuthUserSafe>;
   updateUserEmail(id: number, newEmail: string): Promise<AuthUserSafe>;
   updateUserUsername(id: number, newUsername: string): Promise<AuthUserSafe>;
+  updateUserPreferences(
+    id: number,
+    preferences: UpdateUserPreferencesSafe,
+  ): Promise<AuthUserSafe>;
+  updateUserSubscription(
+    id: number,
+    subscription: UpdateUserSubscriptionSafe,
+  ): Promise<AuthUserSafe>;
   isUserEmailVerified(id: number): Promise<{ verified: boolean }>;
   isUsernameExists(username: string): Promise<boolean>;
   getUserStats(id: number): Promise<UserStats>;
@@ -95,6 +107,44 @@ export class UserService implements IUserService {
     const updatedUser = await this.userRepository.updateUsername(
       id,
       newUsername.toLowerCase(),
+    );
+    if (!updatedUser) {
+      throw new NotFoundError("user record not found");
+    }
+    return updatedUser;
+  }
+
+  async updateUserPreferences(
+    id: number,
+    preferences: UpdateUserPreferencesSafe,
+  ) {
+    const updatedUser = await this.userRepository.updateUserPreferences(
+      id,
+      preferences,
+    );
+    if (!updatedUser) {
+      throw new NotFoundError("user record not found");
+    }
+    return updatedUser;
+  }
+
+  async updateUserSubscription(
+    id: number,
+    subscription: UpdateUserSubscriptionSafe,
+  ) {
+    // Validate subscription expiry date if provided
+    if (subscription.subscriptionExpiresAt) {
+      const now = new Date();
+      if (subscription.subscriptionExpiresAt <= now) {
+        throw new ValidationError(
+          "Subscription expiry date must be in the future",
+        );
+      }
+    }
+
+    const updatedUser = await this.userRepository.updateUserSubscription(
+      id,
+      subscription,
     );
     if (!updatedUser) {
       throw new NotFoundError("user record not found");

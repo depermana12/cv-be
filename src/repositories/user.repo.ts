@@ -7,6 +7,8 @@ import type {
   UserInsert,
   UserSelect,
   UserUpdate,
+  UpdateUserPreferencesSafe,
+  UpdateUserSubscriptionSafe,
 } from "../db/types/user.type";
 
 export interface IUserRepository {
@@ -19,6 +21,14 @@ export interface IUserRepository {
   updateUser(id: number, newUserData: UserUpdate): Promise<SafeUser | null>;
   updateEmail(id: number, newEmail: string): Promise<SafeUser | null>;
   updateUsername(id: number, newUsername: string): Promise<SafeUser | null>;
+  updateUserPreferences(
+    id: number,
+    preferences: UpdateUserPreferencesSafe,
+  ): Promise<SafeUser | null>;
+  updateUserSubscription(
+    id: number,
+    subscription: UpdateUserSubscriptionSafe,
+  ): Promise<SafeUser | null>;
   verifyUserEmail(id: number): Promise<SafeUser | null>;
   updateUserPassword(id: number, newPw: string): Promise<SafeUser | null>;
   deleteUser(id: number): Promise<boolean>;
@@ -166,6 +176,34 @@ export class UserRepository implements IUserRepository {
     const result = await this.db
       .update(this.table)
       .set({ password: newPw })
+      .where(eq(this.table.id, id))
+      .returning();
+    if (!result.length) return null;
+    const { password, ...safeUser } = result[0];
+    return safeUser;
+  }
+
+  async updateUserPreferences(
+    id: number,
+    preferences: UpdateUserPreferencesSafe,
+  ): Promise<SafeUser | null> {
+    const result = await this.db
+      .update(this.table)
+      .set(preferences)
+      .where(eq(this.table.id, id))
+      .returning();
+    if (!result.length) return null;
+    const { password, ...safeUser } = result[0];
+    return safeUser;
+  }
+
+  async updateUserSubscription(
+    id: number,
+    subscription: UpdateUserSubscriptionSafe,
+  ): Promise<SafeUser | null> {
+    const result = await this.db
+      .update(this.table)
+      .set(subscription)
       .where(eq(this.table.id, id))
       .returning();
     if (!result.length) return null;

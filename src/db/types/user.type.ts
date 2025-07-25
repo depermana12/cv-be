@@ -17,4 +17,15 @@ export type UpdateUserProfileSafe = Partial<
   >
 >;
 
+export type UpdateUserPreferencesSafe = Partial<
+  Pick<UserInsert, "emailNotifications" | "monthlyReports">
+>;
+
+export type UpdateUserSubscriptionSafe = Partial<
+  Pick<
+    UserInsert,
+    "subscriptionType" | "subscriptionStatus" | "subscriptionExpiresAt"
+  >
+>;
+
 export type SafeUser = Omit<UserSelect, "password">;

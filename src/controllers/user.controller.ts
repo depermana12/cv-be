@@ -1,5 +1,10 @@
 import { zValidator } from "../utils/validator";
-import { updateUserSchema } from "../schemas/user.schema";
+import {
+  updateUserSchema,
+  updateUserCredentialsSchema,
+  updateUserPreferencesSchema,
+  updateUserSubscriptionSchema,
+} from "../schemas/user.schema";
 import { userService } from "../lib/container";
 import { createHonoBindings } from "../lib/create-hono";
 
@@ -12,7 +17,7 @@ export const userRoutes = createHonoBindings()
     return c.json(
       {
         success: true,
-        message: "it's me",
+        message: "user profile retrieved",
         data: me,
       },
       200,
@@ -44,6 +49,78 @@ export const userRoutes = createHonoBindings()
       data: updatedUser,
     });
   })
+  .patch(
+    "/me/credentials",
+    zValidator("json", updateUserCredentialsSchema),
+    async (c) => {
+      const { id: userId } = c.get("jwtPayload");
+      const validatedBody = c.req.valid("json");
+
+      let updatedUser;
+
+      if (validatedBody.username) {
+        updatedUser = await userService.updateUserUsername(
+          +userId,
+          validatedBody.username,
+        );
+      }
+
+      if (validatedBody.email) {
+        updatedUser = await userService.updateUserEmail(
+          +userId,
+          validatedBody.email,
+        );
+      }
+
+      if (!updatedUser) {
+        updatedUser = await userService.getUserByIdSafe(+userId);
+      }
+
+      return c.json({
+        success: true,
+        message: "user credentials updated successfully",
+        data: updatedUser,
+      });
+    },
+  )
+  .patch(
+    "/me/preferences",
+    zValidator("json", updateUserPreferencesSchema),
+    async (c) => {
+      const { id: userId } = c.get("jwtPayload");
+      const validatedBody = c.req.valid("json");
+
+      const updatedUser = await userService.updateUserPreferences(
+        +userId,
+        validatedBody,
+      );
+
+      return c.json({
+        success: true,
+        message: "user preferences updated successfully",
+        data: updatedUser,
+      });
+    },
+  )
+  .patch(
+    "/me/subscription",
+    zValidator("json", updateUserSubscriptionSchema),
+    async (c) => {
+      const { id: userId } = c.get("jwtPayload");
+      const validatedBody = c.req.valid("json");
+
+      const updatedUser = await userService.updateUserSubscription(
+        +userId,
+        validatedBody,
+      );
+
+      return c.json({
+        success: true,
+        message: "user subscription updated successfully",
+        data: updatedUser,
+      });
+    },
+  )
   .get("/me/email-verification-status", async (c) => {
     const { id: userId } = c.get("jwtPayload");
 

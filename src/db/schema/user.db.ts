@@ -14,8 +14,17 @@ import { cv } from "./cv.db";
 import { jobApplications } from "./jobApplication.db";
 
 export const genderEnum = pgEnum("gender", ["male", "female"]);
-export const subscriptionTypeEnum = pgEnum("subscription_type", ["free", "pro"]);
-export const subscriptionStatusEnum = pgEnum("subscription_status", ["active", "expired", "cancelled", "pending"]);
+export const subscriptionTypeEnum = pgEnum("subscription_type", [
+  "free",
+  "trial",
+  "pro",
+]);
+export const subscriptionStatusEnum = pgEnum("subscription_status", [
+  "active",
+  "expired",
+  "cancelled",
+  "pending",
+]);
 
 export const users = pgTable(
   "users",
@@ -30,10 +39,12 @@ export const users = pgTable(
     firstName: varchar("first_name", { length: 50 }),
     lastName: varchar("last_name", { length: 50 }),
     about: text("about"),
-    bio: varchar("bio", {length: 255}),
+    bio: varchar("bio", { length: 255 }),
     gender: genderEnum("gender"),
     subscriptionType: subscriptionTypeEnum("subscription_type").default("free"),
-    subscriptionStatus: subscriptionStatusEnum("subscription_status").default("active"),
+    subscriptionStatus: subscriptionStatusEnum("subscription_status").default(
+      "active",
+    ),
     subscriptionExpiresAt: timestamp("subscription_expires_at"),
     emailNotifications: boolean("email_notifications").default(true),
     monthlyReports: boolean("monthly_reports").default(true),
