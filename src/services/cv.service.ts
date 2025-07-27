@@ -42,6 +42,10 @@ export interface ICvService {
   downloadCv(cvId: number): Promise<CvSelect>;
   getPopularCvs(limit?: number): Promise<CvSelect[]>;
   getUserStats(userId: number): Promise<CvStats>;
+  checkSlugAvailability(
+    slug: string,
+    excludeCvId?: number,
+  ): Promise<{ available: boolean; slug: string }>;
 }
 
 export class CvService implements ICvService {
@@ -193,5 +197,17 @@ export class CvService implements ICvService {
 
   async getUserStats(userId: number) {
     return this.cvRepository.getUserCvStats(userId);
+  }
+
+  async checkSlugAvailability(slug: string, excludeCvId?: number) {
+    const available = await this.cvRepository.checkSlugAvailability(
+      slug,
+      excludeCvId,
+    );
+
+    return {
+      available,
+      slug,
+    };
   }
 }

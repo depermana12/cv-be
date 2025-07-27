@@ -17,7 +17,9 @@ export const createCvSchema = z.object({
   slug: z
     .string()
     .max(255, { message: "Slug must be 255 characters or fewer" })
-    .nullable()
+    .regex(/^[a-z0-9-]+$/, {
+      message: "Slug can only contain lowercase letters, numbers, and hyphens",
+    })
     .optional(),
   language: z
     .string()
@@ -71,4 +73,20 @@ export const cvSlugParamsSchema = z.object({
 // query schema for popular CVs
 export const popularCvQuerySchema = z.object({
   limit: z.coerce.number().min(1).max(50).default(10).optional(),
+});
+
+// query schema for slug availability check
+export const slugAvailabilityQuerySchema = z.object({
+  slug: z
+    .string({ required_error: "Slug is required" })
+    .min(1, { message: "Slug cannot be empty" })
+    .max(255, { message: "Slug must be 255 characters or fewer" })
+    .regex(/^[a-z0-9-]+$/, {
+      message: "Slug can only contain lowercase letters, numbers, and hyphens",
+    }),
+  excludeCvId: z.coerce
+    .number()
+    .int()
+    .positive({ message: "CV ID must be a positive integer" })
+    .optional(),
 });
