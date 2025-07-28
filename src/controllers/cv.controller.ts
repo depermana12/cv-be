@@ -8,6 +8,7 @@ import {
   cvParamsSchema,
   cvSlugParamsSchema,
   popularCvQuerySchema,
+  slugAvailabilityQuerySchema,
 } from "../schemas/cv.schema";
 import { cvService } from "../lib/container";
 
@@ -49,6 +50,32 @@ export const cvRoutes = createHonoBindings()
       201,
     );
   })
+  .get("/me/stats", async (c) => {
+    const { id: userId } = c.get("jwtPayload");
+
+    const stats = await cvService.getUserStats(+userId);
+
+    return c.json({
+      success: true,
+      message: "User CV statistics retrieved successfully",
+      data: stats,
+    });
+  })
+  .get(
+    "/check-slug-availability",
+    zValidator("query", slugAvailabilityQuerySchema),
+    async (c) => {
+      const { slug, excludeCvId } = c.req.valid("query");
+
+      const result = await cvService.checkSlugAvailability(slug, excludeCvId);
+
+      return c.json({
+        success: true,
+        message: "Slug availability checked successfully",
+        data: result,
+      });
+    },
+  )
   .get("/:id", zValidator("param", cvParamsSchema), async (c) => {
     const { id: userId } = c.get("jwtPayload");
     const { id: cvId } = c.req.valid("param");
@@ -95,17 +122,6 @@ export const cvRoutes = createHonoBindings()
       success: true,
       message: `CV with ID ${cvId} deleted successfully`,
       data: deleted,
-    });
-  })
-  .get("/me/stats", async (c) => {
-    const { id: userId } = c.get("jwtPayload");
-
-    const stats = await cvService.getUserStats(+userId);
-
-    return c.json({
-      success: true,
-      message: "User CV statistics retrieved successfully",
-      data: stats,
     });
   });
 
