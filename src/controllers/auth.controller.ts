@@ -47,6 +47,7 @@ export const authRoutes = createHonoBindings()
     const verificationToken = await authService.createEmailVerificationToken({
       id: user.id.toString(),
       email: user.email,
+      isEmailVerified: user.isEmailVerified || false,
     });
 
     await emailService.sendEmailVerification({
@@ -108,6 +109,7 @@ export const authRoutes = createHonoBindings()
       const resetToken = await authService.createResetPasswordToken({
         id: user.id.toString(),
         email: user.email,
+        isEmailVerified: user.isEmailVerified || false,
       });
 
       await emailService.sendPasswordReset({
@@ -149,22 +151,34 @@ export const authRoutes = createHonoBindings()
       try {
         const { token } = c.req.valid("param");
 
-        const user = await authService.validateEmailVerificationToken(token);
+        const userPayload = await authService.validateEmailVerificationToken(
+          token,
+        );
 
-        const isVerified = await authService.isEmailVerified(+user.id);
+        const isVerified = await authService.isEmailVerified(+userPayload.id);
         if (!isVerified.verified) {
-          await authService.verifyUserEmail(+user.id);
-          const fullUser = await authService.getByEmail(user.email);
+          await authService.verifyUserEmail(+userPayload.id);
+          const fullUser = await authService.getByEmail(userPayload.email);
           await emailService.sendWelcomeEmail(
             fullUser.email,
             fullUser.username,
           );
         }
 
+        // Generate new tokens with updated isEmailVerified flag
+        const updatedPayload = {
+          ...userPayload,
+          isEmailVerified: true,
+        };
+        const newTokens = await authService.generateAuthTokens(updatedPayload);
+
         return c.json({
           success: true,
           message: "Email verified successfully",
-          data: { userId: user.id },
+          data: {
+            userId: userPayload.id,
+            ...newTokens, // Include new access and refresh tokens
+          },
         });
       } catch (err) {
         if (
@@ -203,6 +217,7 @@ export const authRoutes = createHonoBindings()
     const token = await authService.createEmailVerificationToken({
       id: user.id,
       email: user.email,
+      isEmailVerified: user.isEmailVerified || false,
     });
 
     const fullUser = await authService.getByEmail(user.email);

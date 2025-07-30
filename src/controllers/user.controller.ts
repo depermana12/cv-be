@@ -8,8 +8,10 @@ import {
 } from "../schemas/user.schema";
 import { userService } from "../lib/container";
 import { createHonoBindings } from "../lib/create-hono";
+import { verifiedEmail } from "../middlewares/verifiedEmail";
 
-export const userRoutes = createHonoBindings()
+// Routes that don't require email verification (basic user info)
+export const userBasicRoutes = createHonoBindings()
   .get("/me", async (c) => {
     const { id: userId } = c.get("jwtPayload");
 
@@ -24,6 +26,21 @@ export const userRoutes = createHonoBindings()
       200,
     );
   })
+  .get("/me/email-verification-status", async (c) => {
+    const { id: userId } = c.get("jwtPayload");
+
+    const verificationStatus = await userService.isUserEmailVerified(+userId);
+
+    return c.json({
+      success: true,
+      message: "email verification status retrieved",
+      data: verificationStatus,
+    });
+  });
+
+// Routes that require email verification
+export const userRoutes = createHonoBindings()
+  .use("/*", verifiedEmail)
   .get("/me/stats", async (c) => {
     const { id: userId } = c.get("jwtPayload");
 
@@ -122,17 +139,6 @@ export const userRoutes = createHonoBindings()
       });
     },
   )
-  .get("/me/email-verification-status", async (c) => {
-    const { id: userId } = c.get("jwtPayload");
-
-    const verificationStatus = await userService.isUserEmailVerified(+userId);
-
-    return c.json({
-      success: true,
-      message: "email verification status retrieved",
-      data: verificationStatus,
-    });
-  })
   .delete("/me", zValidator("json", deleteUserSchema), async (c) => {
     const { id: userId } = c.get("jwtPayload");
     const { password } = c.req.valid("json");

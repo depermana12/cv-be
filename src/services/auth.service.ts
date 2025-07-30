@@ -67,6 +67,7 @@ export class AuthService implements IAuthService {
     const payload: UserPayload = {
       id: createdUser.id.toString(),
       email: createdUser.email,
+      isEmailVerified: createdUser.isEmailVerified || false,
     };
 
     const { accessToken, refreshToken } =
@@ -93,6 +94,7 @@ export class AuthService implements IAuthService {
     const payload: UserPayload = {
       id: user.id.toString(),
       email: user.email,
+      isEmailVerified: user.isEmailVerified ?? false,
     };
 
     const { accessToken, refreshToken } =
@@ -162,7 +164,11 @@ export class AuthService implements IAuthService {
       token,
     );
     await this.verifyUserEmail(Number(payload.id));
-    return payload;
+
+    return {
+      ...payload,
+      isEmailVerified: true,
+    };
   }
 
   async validateRefreshToken(refreshToken: string): Promise<UserPayload> {

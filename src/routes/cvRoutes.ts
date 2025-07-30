@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import { jwt } from "../middlewares/auth";
+import { verifiedEmail } from "../middlewares/verifiedEmail";
 
 import { courseRoutes } from "../controllers/cvChildren/course.controller";
 import { educationRoutes } from "../controllers/cvChildren/education.controller";
@@ -13,6 +14,7 @@ import { contactRoutes } from "../controllers/cvChildren/contact.controller";
 const cvChildRoutes = new Hono();
 
 cvChildRoutes.use("*", jwt());
+cvChildRoutes.use("*", verifiedEmail);
 cvChildRoutes.route("/", contactRoutes);
 cvChildRoutes.route("/", educationRoutes);
 cvChildRoutes.route("/", workRoutes);

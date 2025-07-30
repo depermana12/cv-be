@@ -1,6 +1,7 @@
 import { createHonoBindings } from "../lib/create-hono";
 import { zValidator } from "../utils/validator";
 import { jwt } from "../middlewares/auth";
+import { verifiedEmail } from "../middlewares/verifiedEmail";
 import {
   createCvSchema,
   updateCvSchema,
@@ -13,8 +14,9 @@ import {
 import { cvService } from "../lib/container";
 
 export const cvRoutes = createHonoBindings()
-  // Protected routes (require authentication)
+  // Protected routes (require authentication and email verification)
   .use("/*", jwt())
+  .use("/*", verifiedEmail)
   .get("/", zValidator("query", cvQuerySchema), async (c) => {
     const { id: userId } = c.get("jwtPayload");
     const options = c.req.valid("query");

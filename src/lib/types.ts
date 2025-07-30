@@ -5,6 +5,7 @@ import type { RequestIdVariables } from "hono/request-id";
 export type UserPayload = {
   id: string;
   email: string;
+  isEmailVerified: boolean;
   iat?: number | undefined;
   exp?: number | undefined;
 };

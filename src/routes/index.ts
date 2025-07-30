@@ -1,7 +1,8 @@
 import { Hono } from "hono";
 
 import { jwt } from "../middlewares/auth";
-import { userRoutes } from "../controllers/user.controller";
+import { verifiedEmail } from "../middlewares/verifiedEmail";
+import { userRoutes, userBasicRoutes } from "../controllers/user.controller";
 import { uploadRoutes } from "../controllers/upload.controller";
 import cvChildRoutes from "./cvRoutes";
 import { cvRoutes, publicCvRoutes } from "../controllers/cv.controller";
@@ -23,12 +24,19 @@ router.route("/auth", authRoutes);
 // cvs for public access isPublic true (no auth)
 router.route("/cvs", publicCvRoutes);
 
-// protected routes (global jwt middleware)
+// protected routes requiring authentication and email verification
 router.use("*", jwt());
-router.route("/users", userRoutes);
+router.use("*", verifiedEmail);
 router.route("/applications-tracking", jobApplicationRoutes);
 router.route("/uploads", uploadRoutes);
 router.route("/analytics", analyticsRoutes);
 router.route("/cover-letters", coverLetterRoutes);
+
+// user routes - basic routes (JWT only, no email verification required)
+router.use("/users/*", jwt());
+router.route("/users", userBasicRoutes);
+
+// user routes - advanced routes (JWT + email verification required)
+router.route("/users", userRoutes);
 
 export default router;
