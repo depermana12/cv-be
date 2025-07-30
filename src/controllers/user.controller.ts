@@ -4,6 +4,7 @@ import {
   updateUserCredentialsSchema,
   updateUserPreferencesSchema,
   updateUserSubscriptionSchema,
+  deleteUserSchema,
 } from "../schemas/user.schema";
 import { userService } from "../lib/container";
 import { createHonoBindings } from "../lib/create-hono";
@@ -132,10 +133,11 @@ export const userRoutes = createHonoBindings()
       data: verificationStatus,
     });
   })
-  .delete("/me", async (c) => {
+  .delete("/me", zValidator("json", deleteUserSchema), async (c) => {
     const { id: userId } = c.get("jwtPayload");
+    const { password } = c.req.valid("json");
 
-    const deleted = await userService.deleteUser(+userId);
+    const deleted = await userService.deleteUser(+userId, password);
 
     return c.json({
       success: true,

@@ -32,7 +32,7 @@ export interface IUserService {
   isUserEmailVerified(id: number): Promise<{ verified: boolean }>;
   isUsernameExists(username: string): Promise<boolean>;
   getUserStats(id: number): Promise<UserStats>;
-  deleteUser(id: number): Promise<boolean>;
+  deleteUser(id: number, password: string): Promise<boolean>;
 }
 export class UserService implements IUserService {
   constructor(
@@ -192,9 +192,12 @@ export class UserService implements IUserService {
   // USER ACCOUNT MANAGEMENT
   // =============================
 
-  async deleteUser(id: number): Promise<boolean> {
-    // First verify the user exists
-    await this.getUserByIdSafe(id);
+  async deleteUser(id: number, password: string): Promise<boolean> {
+    // Verify the user exists and password
+    const user = await this.userRepository.getByIdWithPassword(id);
+    if (!user || !(await Bun.password.verify(password, user.password))) {
+      throw new NotFoundError("Failed to delete user account");
+    }
 
     // Delete the user account
     const deleted = await this.userRepository.deleteUser(id);

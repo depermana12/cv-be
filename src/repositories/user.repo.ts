@@ -15,6 +15,7 @@ export interface IUserRepository {
   userExistsById(id: number): Promise<boolean>;
   isUsernameExists(username: string): Promise<boolean>;
   getByEmail(email: string): Promise<UserSelect | null>;
+  getByIdWithPassword(id: number): Promise<UserSelect | null>;
   createUser(user: UserInsert): Promise<SafeUser>;
   getByIdSafe(id: number): Promise<SafeUser | null>;
   getByEmailSafe(email: string): Promise<SafeUser | null>;

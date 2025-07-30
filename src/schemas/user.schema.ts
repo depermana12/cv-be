@@ -75,3 +75,8 @@ export const userParamsSchema = z.object({
     .int()
     .positive({ message: "User ID must be a positive integer" }),
 });
+
+// Delete user validation schema
+export const deleteUserSchema = z.object({
+  password: z.string({ required_error: "Password is required" }),
+});
