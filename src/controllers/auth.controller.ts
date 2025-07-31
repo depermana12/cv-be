@@ -165,19 +165,11 @@ export const authRoutes = createHonoBindings()
           );
         }
 
-        // Generate new tokens with updated isEmailVerified flag
-        const updatedPayload = {
-          ...userPayload,
-          isEmailVerified: true,
-        };
-        const newTokens = await authService.generateAuthTokens(updatedPayload);
-
         return c.json({
           success: true,
           message: "Email verified successfully",
           data: {
             userId: userPayload.id,
-            ...newTokens, // Include new access and refresh tokens
           },
         });
       } catch (err) {
