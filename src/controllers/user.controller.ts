@@ -145,6 +145,11 @@ export const userRoutes = createHonoBindings()
 
     const deleted = await userService.deleteUser(+userId, password);
 
+    c.header(
+      "Set-Cookie",
+      "refreshToken=; Path=/; HttpOnly; Max-Age=0; SameSite=Strict",
+    );
+
     return c.json({
       success: true,
       message: "user account deleted successfully",
