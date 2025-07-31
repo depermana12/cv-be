@@ -74,6 +74,7 @@ export class TokenService implements ITokenService {
     const payload: UserPayload = {
       id: user.id,
       email: user.email,
+      isEmailVerified: user.isEmailVerified,
       iat: now,
       exp: now + this.accessTokenExpirationSeconds,
     };
@@ -96,6 +97,7 @@ export class TokenService implements ITokenService {
     const payload: UserPayload = {
       id: user.id,
       email: user.email,
+      isEmailVerified: user.isEmailVerified,
       iat: now,
       exp,
     };
@@ -128,6 +130,7 @@ export class TokenService implements ITokenService {
     const payload: UserPayload = {
       id: user.id,
       email: user.email,
+      isEmailVerified: user.isEmailVerified,
       iat: now,
       exp: now + this.resetTokenExpirationSeconds,
     };
@@ -145,6 +148,7 @@ export class TokenService implements ITokenService {
     const payload: UserPayload = {
       id: user.id,
       email: user.email,
+      isEmailVerified: user.isEmailVerified,
       iat: now,
       exp: now + this.emailVerificationTokenExpirationSeconds,
     };

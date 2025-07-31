@@ -67,7 +67,7 @@ export class AuthService implements IAuthService {
     const payload: UserPayload = {
       id: createdUser.id.toString(),
       email: createdUser.email,
-      isEmailVerified: createdUser.isEmailVerified || false,
+      isEmailVerified: createdUser.isEmailVerified ?? false,
     };
 
     const { accessToken, refreshToken } =
