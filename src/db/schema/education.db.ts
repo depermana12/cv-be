@@ -25,14 +25,13 @@ export const educations = pgTable("educations", {
     .references(() => cv.id, { onDelete: "cascade" }),
   institution: varchar("institution", { length: 100 }).notNull(),
   degree: educationTypeEnum("degree").notNull(),
-  fieldOfStudy: varchar("field_of_study", { length: 100 }),
-  startDate: date("start_date", { mode: "date" }),
+  fieldOfStudy: varchar("field_of_study", { length: 100 }).notNull(),
+  startDate: date("start_date", { mode: "date" }).notNull(),
   endDate: date("end_date", { mode: "date" }),
   gpa: decimal("gpa", { precision: 3, scale: 2 }),
-  url: varchar("url", { length: 255 }),
   displayOrder: integer("display_order"),
-  location: varchar("location", { length: 100 }),
-  description: text("description").array(),
+  location: varchar("location", { length: 100 }).notNull(),
+  description: text("description"),
 });
 
 export const educationRelations = relations(educations, ({ one }) => ({
