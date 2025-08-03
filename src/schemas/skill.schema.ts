@@ -2,22 +2,12 @@ import { z } from "zod";
 
 // Create skill validation schema
 export const createSkillSchema = z.object({
-  type: z.enum(["technical", "soft", "language", "tool"], {
-    message: "Please select a valid skill type",
-  }),
   category: z
     .string()
-    .max(100, { message: "Category must be 100 characters or fewer" }),
-  name: z
-    .string()
-    .max(100, { message: "Skill name must be 100 characters or fewer" }),
-  proficiency: z
-    .enum(["beginner", "intermediate", "advanced", "expert"], {
-      message: "Please select a valid proficiency level",
-    })
-    .optional(),
-  keywords: z.array(z.string()).optional(),
-  description: z.string().optional(),
+    .max(255, { message: "Category must be 255 characters or fewer" }),
+  skill: z
+    .array(z.string())
+    .min(1, { message: "At least one skill is required" }),
 });
 
 // Update skill validation schema

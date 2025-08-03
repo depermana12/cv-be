@@ -2,21 +2,8 @@ import { CvChildService } from "../cvChild.service";
 import type { SkillInsert, SkillSelect } from "../../db/types/skill.type";
 import { SkillRepository } from "../../repositories/cvChildren/skill.repo";
 
-export interface ISkillService {
-  getUniqueCategories(cvId: number): Promise<string[]>;
-}
-
-export class SkillService
-  extends CvChildService<SkillSelect, SkillInsert>
-  implements ISkillService
-{
+export class SkillService extends CvChildService<SkillSelect, SkillInsert> {
   constructor(private readonly skillRepository: SkillRepository) {
     super(skillRepository);
-  }
-
-  // Custom method: gets unique categories for the CV
-  async getUniqueCategories(cvId: number) {
-    const categories = await this.skillRepository.getCategoriesForCv(cvId);
-    return categories.map((row) => row.category);
   }
 }
