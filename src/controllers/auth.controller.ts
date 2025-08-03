@@ -13,7 +13,7 @@ import {
   refreshTokenSchema,
   tokenParamsSchema,
   userIdParamsSchema,
-  usernameParamsSchema,
+  usernameQuerySchema,
 } from "../schemas/auth.schema";
 import {
   JwtAlgorithmNotImplemented,
@@ -243,10 +243,10 @@ export const authRoutes = createHonoBindings()
     },
   )
   .get(
-    "/check-username/:username",
-    zValidator("param", usernameParamsSchema),
+    "/check-username",
+    zValidator("query", usernameQuerySchema),
     async (c) => {
-      const { username } = c.req.valid("param");
+      const { username } = c.req.valid("query");
 
       const result = await authService.isUsernameAvailable(username);
 

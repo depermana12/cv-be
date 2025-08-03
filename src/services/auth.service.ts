@@ -49,12 +49,7 @@ export class AuthService implements IAuthService {
     if (emailExist) {
       throw new ValidationError("email already registered");
     }
-    const usernameExist = await this.userRepository.isUsernameExists(
-      userRegistration.username.toLowerCase(),
-    );
-    if (usernameExist) {
-      throw new ValidationError("username already taken");
-    }
+
     const hashedPassword = await this.hashPassword(userRegistration.password);
 
     const createdUser = await this.userRepository.createUser({

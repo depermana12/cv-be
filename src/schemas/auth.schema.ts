@@ -101,7 +101,7 @@ export const userIdParamsSchema = z.object({
 });
 
 // Username check parameter schema
-export const usernameParamsSchema = z.object({
+export const usernameQuerySchema = z.object({
   username: z
     .string()
     .min(3, { message: "Username must be at least 3 characters" })
