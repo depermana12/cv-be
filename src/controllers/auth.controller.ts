@@ -1,4 +1,4 @@
-import { authService, emailService, userService } from "../lib/container";
+import { authService, emailService } from "../lib/container";
 import { ValidationError } from "../errors/validation.error";
 import { createHonoBindings } from "../lib/create-hono";
 import { zValidator } from "../utils/validator";
@@ -248,26 +248,14 @@ export const authRoutes = createHonoBindings()
     async (c) => {
       const { username } = c.req.valid("param");
 
-      // Add artificial delay to prevent timing attacks
-      const startTime = Date.now();
-      const exists = await userService.isUsernameExists(username);
-      const elapsedTime = Date.now() - startTime;
-
-      // Ensure minimum response time to prevent timing analysis
-      const minResponseTime = 100; // 100ms minimum
-      if (elapsedTime < minResponseTime) {
-        await new Promise((resolve) =>
-          setTimeout(resolve, minResponseTime - elapsedTime),
-        );
-      }
+      const result = await authService.isUsernameAvailable(username);
 
       return c.json({
         success: true,
         message: "username availability checked",
         data: {
           username,
-          available: !exists,
-          exists,
+          available: result.available,
         },
       });
     },

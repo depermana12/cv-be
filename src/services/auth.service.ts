@@ -10,6 +10,7 @@ import type {
 import type { UserPayload } from "../lib/types";
 import { ValidationError } from "../errors/validation.error";
 import { NotFoundError } from "../errors/not-found.error";
+import { set } from "zod";
 
 export interface IAuthService {
   registerUser(
@@ -26,6 +27,7 @@ export interface IAuthService {
   validateRefreshToken(refreshToken: string): Promise<UserPayload>;
   generateAuthTokens(user: UserPayload): Promise<AuthTokens>;
   changeUserPassword(id: number, newPassword: string): Promise<void>;
+  isUsernameAvailable(username: string): Promise<{ available: boolean }>;
 }
 
 export class AuthService implements IAuthService {
@@ -196,5 +198,26 @@ export class AuthService implements IAuthService {
     if (!updated) {
       throw new ValidationError("Failed to update user password");
     }
+  }
+
+  // =============================
+  // USERNAME AVAILABILITY
+  // =============================
+
+  async isUsernameAvailable(username: string): Promise<{ available: boolean }> {
+    // 100ms artificial delay to prevent timing attacks
+    // debounce in frontend
+    const startTime = Date.now();
+    const exists = await this.userRepository.isUsernameExists(
+      username.toLowerCase(),
+    );
+    const elapsedTime = Date.now() - startTime;
+    if (elapsedTime < 100) {
+      await new Promise((resolve) => setTimeout(resolve, 100 - elapsedTime));
+    }
+
+    return {
+      available: !exists,
+    };
   }
 }
