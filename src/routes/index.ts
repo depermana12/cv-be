@@ -13,16 +13,15 @@ import { coverLetterRoutes } from "../controllers/coverLetter.controller";
 
 const router = new Hono();
 
-// routes with specific authentication (more specific patterns first)
+// public routes (no auth required)
+router.route("/auth", authRoutes);
+router.route("/cvs", publicCvRoutes); // handles /cvs/public/* routes
+
+// protected cv routes requiring authentication
 // child routes for cv related sections (has own jwt middleware)
 router.route("/cvs", cvChildRoutes);
 // cvs for authenticated users (has own jwt middleware)
 router.route("/cvs", cvRoutes);
-
-// public routes (no auth required, less specific patterns last)
-router.route("/auth", authRoutes);
-// cvs for public access isPublic true (no auth)
-router.route("/cvs", publicCvRoutes);
 
 // protected routes requiring authentication and email verification
 router.use("*", jwt());

@@ -130,7 +130,7 @@ export const cvRoutes = createHonoBindings()
 // Public routes for cv with isPublic (no authentication required)
 export const publicCvRoutes = createHonoBindings()
   .get(
-    "/:username/:slug",
+    "/public/:username/:slug",
     zValidator("param", cvSlugParamsSchema),
     async (c) => {
       const { username, slug } = c.req.valid("param");
@@ -144,25 +144,33 @@ export const publicCvRoutes = createHonoBindings()
       });
     },
   )
-  .get("/:id/download", zValidator("param", cvParamsSchema), async (c) => {
-    const { id: cvId } = c.req.valid("param");
+  .get(
+    "/public/:id/download",
+    zValidator("param", cvParamsSchema),
+    async (c) => {
+      const { id: cvId } = c.req.valid("param");
 
-    const cv = await cvService.downloadCv(cvId);
+      const cv = await cvService.downloadCv(cvId);
 
-    return c.json({
-      success: true,
-      message: `CV download tracked successfully`,
-      data: cv,
-    });
-  })
-  .get("/popular", zValidator("query", popularCvQuerySchema), async (c) => {
-    const { limit } = c.req.valid("query");
+      return c.json({
+        success: true,
+        message: `CV download tracked successfully`,
+        data: cv,
+      });
+    },
+  )
+  .get(
+    "/public/popular",
+    zValidator("query", popularCvQuerySchema),
+    async (c) => {
+      const { limit } = c.req.valid("query");
 
-    const popularCvs = await cvService.getPopularCvs(limit);
+      const popularCvs = await cvService.getPopularCvs(limit);
 
-    return c.json({
-      success: true,
-      message: `Retrieved ${popularCvs.length} popular CVs`,
-      data: popularCvs,
-    });
-  });
+      return c.json({
+        success: true,
+        message: `Retrieved ${popularCvs.length} popular CVs`,
+        data: popularCvs,
+      });
+    },
+  );
