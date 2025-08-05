@@ -5,6 +5,7 @@ import {
   updateUserPreferencesSchema,
   updateUserSubscriptionSchema,
   deleteUserSchema,
+  updateMonthlyGoalSchema,
 } from "../schemas/user.schema";
 import { userService } from "../lib/container";
 import { createHonoBindings } from "../lib/create-hono";
@@ -52,6 +53,33 @@ export const userRoutes = createHonoBindings()
       data: userStats,
     });
   })
+  .get("/me/monthly-goal", async (c) => {
+    const { id: userId } = c.get("jwtPayload");
+
+    const monthlyGoal = await userService.getMonthlyGoal(+userId);
+
+    return c.json({
+      success: true,
+      message: "Monthly goal retrieved successfully",
+      data: monthlyGoal,
+    });
+  })
+  .patch(
+    "/me/monthly-goal",
+    zValidator("json", updateMonthlyGoalSchema),
+    async (c) => {
+      const { id: userId } = c.get("jwtPayload");
+      const { goal } = c.req.valid("json");
+
+      const updatedGoal = await userService.updateMonthlyGoal(+userId, goal);
+
+      return c.json({
+        success: true,
+        message: "Monthly goal updated successfully",
+        data: updatedGoal,
+      });
+    },
+  )
   .patch("/me", zValidator("json", updateUserSchema), async (c) => {
     const { id: userId } = c.get("jwtPayload");
     const validatedBody = c.req.valid("json");

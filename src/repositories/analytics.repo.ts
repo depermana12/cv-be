@@ -34,6 +34,11 @@ export interface IAnalyticsRepository {
     userId: number,
     startOfMonth: Date,
   ): Promise<number>;
+  getApplicationCountByMonth(
+    userId: number,
+    year: number,
+    month: number,
+  ): Promise<number>;
   getTimeFilter(timeRange?: TimeRange): SQL | undefined;
 }
 
@@ -148,6 +153,29 @@ export class AnalyticsRepository implements IAnalyticsRepository {
         and(
           eq(jobApplications.userId, userId),
           gte(jobApplications.appliedAt, startOfMonth),
+        ),
+      );
+
+    return result[0]?.count ?? 0;
+  }
+
+  async getApplicationCountByMonth(
+    userId: number,
+    year: number,
+    month: number,
+  ) {
+    // Create start and end of the specified month
+    const startOfMonth = new Date(year, month - 1, 1); // month is 0-indexed in Date constructor
+    const endOfMonth = new Date(year, month, 0, 23, 59, 59, 999); // Last day of the month
+
+    const result = await this.db
+      .select({ count: count() })
+      .from(jobApplications)
+      .where(
+        and(
+          eq(jobApplications.userId, userId),
+          gte(jobApplications.appliedAt, startOfMonth),
+          sql`${jobApplications.appliedAt} <= ${endOfMonth}`,
         ),
       );
 

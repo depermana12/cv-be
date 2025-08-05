@@ -108,5 +108,8 @@ export const userService = new UserService(
 export const emailService = new EmailService();
 
 // Analytics Service
-export const analyticsService = new AnalyticsService(analyticsRepository);
+export const analyticsService = new AnalyticsService(
+  analyticsRepository,
+  userRepository,
+);
 export const coverLetterService = new CoverLetterService(coverLetterRepository);

@@ -80,3 +80,13 @@ export const userParamsSchema = z.object({
 export const deleteUserSchema = z.object({
   password: z.string({ required_error: "Password is required" }),
 });
+
+// Monthly goal validation schema
+export const updateMonthlyGoalSchema = z.object({
+  goal: z.coerce
+    .number()
+    .int()
+    .positive({ message: "Monthly goal must be a positive integer" })
+    .min(1, { message: "Monthly goal must be at least 1" })
+    .max(1000, { message: "Monthly goal cannot exceed 1000" }),
+});

@@ -48,6 +48,7 @@ export const users = pgTable(
     subscriptionExpiresAt: timestamp("subscription_expires_at"),
     emailNotifications: boolean("email_notifications").default(true),
     monthlyReports: boolean("monthly_reports").default(true),
+    monthlyApplicationGoal: integer("monthly_application_goal").default(30),
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at")
       .defaultNow()

@@ -4,8 +4,8 @@ import { zValidator } from "../utils/validator";
 import { analyticsService } from "../lib/container.js";
 import {
   daysSchema,
-  goalSchema,
   timeRangeSchema,
+  monthYearSchema,
 } from "../schemas/analytic.schema.js";
 
 export const analyticsRoutes = createHonoBindings()
@@ -71,15 +71,41 @@ export const analyticsRoutes = createHonoBindings()
       data: result,
     });
   })
-  .get("/monthly-progress", zValidator("query", goalSchema), async (c) => {
+  .get("/monthly-progress", async (c) => {
     const { id: userId } = c.get("jwtPayload");
-    const { goal } = c.req.valid("query");
 
-    const progress = await analyticsService.getMonthlyProgress(+userId, goal);
+    const progress = await analyticsService.getMonthlyProgress(+userId);
 
     return c.json({
       success: true,
       message: "Monthly progress retrieved successfully",
       data: progress,
+    });
+  })
+  .get("/monthly-metrics", async (c) => {
+    const { id: userId } = c.get("jwtPayload");
+
+    const metrics = await analyticsService.getMonthlyApplicationRate(+userId);
+
+    return c.json({
+      success: true,
+      message: "Monthly application metrics retrieved successfully",
+      data: metrics,
+    });
+  })
+  .get("/monthly-count", zValidator("query", monthYearSchema), async (c) => {
+    const { id: userId } = c.get("jwtPayload");
+    const { year, month } = c.req.valid("query");
+
+    const count = await analyticsService.getApplicationCountByMonth(
+      +userId,
+      year,
+      month,
+    );
+
+    return c.json({
+      success: true,
+      message: "Monthly application count retrieved successfully",
+      data: { count, year, month },
     });
   });

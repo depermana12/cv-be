@@ -60,7 +60,8 @@ export type MonthlyProgress = {
   goal: number;
   current: number;
   percentage: number;
-  remaining: number;
+  remainingItem: number;
+  remainingDays: number;
 };
 
 export type TimeToResponseResult = {

@@ -8,6 +8,7 @@ export const daysSchema = z.object({
   days: z.coerce.number().min(1).max(365).default(30),
 });
 
-export const goalSchema = z.object({
-  goal: z.coerce.number().min(1).max(1000).default(20),
+export const monthYearSchema = z.object({
+  year: z.coerce.number().min(2020).max(2100),
+  month: z.coerce.number().min(1).max(12),
 });

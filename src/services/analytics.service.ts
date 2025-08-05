@@ -1,4 +1,5 @@
 import type { IAnalyticsRepository } from "../repositories/analytics.repo";
+import type { IUserRepository } from "../repositories/user.repo";
 import type {
   ApplicationMetrics,
   StatusDistribution,
@@ -21,14 +22,22 @@ export interface IAnalyticsService {
   ): Promise<ApplicationTrends[]>;
   getPortalPerformance(userId: number): Promise<PortalPerformance[]>;
   getAverageTimeToResponse(userId: number): Promise<TimeToResponseResult>;
-  getMonthlyProgress(
+  getMonthlyProgress(userId: number): Promise<MonthlyProgress>;
+  getApplicationCountByMonth(
     userId: number,
-    monthlyGoal?: number,
-  ): Promise<MonthlyProgress>;
+    year: number,
+    month: number,
+  ): Promise<number>;
+  getMonthlyApplicationRate(
+    userId: number,
+  ): Promise<{ thisMonth: number; lastMonth: number; growthRate: number }>;
 }
 
 export class AnalyticsService implements IAnalyticsService {
-  constructor(private analyticsRepo: IAnalyticsRepository) {}
+  constructor(
+    private analyticsRepo: IAnalyticsRepository,
+    private userRepo: IUserRepository,
+  ) {}
 
   // =============================
   // JOB APPLICATION ANALYTICS
@@ -142,21 +151,78 @@ export class AnalyticsService implements IAnalyticsService {
   // =============================
 
   // 6. Monthly Goal Progress
-  async getMonthlyProgress(userId: number, monthlyGoal: number = 20) {
-    const startOfMonth = new Date();
-    startOfMonth.setDate(1);
-    startOfMonth.setHours(0, 0, 0, 0);
+  async getMonthlyProgress(userId: number) {
+    const now = new Date();
+    const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    now.setHours(0, 0, 0, 0); // Reset time to start of day
 
     const currentCount = await this.analyticsRepo.getMonthlyApplicationCount(
       userId,
-      startOfMonth,
+      firstDayOfMonth,
     );
 
+    const user = await this.userRepo.getByIdSafe(userId);
+    const goal = user?.monthlyApplicationGoal ?? 30;
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const remainingDays =
+      (lastDayOfMonth.getTime() - today.getTime()) / (1000 * 60 * 60 * 24);
+
+    // Add 1 to include today in the count
+    const remainingDaysInt = Math.max(0, Math.floor(remainingDays) + 1);
+
     return {
-      goal: monthlyGoal,
+      goal,
       current: currentCount,
-      percentage: this.calculatePercentage(currentCount, monthlyGoal),
-      remaining: Math.max(0, monthlyGoal - currentCount),
+      percentage: this.calculatePercentage(currentCount, goal),
+      remainingItem: Math.max(0, goal - currentCount),
+      remainingDays: remainingDaysInt,
+    };
+  }
+
+  // Application Count by Specific Month
+  async getApplicationCountByMonth(
+    userId: number,
+    year: number,
+    month: number,
+  ) {
+    return this.analyticsRepo.getApplicationCountByMonth(userId, year, month);
+  }
+
+  // Current vs previous month
+  async getMonthlyApplicationRate(userId: number) {
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth() + 1; // getMonth() is 0-indexed
+
+    // Calculate previous month
+    let previousYear = currentYear;
+    let previousMonth = currentMonth - 1;
+
+    if (previousMonth === 0) {
+      previousMonth = 12;
+      previousYear = currentYear - 1;
+    }
+
+    const [thisMonth, lastMonth] = await Promise.all([
+      this.getApplicationCountByMonth(userId, currentYear, currentMonth),
+      this.getApplicationCountByMonth(userId, previousYear, previousMonth),
+    ]);
+
+    // Calculate growth rate percentage
+    const growthRate =
+      lastMonth === 0
+        ? thisMonth > 0
+          ? 100
+          : 0
+        : this.calculatePercentage(thisMonth - lastMonth, lastMonth);
+
+    return {
+      thisMonth,
+      lastMonth,
+      growthRate,
     };
   }
 

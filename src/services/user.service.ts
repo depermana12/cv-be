@@ -32,6 +32,8 @@ export interface IUserService {
   isUserEmailVerified(id: number): Promise<{ verified: boolean }>;
   isUsernameExists(username: string): Promise<boolean>;
   getUserStats(id: number): Promise<UserStats>;
+  getMonthlyGoal(id: number): Promise<{ goal: number }>;
+  updateMonthlyGoal(id: number, goal: number): Promise<{ goal: number }>;
   deleteUser(id: number, password: string): Promise<boolean>;
 }
 export class UserService implements IUserService {
@@ -206,6 +208,30 @@ export class UserService implements IUserService {
     }
 
     return deleted;
+  }
+
+  // =============================
+  // MONTHLY GOAL MANAGEMENT
+  // =============================
+
+  async getMonthlyGoal(id: number) {
+    const user = await this.userRepository.getByIdSafe(id);
+    if (!user) {
+      throw new NotFoundError(`User with ID ${id} not found`);
+    }
+    return { goal: user.monthlyApplicationGoal ?? 30 };
+  }
+
+  async updateMonthlyGoal(id: number, goal: number) {
+    const updatedUser = await this.userRepository.updateUser(id, {
+      monthlyApplicationGoal: goal,
+    });
+
+    if (!updatedUser) {
+      throw new NotFoundError(`User with ID ${id} not found`);
+    }
+
+    return { goal: updatedUser.monthlyApplicationGoal ?? 30 };
   }
 
   // =============================
