@@ -39,6 +39,11 @@ export interface IAnalyticsRepository {
     year: number,
     month: number,
   ): Promise<number>;
+  getInterviewCountByMonth(
+    userId: number,
+    year: number,
+    month: number,
+  ): Promise<number>;
   getTimeFilter(timeRange?: TimeRange): SQL | undefined;
 }
 
@@ -176,6 +181,29 @@ export class AnalyticsRepository implements IAnalyticsRepository {
           eq(jobApplications.userId, userId),
           gte(jobApplications.appliedAt, startOfMonth),
           sql`${jobApplications.appliedAt} <= ${endOfMonth}`,
+        ),
+      );
+
+    return result[0]?.count ?? 0;
+  }
+
+  async getInterviewCountByMonth(userId: number, year: number, month: number) {
+    const startOfMonth = new Date(year, month - 1, 1);
+    const endOfMonth = new Date(year, month, 0, 23, 59, 59, 999);
+
+    const result = await this.db
+      .select({ count: count() })
+      .from(jobApplicationStatuses)
+      .innerJoin(
+        jobApplications,
+        eq(jobApplicationStatuses.applicationId, jobApplications.id),
+      )
+      .where(
+        and(
+          eq(jobApplications.userId, userId),
+          eq(jobApplicationStatuses.status, "interview"),
+          gte(jobApplicationStatuses.changedAt, startOfMonth),
+          sql`${jobApplicationStatuses.changedAt} <= ${endOfMonth}`,
         ),
       );
 

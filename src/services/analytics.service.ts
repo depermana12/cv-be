@@ -31,6 +31,9 @@ export interface IAnalyticsService {
   getMonthlyApplicationRate(
     userId: number,
   ): Promise<{ thisMonth: number; lastMonth: number; growthRate: number }>;
+  getMonthlyInterviewRate(
+    userId: number,
+  ): Promise<{ thisMonth: number; lastMonth: number; growthRate: number }>;
 }
 
 export class AnalyticsService implements IAnalyticsService {
@@ -186,6 +189,10 @@ export class AnalyticsService implements IAnalyticsService {
     return this.analyticsRepo.getApplicationCountByMonth(userId, year, month);
   }
 
+  async getInterviewCountByMonth(userId: number, year: number, month: number) {
+    return this.analyticsRepo.getInterviewCountByMonth(userId, year, month);
+  }
+
   // Current vs previous month
   async getMonthlyApplicationRate(userId: number) {
     const now = new Date();
@@ -207,6 +214,38 @@ export class AnalyticsService implements IAnalyticsService {
     ]);
 
     // Calculate growth rate percentage
+    const growthRate =
+      lastMonth === 0
+        ? thisMonth > 0
+          ? 100
+          : 0
+        : this.calculatePercentage(thisMonth - lastMonth, lastMonth);
+
+    return {
+      thisMonth,
+      lastMonth,
+      growthRate,
+    };
+  }
+
+  async getMonthlyInterviewRate(userId: number) {
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth() + 1;
+
+    let previousYear = currentYear;
+    let previousMonth = currentMonth - 1;
+
+    if (previousMonth === 0) {
+      previousMonth = 12;
+      previousYear = currentYear - 1;
+    }
+
+    const [thisMonth, lastMonth] = await Promise.all([
+      this.getInterviewCountByMonth(userId, currentYear, currentMonth),
+      this.getInterviewCountByMonth(userId, previousYear, previousMonth),
+    ]);
+
     const growthRate =
       lastMonth === 0
         ? thisMonth > 0

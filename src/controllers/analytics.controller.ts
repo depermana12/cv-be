@@ -69,7 +69,7 @@ export const analyticsRoutes = createHonoBindings()
       data: result,
     });
   })
-  .get("/monthly-progress", async (c) => {
+  .get("/monthly-application-progress", async (c) => {
     const { id: userId } = c.get("jwtPayload");
 
     const progress = await analyticsService.getMonthlyProgress(+userId);
@@ -80,7 +80,7 @@ export const analyticsRoutes = createHonoBindings()
       data: progress,
     });
   })
-  .get("/monthly-metrics", async (c) => {
+  .get("/monthly-application-metrics", async (c) => {
     const { id: userId } = c.get("jwtPayload");
 
     const metrics = await analyticsService.getMonthlyApplicationRate(+userId);
@@ -91,19 +91,34 @@ export const analyticsRoutes = createHonoBindings()
       data: metrics,
     });
   })
-  .get("/monthly-count", zValidator("query", monthYearSchema), async (c) => {
+  .get("/monthly-interview-metrics", async (c) => {
     const { id: userId } = c.get("jwtPayload");
-    const { year, month } = c.req.valid("query");
 
-    const count = await analyticsService.getApplicationCountByMonth(
-      +userId,
-      year,
-      month,
-    );
+    const metrics = await analyticsService.getMonthlyInterviewRate(+userId);
 
     return c.json({
       success: true,
-      message: "Monthly application count retrieved successfully",
-      data: { count, year, month },
+      message: "Monthly interview metrics retrieved successfully",
+      data: metrics,
     });
-  });
+  })
+  .get(
+    "/monthly-application-count",
+    zValidator("query", monthYearSchema),
+    async (c) => {
+      const { id: userId } = c.get("jwtPayload");
+      const { year, month } = c.req.valid("query");
+
+      const count = await analyticsService.getApplicationCountByMonth(
+        +userId,
+        year,
+        month,
+      );
+
+      return c.json({
+        success: true,
+        message: "Monthly application count retrieved successfully",
+        data: { count, year, month },
+      });
+    },
+  );
