@@ -132,17 +132,12 @@ export class AnalyticsService implements IAnalyticsService {
     if (result === null) {
       return {
         avgDays: null,
-        hasData: false,
-        description: "No applications have reached interview stage yet",
       };
     }
-
     const roundedDays = this.roundToTwoDecimals(result);
 
     return {
       avgDays: roundedDays,
-      hasData: true,
-      description: `Average time from application to interview: ${roundedDays} days`,
     };
   }
 

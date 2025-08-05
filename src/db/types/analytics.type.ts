@@ -66,8 +66,6 @@ export type MonthlyProgress = {
 
 export type TimeToResponseResult = {
   avgDays: number | null;
-  hasData: boolean;
-  description: string;
 };
 
 export type TimeRange = "week" | "month" | "all";

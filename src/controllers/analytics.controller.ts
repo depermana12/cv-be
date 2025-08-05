@@ -58,16 +58,14 @@ export const analyticsRoutes = createHonoBindings()
       data: performance,
     });
   })
-  .get("/time-to-response", async (c) => {
+  .get("/time-to-interview", async (c) => {
     const { id: userId } = c.get("jwtPayload");
 
     const result = await analyticsService.getAverageTimeToResponse(+userId);
 
     return c.json({
       success: true,
-      message: result.hasData
-        ? "Average time to response retrieved successfully"
-        : "No interview response data available yet",
+      message: "Average time to response retrieved",
       data: result,
     });
   })
