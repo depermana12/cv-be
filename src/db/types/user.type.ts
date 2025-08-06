@@ -29,3 +29,20 @@ export type UpdateUserSubscriptionSafe = Partial<
 >;
 
 export type SafeUser = Omit<UserSelect, "password">;
+
+export type UserProfileProgress = {
+  profileImage: string | null;
+  birthDate: Date | null;
+  firstName: string | null;
+  lastName: string | null;
+  about: string | null;
+  bio: string | null;
+  gender: "male" | "female" | null;
+};
+
+export type UserProfileProgressRes = {
+  totalFields: number;
+  filledFields: number;
+  progressPercentage: number;
+  emptyFieldNames: string[];
+};

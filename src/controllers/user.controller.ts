@@ -80,6 +80,17 @@ export const userRoutes = createHonoBindings()
       });
     },
   )
+  .get("/me/profile-progress", async (c) => {
+    const { id: userId } = c.get("jwtPayload");
+
+    const profileProgress = await userService.getProfileProgress(+userId);
+
+    return c.json({
+      success: true,
+      message: "Profile progress retrieved successfully",
+      data: profileProgress,
+    });
+  })
   .patch("/me", zValidator("json", updateUserSchema), async (c) => {
     const { id: userId } = c.get("jwtPayload");
     const validatedBody = c.req.valid("json");

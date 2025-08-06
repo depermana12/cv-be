@@ -9,6 +9,7 @@ import type {
   UserUpdate,
   UpdateUserPreferencesSafe,
   UpdateUserSubscriptionSafe,
+  UserProfileProgress,
 } from "../db/types/user.type";
 
 export interface IUserRepository {
@@ -33,6 +34,7 @@ export interface IUserRepository {
   verifyUserEmail(id: number): Promise<SafeUser | null>;
   updateUserPassword(id: number, newPw: string): Promise<SafeUser | null>;
   deleteUser(id: number): Promise<boolean>;
+  getProfileProgressData(id: number): Promise<UserProfileProgress | null>;
 }
 
 export class UserRepository implements IUserRepository {
@@ -218,5 +220,22 @@ export class UserRepository implements IUserRepository {
       .where(eq(this.table.id, id))
       .returning();
     return result.length > 0;
+  }
+
+  async getProfileProgressData(id: number) {
+    const result = await this.db
+      .select({
+        profileImage: this.table.profileImage,
+        birthDate: this.table.birthDate,
+        firstName: this.table.firstName,
+        lastName: this.table.lastName,
+        about: this.table.about,
+        bio: this.table.bio,
+        gender: this.table.gender,
+      })
+      .from(this.table)
+      .where(eq(this.table.id, id));
+
+    return result.length > 0 ? result[0] : null;
   }
 }

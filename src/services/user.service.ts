@@ -7,6 +7,7 @@ import type {
   UpdateUserProfileSafe,
   UpdateUserPreferencesSafe,
   UpdateUserSubscriptionSafe,
+  UserProfileProgressRes,
 } from "../db/types/user.type";
 import type { CvService } from "./cv.service";
 import type { IJobApplicationService } from "./jobApplication.service";
@@ -34,6 +35,7 @@ export interface IUserService {
   getUserStats(id: number): Promise<UserStats>;
   getMonthlyGoal(id: number): Promise<{ goal: number }>;
   updateMonthlyGoal(id: number, goal: number): Promise<{ goal: number }>;
+  getProfileProgress(id: number): Promise<UserProfileProgressRes>;
   deleteUser(id: number, password: string): Promise<boolean>;
 }
 export class UserService implements IUserService {
@@ -235,6 +237,50 @@ export class UserService implements IUserService {
   }
 
   // =============================
+  // PROFILE PROGRESS MANAGEMENT
+  // =============================
+
+  async getProfileProgress(id: number) {
+    const profileData = await this.userRepository.getProfileProgressData(id);
+
+    if (!profileData) {
+      throw new NotFoundError(`User with ID ${id} not found`);
+    }
+
+    // Define the profile fields to check
+    const profileFields = {
+      profileImage: profileData.profileImage,
+      birthDate: profileData.birthDate,
+      firstName: profileData.firstName,
+      lastName: profileData.lastName,
+      about: profileData.about,
+      bio: profileData.bio,
+      gender: profileData.gender,
+    };
+
+    const totalFields = Object.keys(profileFields).length;
+    let filledFields = 0;
+    const emptyFieldNames: string[] = [];
+
+    Object.entries(profileFields).forEach(([fieldName, value]) => {
+      if (this.isFieldFilled(value)) {
+        filledFields++;
+      } else {
+        emptyFieldNames.push(fieldName);
+      }
+    });
+
+    const progressPercentage = Math.round((filledFields / totalFields) * 100);
+
+    return {
+      totalFields,
+      filledFields,
+      progressPercentage,
+      emptyFieldNames,
+    };
+  }
+
+  // =============================
   // PRIVATE UTILITY METHODS
   // =============================
 
@@ -270,5 +316,16 @@ export class UserService implements IUserService {
       offset: 0,
     });
     return result.total;
+  }
+
+  /**
+   * Checks if a profile field is considered "filled" (not null, undefined, or empty string)
+   * @param value - The field value to check
+   * @returns True if the field is filled, false otherwise
+   */
+  private isFieldFilled(
+    value: string | number | Date | null | undefined,
+  ): boolean {
+    return value !== null && value !== undefined && value !== "";
   }
 }
