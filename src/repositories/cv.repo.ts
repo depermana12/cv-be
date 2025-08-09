@@ -89,6 +89,12 @@ export class CvRepository
       const searchTerm = `%${options.search}%`;
       whereClause.push(ilike(cv.title, searchTerm));
     }
+
+    // Use !== undefined to handle explicit false values
+    // This allows filtering for:
+    // - isPublic: true (only public CVs)
+    // - isPublic: false (only private CVs)
+    // - isPublic: undefined (all CVs - no filter applied)
     if (options?.isPublic !== undefined) {
       whereClause.push(eq(cv.isPublic, options.isPublic));
     }
