@@ -18,6 +18,9 @@ const envSchema = z.object({
   JWT_SECRET: z.string().min(8),
   JWT_REFRESH_SECRET: z.string().min(8),
 
+  // OpenAI
+  OPENAI_API_KEY: z.string().optional(),
+
   // email
   MAILTRAP_HOST: z.string().optional(),
   MAILTRAP_PORT: z.string().transform(Number).optional(),
@@ -64,6 +67,10 @@ export const config = {
     refreshSecret: env.JWT_REFRESH_SECRET,
     expiresIn: "15m",
     refreshExpiresIn: "7d",
+  },
+
+  openai: {
+    apiKey: env.OPENAI_API_KEY,
   },
 
   email: {

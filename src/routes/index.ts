@@ -10,6 +10,7 @@ import { authRoutes } from "../controllers/auth.controller";
 import { jobApplicationRoutes } from "../controllers/jobApplication.controller";
 import { analyticsRoutes } from "../controllers/analytics.controller";
 import { coverLetterRoutes } from "../controllers/coverLetter.controller";
+import { aiOptimizationRoutes } from "../controllers/aiOptimization.controller";
 
 const router = new Hono();
 
@@ -30,6 +31,7 @@ router.route("/applications-tracking", jobApplicationRoutes);
 router.route("/uploads", uploadRoutes);
 router.route("/analytics", analyticsRoutes);
 router.route("/cover-letters", coverLetterRoutes);
+router.route("/ai", aiOptimizationRoutes);
 
 // user routes - basic routes (JWT only, no email verification required)
 router.use("/users/*", jwt());

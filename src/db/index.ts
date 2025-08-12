@@ -16,6 +16,7 @@ import * as skill from "./schema/skill.db";
 import * as language from "./schema/language.db";
 // import * as coverLetter from "./schema/coverLetter.db";
 import * as jobApplication from "./schema/jobApplication.db";
+import * as aiOptimization from "./schema/aiOptimization.db";
 
 export const schema = {
   ...user,
@@ -29,6 +30,7 @@ export const schema = {
   ...skill,
   ...language,
   ...jobApplication,
+  ...aiOptimization,
 };
 
 const getDatabaseUrl = () => {
