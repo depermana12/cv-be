@@ -32,6 +32,11 @@ import { JobApplicationStatusRepository } from "../repositories/jobApplicationSt
 import { ContactRepository } from "../repositories/cvChildren/contact.repo.js";
 import { ContactService } from "../services/cvChildren/contact.service.js";
 
+// AI Imports
+import { AIOptimizationRepository } from "../repositories/aiOptimization.repo";
+import { AIOptimizationService } from "../services/aiOptimization.service";
+import { OpenAIProvider } from "../services/ai/openaiProvider";
+
 const db = getDb();
 
 // =====================
@@ -59,6 +64,9 @@ const jobApplicationStatusRepository = new JobApplicationStatusRepository(db);
 // Analytics Repository
 const analyticsRepository = new AnalyticsRepository(db);
 const coverLetterRepository = new CoverLetterRepositoryImpl(db);
+
+// AI Repositories
+const aiOptimizationRepository = new AIOptimizationRepository(db);
 
 // =====================
 // SERVICES
@@ -113,3 +121,10 @@ export const analyticsService = new AnalyticsService(
   userRepository,
 );
 export const coverLetterService = new CoverLetterService(coverLetterRepository);
+
+// AI Services
+const openaiProvider = new OpenAIProvider();
+export const aiOptimizationService = new AIOptimizationService(
+  aiOptimizationRepository,
+  openaiProvider,
+);
