@@ -2,86 +2,41 @@ import { describe, it, expect, vi, beforeEach, type Mocked } from "vitest";
 import { AuthService } from "../../src/services/auth.service";
 import { ValidationError } from "../../src/errors/validation.error";
 import { NotFoundError } from "../../src/errors/not-found.error";
-import type {
-  AuthUserRegister,
-  AuthUserLogin,
-  AuthUserSafe,
-} from "../../src/db/types/auth.type";
-import type { UserPayload } from "../../src/lib/types";
 import type { IUserRepository } from "../../src/repositories/user.repo";
-import { createMockUserRepository } from "./user.service.test";
 import type { ITokenService } from "../../src/services/token.service";
+import {
+  createMockUserRepository,
+  createMockTokenService,
+  createMockUser,
+  createMockUserWithPassword,
+  createMockUserPayload,
+  createMockAuthTokens,
+  createMockRegistration,
+  createMockLogin,
+  setupAuthServiceMocks,
+  setupBunPasswordMock,
+  mockBunPassword,
+  VALID_USER_ID,
+  INVALID_USER_ID,
+  VALID_EMAIL,
+  INVALID_EMAIL,
+  EXISTING_USERNAME,
+  AVAILABLE_USERNAME,
+  VALID_PASSWORD,
+  INVALID_PASSWORD,
+  HASHED_PASSWORD,
+  ACCESS_TOKEN,
+  REFRESH_TOKEN,
+  RESET_TOKEN,
+  VERIFICATION_TOKEN,
+} from "../utils/auth.test-helpers";
 
-// mock bun utils
-const mockBunPassword = {
-  hash: vi.fn(),
-  verify: vi.fn(),
-};
-global.Bun = {
-  password: mockBunPassword,
-} as any;
-
-export function createMockTokenService(): Mocked<ITokenService> {
-  return {
-    decodeToken: vi.fn(),
-    createAccessToken: vi.fn(),
-    createRefreshToken: vi.fn(),
-    generateAuthTokens: vi.fn(),
-    createResetPasswordToken: vi.fn(),
-    createEmailVerificationToken: vi.fn(),
-    verifyToken: vi
-      .fn()
-      .mockImplementation(
-        async <T extends object>(token: string): Promise<T> => ({} as T),
-      ),
-    validateRefreshToken: vi.fn(),
-    validateResetPasswordToken: vi.fn(),
-    validateEmailVerificationToken: vi.fn(),
-  };
-}
+setupBunPasswordMock();
 
 describe("AuthService", () => {
   let authService: AuthService;
   let mockUserRepository: Mocked<IUserRepository>;
   let mockTokenService: Mocked<ITokenService>;
-
-  const userId = 1;
-  const mockUser: AuthUserSafe = {
-    id: userId,
-    email: "tungtungsahur@example.com",
-    firstName: "tungtung",
-    lastName: "tung",
-    username: "sahur",
-    isEmailVerified: true,
-    profileImage: null,
-    birthDate: null,
-    gender: null,
-    createdAt: new Date("2023-01-01"),
-    updatedAt: new Date("2023-01-01"),
-  };
-
-  const userWithPassword = {
-    ...mockUser,
-    password: "moCkHashedPassworD",
-  };
-
-  const mockAuthTokens = {
-    accessToken: "mOckAcCeSsTokEn",
-    refreshToken: "mOckReFrEsHTokEn",
-  };
-
-  const mockRegistration: AuthUserRegister = {
-    email: mockUser.email,
-    password: "ballerinaCapuccina",
-    username: mockUser.username,
-  };
-
-  const mockLogin: AuthUserLogin = {
-    email: mockUser.email,
-    password: "ballerinaCapuccina",
-  };
-
-  const userPayload: UserPayload = { id: "1", email: mockUser.email };
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -91,306 +46,446 @@ describe("AuthService", () => {
   });
 
   describe("registerUser", () => {
-    it("should register a new user", async () => {
-      mockUserRepository.getByEmailSafe.mockResolvedValueOnce(null);
-      mockBunPassword.hash.mockResolvedValueOnce("hashed_password_123");
-      mockUserRepository.createUser.mockResolvedValueOnce({ id: userId });
-      mockUserRepository.getById.mockResolvedValueOnce(mockUser);
-      mockTokenService.generateAuthTokens.mockResolvedValueOnce(mockAuthTokens);
+    it("should register a new user successfully", async () => {
+      const mockUser = createMockUser();
+      const mockTokens = createMockAuthTokens();
+      const mockRegistration = createMockRegistration();
+
+      mockUserRepository.getByEmailSafe.mockResolvedValue(null);
+      mockBunPassword.hash.mockResolvedValue(HASHED_PASSWORD);
+      mockUserRepository.createUser.mockResolvedValue(mockUser);
+      mockTokenService.generateAuthTokens.mockResolvedValue(mockTokens);
 
       const result = await authService.registerUser(mockRegistration);
 
       expect(result).toEqual({
         ...mockUser,
-        accessToken: "mOckAcCeSsTokEn",
-        refreshToken: "mOckReFrEsHTokEn",
+        accessToken: ACCESS_TOKEN,
+        refreshToken: REFRESH_TOKEN,
       });
       expect(mockUserRepository.getByEmailSafe).toHaveBeenCalledWith(
-        "tungtungsahur@example.com",
+        VALID_EMAIL,
       );
-      expect(mockBunPassword.hash).toHaveBeenCalledWith("ballerinaCapuccina");
+      expect(mockBunPassword.hash).toHaveBeenCalledWith(VALID_PASSWORD);
       expect(mockUserRepository.createUser).toHaveBeenCalledWith({
         ...mockRegistration,
-        password: "hashed_password_123",
+        password: HASHED_PASSWORD,
       });
-      expect(mockUserRepository.getById).toHaveBeenCalledWith(1);
       expect(mockTokenService.generateAuthTokens).toHaveBeenCalledWith({
-        id: "1",
-        email: "tungtungsahur@example.com",
+        id: VALID_USER_ID.toString(),
+        email: VALID_EMAIL,
+        isEmailVerified: false,
       });
     });
 
-    it("should throw ValidationError if email exists", async () => {
-      mockUserRepository.getByEmailSafe.mockResolvedValue(mockUser);
+    it("should throw ValidationError when email already exists", async () => {
+      const existingUser = createMockUser();
+      const mockRegistration = createMockRegistration();
+
+      mockUserRepository.getByEmailSafe.mockResolvedValue(existingUser);
 
       await expect(authService.registerUser(mockRegistration)).rejects.toThrow(
-        ValidationError,
+        new ValidationError("email already registered"),
       );
+
+      expect(mockUserRepository.getByEmailSafe).toHaveBeenCalledWith(
+        VALID_EMAIL,
+      );
+      expect(mockBunPassword.hash).not.toHaveBeenCalled();
+      expect(mockUserRepository.createUser).not.toHaveBeenCalled();
     });
 
-    it("should handle password hashing errors", async () => {
+    it("should handle password hashing failure", async () => {
+      const mockRegistration = createMockRegistration();
+
       mockUserRepository.getByEmailSafe.mockResolvedValue(null);
-      mockBunPassword.hash.mockRejectedValue(new Error("failed hashing"));
+      mockBunPassword.hash.mockRejectedValue(new Error("Hashing failed"));
 
       await expect(authService.registerUser(mockRegistration)).rejects.toThrow(
-        ValidationError,
+        new ValidationError("Failed to process password"),
+      );
+
+      expect(mockUserRepository.createUser).not.toHaveBeenCalled();
+    });
+
+    it("should throw ValidationError when user creation fails", async () => {
+      const mockRegistration = createMockRegistration();
+
+      mockUserRepository.getByEmailSafe.mockResolvedValue(null);
+      mockBunPassword.hash.mockResolvedValue(HASHED_PASSWORD);
+      mockUserRepository.createUser.mockResolvedValue(null as any);
+
+      await expect(authService.registerUser(mockRegistration)).rejects.toThrow(
+        new ValidationError("failed to create user"),
       );
     });
   });
 
   describe("userLogin", () => {
-    it("should log in successfully", async () => {
-      mockUserRepository.getByEmail.mockResolvedValue(userWithPassword);
+    it("should login user successfully", async () => {
+      const mockUserWithPassword = createMockUserWithPassword();
+      const mockLogin = createMockLogin();
+      const mockTokens = createMockAuthTokens();
+
+      mockUserRepository.getByEmail.mockResolvedValue(mockUserWithPassword);
       mockBunPassword.verify.mockResolvedValue(true);
-      mockTokenService.generateAuthTokens.mockResolvedValue(mockAuthTokens);
+      mockTokenService.generateAuthTokens.mockResolvedValue(mockTokens);
 
       const result = await authService.userLogin(mockLogin);
 
-      const { password, ...expectedUser } = userWithPassword;
+      const { password, ...expectedUser } = mockUserWithPassword;
       expect(result).toEqual({
         ...expectedUser,
-        accessToken: "mOckAcCeSsTokEn",
-        refreshToken: "mOckReFrEsHTokEn",
+        accessToken: ACCESS_TOKEN,
+        refreshToken: REFRESH_TOKEN,
       });
-      expect(mockUserRepository.getByEmail).toHaveBeenCalledWith(
-        "tungtungsahur@example.com",
+      expect(mockUserRepository.getByEmail).toHaveBeenCalledWith(VALID_EMAIL);
+      expect(mockBunPassword.verify).toHaveBeenCalledWith(
+        VALID_PASSWORD,
+        HASHED_PASSWORD,
       );
     });
 
-    it("should throw if password wrong", async () => {
-      mockUserRepository.getByEmail.mockResolvedValue(userWithPassword);
+    it("should throw ValidationError when user not found", async () => {
+      const mockLogin = createMockLogin();
+
+      mockUserRepository.getByEmail.mockResolvedValue(null);
+
+      await expect(authService.userLogin(mockLogin)).rejects.toThrow(
+        new ValidationError("invalid email or password"),
+      );
+
+      expect(mockBunPassword.verify).not.toHaveBeenCalled();
+    });
+
+    it("should throw ValidationError when password is incorrect", async () => {
+      const mockUserWithPassword = createMockUserWithPassword();
+      const mockLogin = createMockLogin();
+
+      mockUserRepository.getByEmail.mockResolvedValue(mockUserWithPassword);
       mockBunPassword.verify.mockResolvedValue(false);
 
       await expect(authService.userLogin(mockLogin)).rejects.toThrow(
         new ValidationError("invalid email or password"),
       );
+
       expect(mockBunPassword.verify).toHaveBeenCalledWith(
-        "ballerinaCapuccina",
-        "moCkHashedPassworD",
+        VALID_PASSWORD,
+        HASHED_PASSWORD,
       );
     });
 
-    it("should throw ValidationError if user not found", async () => {
-      mockUserRepository.getByEmail.mockResolvedValue(null);
+    it("should exclude password from returned user data", async () => {
+      const mockUserWithPassword = createMockUserWithPassword();
+      const mockLogin = createMockLogin();
 
-      await expect(authService.userLogin(mockLogin)).rejects.toThrow(
-        new ValidationError("invalid email or password"),
-      );
-      expect(mockBunPassword.verify).not.toHaveBeenCalled();
-    });
-
-    it("should handle case-insensitive email", async () => {
-      const loginDataWithUpperCase = {
-        email: "TUNGTUNGSAHUR@EXAMPLE.COM",
-        password: "password123",
-      };
-      mockUserRepository.getByEmail.mockResolvedValue(userWithPassword);
+      mockUserRepository.getByEmail.mockResolvedValue(mockUserWithPassword);
       mockBunPassword.verify.mockResolvedValue(true);
-      mockTokenService.generateAuthTokens.mockResolvedValue({
-        accessToken: "token",
-        refreshToken: "refresh",
-      });
-
-      await authService.userLogin(loginDataWithUpperCase);
-
-      expect(mockUserRepository.getByEmail).toHaveBeenCalledWith(
-        "tungtungsahur@example.com",
+      mockTokenService.generateAuthTokens.mockResolvedValue(
+        createMockAuthTokens(),
       );
-    });
-  });
 
-  describe("getByEmail", () => {
-    it("should return user without password", async () => {
-      mockUserRepository.getByEmail.mockResolvedValue(userWithPassword);
+      const result = await authService.userLogin(mockLogin);
 
-      const result = await authService.getByEmail("tungtungsahur@example.com");
-
-      const { password, ...expectedUser } = userWithPassword;
-      expect(result).toEqual(expectedUser);
-      expect(mockUserRepository.getByEmail).toHaveBeenCalledWith(
-        "tungtungsahur@example.com",
-      );
-    });
-
-    it("should throw NotFoundError if user not found", async () => {
-      mockUserRepository.getByEmail.mockResolvedValue(null);
-
-      await expect(
-        authService.getByEmail("nonexistent@example.com"),
-      ).rejects.toThrow(new NotFoundError("user record not found"));
+      expect(result).not.toHaveProperty("password");
     });
   });
 
   describe("isEmailVerified", () => {
-    it("should return verification status for verified user", async () => {
-      const userId = 1;
-      mockUserRepository.getById.mockResolvedValue(mockUser);
+    it("should return true for verified user", async () => {
+      const verifiedUser = createMockUser({ isEmailVerified: true });
 
-      const result = await authService.isEmailVerified(userId);
+      mockUserRepository.getByIdSafe.mockResolvedValue(verifiedUser);
+
+      const result = await authService.isEmailVerified(VALID_USER_ID);
 
       expect(result).toEqual({ verified: true });
-      expect(mockUserRepository.getById).toHaveBeenCalledWith(userId);
+      expect(mockUserRepository.getByIdSafe).toHaveBeenCalledWith(
+        VALID_USER_ID,
+      );
     });
 
     it("should return false for unverified user", async () => {
-      const userId = 1;
-      const unverifiedUser = { ...mockUser, isEmailVerified: false };
-      mockUserRepository.getById.mockResolvedValue(unverifiedUser);
+      const unverifiedUser = createMockUser({ isEmailVerified: false });
 
-      const result = await authService.isEmailVerified(userId);
+      mockUserRepository.getByIdSafe.mockResolvedValue(unverifiedUser);
+
+      const result = await authService.isEmailVerified(VALID_USER_ID);
 
       expect(result).toEqual({ verified: false });
     });
 
-    it("should throw ValidationError if user not found", async () => {
-      mockUserRepository.getById.mockResolvedValue(null);
+    it("should return false when isEmailVerified is null", async () => {
+      const userWithNullVerification = createMockUser({
+        isEmailVerified: null,
+      });
 
-      await expect(authService.isEmailVerified(1)).rejects.toThrow(
-        new ValidationError("User not found"),
+      mockUserRepository.getByIdSafe.mockResolvedValue(
+        userWithNullVerification,
+      );
+
+      const result = await authService.isEmailVerified(VALID_USER_ID);
+
+      expect(result).toEqual({ verified: false });
+    });
+
+    it("should throw NotFoundError when user does not exist", async () => {
+      mockUserRepository.getByIdSafe.mockResolvedValue(null);
+
+      await expect(
+        authService.isEmailVerified(INVALID_USER_ID),
+      ).rejects.toThrow(new NotFoundError("User not found"));
+
+      expect(mockUserRepository.getByIdSafe).toHaveBeenCalledWith(
+        INVALID_USER_ID,
       );
     });
   });
 
   describe("verifyUserEmail", () => {
-    it("should call repository to verify user email", async () => {
-      await authService.verifyUserEmail(1);
+    it("should verify user email successfully", async () => {
+      const mockUser = createMockUser();
 
-      expect(mockUserRepository.verifyUserEmail).toHaveBeenCalledWith(1);
+      mockUserRepository.verifyUserEmail.mockResolvedValue(mockUser);
+
+      const result = await authService.verifyUserEmail(VALID_USER_ID);
+
+      expect(result).toBe(true);
+      expect(mockUserRepository.verifyUserEmail).toHaveBeenCalledWith(
+        VALID_USER_ID,
+      );
+    });
+
+    it("should return false when verification fails", async () => {
+      mockUserRepository.verifyUserEmail.mockResolvedValue(null);
+
+      const result = await authService.verifyUserEmail(VALID_USER_ID);
+
+      expect(result).toBe(false);
     });
   });
 
-  describe("token methods", () => {
+  describe("createResetPasswordToken", () => {
     it("should create reset password token", async () => {
-      mockTokenService.createResetPasswordToken.mockResolvedValue(
-        "reset_token_123",
+      const mockUserPayload = createMockUserPayload();
+
+      mockTokenService.createResetPasswordToken.mockResolvedValue(RESET_TOKEN);
+
+      const result = await authService.createResetPasswordToken(
+        mockUserPayload,
       );
 
-      const result = await authService.createResetPasswordToken(userPayload);
-
-      expect(result).toBe("reset_token_123");
+      expect(result).toBe(RESET_TOKEN);
       expect(mockTokenService.createResetPasswordToken).toHaveBeenCalledWith(
-        userPayload,
+        mockUserPayload,
       );
     });
+  });
 
+  describe("validateDecodeResetPasswordToken", () => {
     it("should validate and decode reset password token", async () => {
-      const token = "reset_token_123";
+      const mockUserPayload = createMockUserPayload();
+
       mockTokenService.validateResetPasswordToken.mockResolvedValue(
-        userPayload,
+        mockUserPayload,
       );
 
-      const result = await authService.validateDecodeResetPasswordToken(token);
+      const result = await authService.validateDecodeResetPasswordToken(
+        RESET_TOKEN,
+      );
 
-      expect(result).toEqual(userPayload);
+      expect(result).toEqual(mockUserPayload);
       expect(mockTokenService.validateResetPasswordToken).toHaveBeenCalledWith(
-        token,
+        RESET_TOKEN,
       );
     });
+  });
 
+  describe("createEmailVerificationToken", () => {
     it("should create email verification token", async () => {
+      const mockUserPayload = createMockUserPayload();
+
       mockTokenService.createEmailVerificationToken.mockResolvedValue(
-        "verify_token_123",
+        VERIFICATION_TOKEN,
       );
 
       const result = await authService.createEmailVerificationToken(
-        userPayload,
+        mockUserPayload,
       );
 
-      expect(result).toBe("verify_token_123");
+      expect(result).toBe(VERIFICATION_TOKEN);
       expect(
         mockTokenService.createEmailVerificationToken,
-      ).toHaveBeenCalledWith(userPayload);
+      ).toHaveBeenCalledWith(mockUserPayload);
     });
+  });
 
-    it("should validate email verification token and verify user", async () => {
-      const token = "verify_token_123";
+  describe("validateEmailVerificationToken", () => {
+    it("should validate email verification token", async () => {
+      const mockUserPayload = createMockUserPayload();
+
       mockTokenService.validateEmailVerificationToken.mockResolvedValue(
-        userPayload,
+        mockUserPayload,
       );
-      mockUserRepository.verifyUserEmail.mockResolvedValue(true);
 
-      const result = await authService.validateEmailVerificationToken(token);
+      const result = await authService.validateEmailVerificationToken(
+        VERIFICATION_TOKEN,
+      );
 
-      expect(result).toEqual(userPayload);
+      expect(result).toEqual({
+        ...mockUserPayload,
+        isEmailVerified: true,
+      });
       expect(
         mockTokenService.validateEmailVerificationToken,
-      ).toHaveBeenCalledWith(token);
-      expect(mockUserRepository.verifyUserEmail).toHaveBeenCalledWith(1);
+      ).toHaveBeenCalledWith(VERIFICATION_TOKEN);
     });
+  });
 
+  describe("validateRefreshToken", () => {
     it("should validate refresh token", async () => {
-      const refreshToken = "refresh_token_123";
-      mockTokenService.validateRefreshToken.mockResolvedValue(userPayload);
+      const mockUserPayload = createMockUserPayload();
 
-      const result = await authService.validateRefreshToken(refreshToken);
+      mockTokenService.validateRefreshToken.mockResolvedValue(mockUserPayload);
 
-      expect(result).toEqual(userPayload);
+      const result = await authService.validateRefreshToken(REFRESH_TOKEN);
+
+      expect(result).toEqual(mockUserPayload);
       expect(mockTokenService.validateRefreshToken).toHaveBeenCalledWith(
-        refreshToken,
+        REFRESH_TOKEN,
       );
     });
+  });
 
+  describe("generateAuthTokens", () => {
     it("should generate auth tokens", async () => {
-      const expectedTokens = {
-        accessToken: "access_token_123",
-        refreshToken: "refresh_token_123",
-      };
-      mockTokenService.generateAuthTokens.mockResolvedValue(expectedTokens);
+      const mockUserPayload = createMockUserPayload();
+      const mockTokens = createMockAuthTokens();
 
-      const result = await authService.generateAuthTokens(userPayload);
+      mockTokenService.generateAuthTokens.mockResolvedValue(mockTokens);
 
-      expect(result).toEqual(expectedTokens);
+      const result = await authService.generateAuthTokens(mockUserPayload);
+
+      expect(result).toEqual(mockTokens);
       expect(mockTokenService.generateAuthTokens).toHaveBeenCalledWith(
-        userPayload,
+        mockUserPayload,
       );
     });
   });
 
   describe("changeUserPassword", () => {
-    it("should successfully change user password", async () => {
-      const userId = 1;
-      const newPassword = "newPassword123";
-      const hashedPassword = "hashed_new_password";
+    it("should change user password successfully", async () => {
+      const newPassword = "NewPassword123!";
+      const mockUser = createMockUser();
 
-      mockBunPassword.hash.mockResolvedValue(hashedPassword);
       mockUserRepository.userExistsById.mockResolvedValue(true);
-      mockUserRepository.updateUserPassword.mockResolvedValue(true);
+      mockBunPassword.hash.mockResolvedValue(HASHED_PASSWORD);
+      mockUserRepository.updateUserPassword.mockResolvedValue(mockUser);
 
-      await authService.changeUserPassword(userId, newPassword);
+      await authService.changeUserPassword(VALID_USER_ID, newPassword);
 
+      expect(mockUserRepository.userExistsById).toHaveBeenCalledWith(
+        VALID_USER_ID,
+      );
       expect(mockBunPassword.hash).toHaveBeenCalledWith(newPassword);
-      expect(mockUserRepository.userExistsById).toHaveBeenCalledWith(userId);
       expect(mockUserRepository.updateUserPassword).toHaveBeenCalledWith(
-        userId,
-        hashedPassword,
+        VALID_USER_ID,
+        HASHED_PASSWORD,
       );
     });
 
-    it("should throw ValidationError if user does not exist", async () => {
-      const userId = 999;
-      const newPassword = "newPassword123";
+    it("should throw NotFoundError when user does not exist", async () => {
+      const newPassword = "NewPassword123!";
 
-      mockBunPassword.hash.mockResolvedValue("hashed_password");
       mockUserRepository.userExistsById.mockResolvedValue(false);
 
       await expect(
-        authService.changeUserPassword(userId, newPassword),
-      ).rejects.toThrow(new ValidationError("User not found"));
+        authService.changeUserPassword(INVALID_USER_ID, newPassword),
+      ).rejects.toThrow(new NotFoundError("User not found"));
 
+      expect(mockBunPassword.hash).not.toHaveBeenCalled();
       expect(mockUserRepository.updateUserPassword).not.toHaveBeenCalled();
     });
 
-    it("should throw ValidationError if password update fails", async () => {
-      const userId = 1;
-      const newPassword = "newPassword123";
+    it("should throw ValidationError when password update fails", async () => {
+      const newPassword = "NewPassword123!";
 
-      mockBunPassword.hash.mockResolvedValue("hashed_password");
       mockUserRepository.userExistsById.mockResolvedValue(true);
-      mockUserRepository.updateUserPassword.mockResolvedValue(false);
+      mockBunPassword.hash.mockResolvedValue(HASHED_PASSWORD);
+      mockUserRepository.updateUserPassword.mockResolvedValue(null);
 
       await expect(
-        authService.changeUserPassword(userId, newPassword),
+        authService.changeUserPassword(VALID_USER_ID, newPassword),
       ).rejects.toThrow(new ValidationError("Failed to update user password"));
+    });
+
+    it("should handle password hashing failure", async () => {
+      const newPassword = "NewPassword123!";
+
+      mockUserRepository.userExistsById.mockResolvedValue(true);
+      mockBunPassword.hash.mockRejectedValue(new Error("Hashing failed"));
+
+      await expect(
+        authService.changeUserPassword(VALID_USER_ID, newPassword),
+      ).rejects.toThrow(new ValidationError("Failed to process password"));
+
+      expect(mockUserRepository.updateUserPassword).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("isUsernameAvailable", () => {
+    it("should return true when username is available", async () => {
+      mockUserRepository.isUsernameExists.mockResolvedValue(false);
+
+      const result = await authService.isUsernameAvailable(AVAILABLE_USERNAME);
+
+      expect(result).toEqual({ available: true });
+      expect(mockUserRepository.isUsernameExists).toHaveBeenCalledWith(
+        AVAILABLE_USERNAME.toLowerCase(),
+      );
+    });
+
+    it("should return false when username exists", async () => {
+      mockUserRepository.isUsernameExists.mockResolvedValue(true);
+
+      const result = await authService.isUsernameAvailable(EXISTING_USERNAME);
+
+      expect(result).toEqual({ available: false });
+      expect(mockUserRepository.isUsernameExists).toHaveBeenCalledWith(
+        EXISTING_USERNAME.toLowerCase(),
+      );
+    });
+
+    it("should include artificial delay for timing attack prevention", async () => {
+      mockUserRepository.isUsernameExists.mockResolvedValue(false);
+
+      const startTime = Date.now();
+      await authService.isUsernameAvailable(AVAILABLE_USERNAME);
+      const endTime = Date.now();
+
+      expect(endTime - startTime).toBeGreaterThanOrEqual(100);
+    });
+  });
+
+  describe("concurent attempts", () => {
+    it("should handle concurrent login attempts", async () => {
+      const mockUserWithPassword = createMockUserWithPassword();
+      const mockLogin = createMockLogin();
+
+      mockUserRepository.getByEmail.mockResolvedValue(mockUserWithPassword);
+      mockBunPassword.verify.mockResolvedValue(true);
+      mockTokenService.generateAuthTokens.mockResolvedValue(
+        createMockAuthTokens(),
+      );
+
+      const [result1, result2] = await Promise.all([
+        authService.userLogin(mockLogin),
+        authService.userLogin(mockLogin),
+      ]);
+
+      expect(result1).toBeDefined();
+      expect(result2).toBeDefined();
+      expect(mockUserRepository.getByEmail).toHaveBeenCalledTimes(2);
     });
   });
 });
