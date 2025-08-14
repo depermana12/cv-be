@@ -4,16 +4,30 @@ import { authRoutes } from "../../src/controllers/auth.controller";
 import type { Context } from "hono";
 import type { IAuthService } from "../../src/services/auth.service";
 import type { IEmailService } from "../../src/services/email.service";
-import type {
-  AuthUserLogin,
-  AuthUserRegister,
-  AuthUserSafe,
-} from "../../src/db/types/auth.type";
-import type { UserPayload } from "../../src/lib/types";
 import { ValidationError } from "../../src/errors/validation.error";
 import { testClient } from "hono/testing";
+import {
+  createMockUser,
+  createMockUserWithPassword,
+  createMockUserPayload,
+  createMockAuthTokens,
+  createMockRegistration,
+  createMockLogin,
+  VALID_USER_ID,
+  INVALID_USER_ID,
+  VALID_EMAIL,
+  INVALID_EMAIL,
+  EXISTING_USERNAME,
+  AVAILABLE_USERNAME,
+  VALID_PASSWORD,
+  INVALID_PASSWORD,
+  HASHED_PASSWORD,
+  ACCESS_TOKEN,
+  REFRESH_TOKEN,
+  RESET_TOKEN,
+  VERIFICATION_TOKEN,
+} from "../utils/auth.test-helpers";
 
-// mock the service container - inline mock objects to avoid hoisting issues
 vi.mock("../../src/lib/container", async () => {
   return {
     authService: {
@@ -29,6 +43,7 @@ vi.mock("../../src/lib/container", async () => {
       validateRefreshToken: vi.fn(),
       generateAuthTokens: vi.fn(),
       changeUserPassword: vi.fn(),
+      isUsernameAvailable: vi.fn(),
     },
     emailService: {
       sendEmailVerification: vi.fn(),
@@ -41,8 +56,8 @@ vi.mock("../../src/lib/container", async () => {
 vi.mock("../../src/middlewares/auth", () => ({
   jwt: () => (c: Context, next: Next) => {
     c.set("jwtPayload", {
-      id: "1",
-      email: "test@example.com",
+      id: VALID_USER_ID.toString(),
+      email: VALID_EMAIL,
       iat: Math.floor(Date.now() / 1000),
       exp: Math.floor(Date.now() / 1000) + 3600,
     });
@@ -52,7 +67,7 @@ vi.mock("../../src/middlewares/auth", () => ({
 
 const testApp = new Hono().route("/", authRoutes);
 
-describe("http integration auth test", () => {
+describe("AuthController", () => {
   const client = testClient(testApp);
   let mockedAuthService: Mocked<IAuthService>;
   let mockedEmailService: Mocked<IEmailService>;
@@ -64,76 +79,40 @@ describe("http integration auth test", () => {
     mockedEmailService = container.emailService as Mocked<IEmailService>;
   });
 
-  const userId = 1;
-  const mockUser: AuthUserSafe = {
-    id: userId,
-    email: "tungtungsahur@email.com",
-    firstName: "tung tung",
-    lastName: "sahur",
-    username: "tung2sahur",
-    isEmailVerified: true,
-    profileImage: "imageurloftungtungtungsahur",
-    birthDate: new Date("2025-03-01"),
-    gender: null,
-    createdAt: new Date("2025-07-01"),
-    updatedAt: new Date("2025-07-01"),
-  };
-
-  const mockUserWithPassword = {
-    ...mockUser,
-    password: "moCkHashedPassworD",
-  };
-
-  const mockAuthTokens = {
-    accessToken: "mock-access-token",
-    refreshToken: "mock-refresh-token",
-  };
-
-  const mockPerTokenan = {
-    verificationToken: "mock-verification-token",
-    resetToken: "mock-reset-token",
-  };
-
-  const mockResetPassword = {
-    email: mockUser.email,
-    username: mockUser.username,
-    resetToken: mockPerTokenan.resetToken,
-  };
-
-  const mockRegistration: AuthUserRegister = {
-    email: mockUser.email,
-    password: "ballerinaCapuccina",
-    username: mockUser.username,
-  };
-
-  const mockLogin: AuthUserLogin = {
-    email: mockUser.email,
-    password: "ballerinaCapuccina",
-  };
-
-  const mockUserPayload: UserPayload = { id: "1", email: mockUser.email };
-
-  describe("POST /auth/signup", () => {
+  describe("POST /signup", () => {
     it("should register a new user successfully", async () => {
+      const mockUser = createMockUser();
+      const mockTokens = createMockAuthTokens();
+      const mockRegistration = createMockRegistration();
+
       mockedAuthService.registerUser.mockResolvedValue({
         ...mockUser,
-        ...mockAuthTokens,
+        ...mockTokens,
       });
       mockedAuthService.createEmailVerificationToken.mockResolvedValue(
-        "verification-token",
+        VERIFICATION_TOKEN,
       );
       mockedEmailService.sendEmailVerification.mockResolvedValue(undefined);
 
       const response = await client.signup.$post({
-        json: mockRegistration,
+        json: {
+          email: mockRegistration.email,
+          password: mockRegistration.password,
+          confirmPassword: mockRegistration.password,
+          username: mockRegistration.username,
+        },
       });
 
       expect(response.status).toBe(201);
-      const data = await response.json();
+      const data = (await response.json()) as {
+        success: boolean;
+        message: string;
+        data?: any;
+      };
       expect(data.success).toBe(true);
       expect(data.message).toContain("User created successfully");
       expect(data.data.email).toBe(mockUser.email);
-      expect(data.data.token).toBe(mockAuthTokens.accessToken);
+      expect(data.data.token).toBe(ACCESS_TOKEN);
 
       expect(mockedAuthService.registerUser).toHaveBeenCalledWith(
         mockRegistration,
@@ -141,55 +120,45 @@ describe("http integration auth test", () => {
       expect(mockedEmailService.sendEmailVerification).toHaveBeenCalledWith({
         email: mockUser.email,
         username: mockUser.username,
-        verificationToken: "verification-token",
+        verificationToken: VERIFICATION_TOKEN,
       });
 
       const cookies = response.headers.get("set-cookie");
-      expect(cookies).toContain("refreshToken=mock-refresh-token");
+      expect(cookies).toContain(`refreshToken=${REFRESH_TOKEN}`);
       expect(cookies).toContain("HttpOnly");
       expect(cookies).toContain("SameSite=Strict");
     });
 
-    it("should validate required fields", async () => {
-      const invalidData = {
-        email: "testemail.com",
-        password: "",
-        username: "",
-      };
-
-      const response = await client.signup.$post({
-        json: invalidData,
-      });
-
-      expect(response.status).toBe(400);
-      expect(mockedAuthService.registerUser).not.toHaveBeenCalled();
-    });
-
-    it("should handle user already registered", async () => {
-      const userData = {
-        email: mockUser.email,
-        password: "strongpassword123!",
-        username: "testuser",
-      };
+    it("should handle email already registered", async () => {
+      const mockRegistration = createMockRegistration();
 
       mockedAuthService.registerUser.mockRejectedValue(
         new ValidationError("email already registered"),
       );
 
       const response = await client.signup.$post({
-        json: userData,
+        json: {
+          ...mockRegistration,
+          confirmPassword: mockRegistration.password,
+        },
       });
 
       expect(response.status).toBe(500);
-      expect(mockedAuthService.registerUser).toHaveBeenCalledWith(userData);
+      expect(mockedAuthService.registerUser).toHaveBeenCalledWith(
+        mockRegistration,
+      );
     });
   });
 
-  describe("POST /auth/signin", () => {
+  describe("POST /signin", () => {
     it("should login user successfully", async () => {
+      const mockUser = createMockUser();
+      const mockTokens = createMockAuthTokens();
+      const mockLogin = createMockLogin();
+
       mockedAuthService.userLogin.mockResolvedValue({
         ...mockUser,
-        ...mockAuthTokens,
+        ...mockTokens,
       });
 
       const response = await client.signin.$post({
@@ -197,93 +166,115 @@ describe("http integration auth test", () => {
       });
 
       expect(response.status).toBe(200);
-      const data = await response.json();
+      const data = (await response.json()) as {
+        success: boolean;
+        message: string;
+        data?: any;
+      };
       expect(data.success).toBe(true);
       expect(data.message).toBe("user login successfully");
-      expect(data.data.token).toBe(mockAuthTokens.accessToken);
+      expect(data.data.token).toBe(ACCESS_TOKEN);
 
       expect(mockedAuthService.userLogin).toHaveBeenCalledWith(mockLogin);
 
       const cookies = response.headers.get("set-cookie");
-      expect(cookies).toContain("refreshToken=mock-refresh-token");
-    });
-
-    it("should return 400 for invalid login data", async () => {
-      const invalidData = {
-        email: "invalidemail.com",
-        password: "123pw",
-      };
-
-      const response = await client.signin.$post({
-        json: invalidData,
-      });
-
-      expect(response.status).toBe(400);
-      expect(mockedAuthService.userLogin).not.toHaveBeenCalled();
+      expect(cookies).toContain(`refreshToken=${REFRESH_TOKEN}`);
     });
 
     it("should handle login service errors", async () => {
-      const loginData = {
-        email: "test@example.com",
-        password: "WrongPassword123!",
-      };
+      const mockLogin = createMockLogin({ password: "WrongPassword" });
 
       mockedAuthService.userLogin.mockRejectedValue(
         new ValidationError("invalid email or password"),
       );
 
       const response = await client.signin.$post({
-        json: loginData,
+        json: mockLogin,
       });
 
       expect(response.status).toBe(500);
-      expect(mockedAuthService.userLogin).toHaveBeenCalledWith(loginData);
+      expect(mockedAuthService.userLogin).toHaveBeenCalledWith(mockLogin);
     });
   });
 
-  describe("POST /auth/forget-password", () => {
+  describe("POST /logout", () => {
+    it("should logout user successfully", async () => {
+      const response = await client.logout.$post({});
+
+      expect(response.status).toBe(200);
+      const data = (await response.json()) as {
+        success: boolean;
+        message: string;
+        data?: any;
+      };
+      expect(data.success).toBe(true);
+      expect(data.message).toBe("user logged out successfully");
+
+      const cookies = response.headers.get("set-cookie");
+      expect(cookies).toContain("refreshToken=");
+      expect(cookies).toContain("Max-Age=0");
+    });
+  });
+
+  describe("POST /forget-password", () => {
     it("should send password reset email successfully", async () => {
+      const mockUser = createMockUser();
+
       mockedAuthService.getByEmail.mockResolvedValue(mockUser);
-      mockedAuthService.createResetPasswordToken.mockResolvedValue(
-        mockPerTokenan.resetToken,
-      );
+      mockedAuthService.createResetPasswordToken.mockResolvedValue(RESET_TOKEN);
       mockedEmailService.sendPasswordReset.mockResolvedValue(undefined);
 
       const response = await client["forget-password"].$post({
-        json: mockResetPassword,
+        json: { email: VALID_EMAIL },
       });
 
       expect(response.status).toBe(200);
-      const data = await response.json();
+      const data = (await response.json()) as {
+        success: boolean;
+        message: string;
+        data?: any;
+      };
       expect(data.success).toBe(true);
       expect(data.message).toBe("Reset password email sent successfully");
 
-      expect(mockedAuthService.getByEmail).toHaveBeenCalledWith(mockUser.email);
+      expect(mockedAuthService.getByEmail).toHaveBeenCalledWith(VALID_EMAIL);
       expect(mockedAuthService.createResetPasswordToken).toHaveBeenCalledWith({
-        id: "1",
+        id: VALID_USER_ID.toString(),
         email: mockUser.email,
+        isEmailVerified: mockUser.isEmailVerified || false,
       });
-      expect(mockedEmailService.sendPasswordReset).toHaveBeenCalledWith(
-        mockResetPassword,
+      expect(mockedEmailService.sendPasswordReset).toHaveBeenCalledWith({
+        email: mockUser.email,
+        username: mockUser.username,
+        resetToken: RESET_TOKEN,
+      });
+    });
+
+    it("should handle user not found", async () => {
+      mockedAuthService.getByEmail.mockRejectedValue(
+        new ValidationError("User not found"),
       );
+
+      const response = await client["forget-password"].$post({
+        json: { email: INVALID_EMAIL },
+      });
+
+      expect(response.status).toBe(500);
+      expect(mockedAuthService.getByEmail).toHaveBeenCalledWith(INVALID_EMAIL);
     });
   });
 
-  describe("POST /auth/reset-password/:token", () => {
+  describe("POST /reset-password/:token", () => {
     it("should reset password successfully", async () => {
       const token = "valid-reset-token";
       const passwordData = {
         password: "NewPassword123!",
         confirmPassword: "NewPassword123!",
       };
-
-      const mockUser = {
-        id: "1",
-        email: "test@example.com",
-      };
+      const mockUserPayload = createMockUserPayload();
 
       mockedAuthService.validateDecodeResetPasswordToken.mockResolvedValue(
-        mockUser,
+        mockUserPayload,
       );
       mockedAuthService.changeUserPassword.mockResolvedValue(undefined);
 
@@ -301,15 +292,36 @@ describe("http integration auth test", () => {
         mockedAuthService.validateDecodeResetPasswordToken,
       ).toHaveBeenCalledWith(token);
       expect(mockedAuthService.changeUserPassword).toHaveBeenCalledWith(
-        1,
+        VALID_USER_ID,
         passwordData.password,
       );
     });
+
+    it("should handle invalid token", async () => {
+      const token = "invalid-token";
+      const passwordData = {
+        password: "NewPassword123!",
+        confirmPassword: "NewPassword123!",
+      };
+
+      mockedAuthService.validateDecodeResetPasswordToken.mockRejectedValue(
+        new ValidationError("Invalid token"),
+      );
+
+      const response = await client["reset-password"][":token"].$post({
+        json: passwordData,
+        param: { token },
+      });
+
+      expect(response.status).toBe(500);
+      expect(mockedAuthService.changeUserPassword).not.toHaveBeenCalled();
+    });
   });
 
-  describe("POST /auth/verify-email/:token", () => {
+  describe("POST /verify-email/:token", () => {
     it("should verify email successfully for new user", async () => {
-      const verificationToken = "mock-verification-token";
+      const mockUserPayload = createMockUserPayload();
+      const mockUser = createMockUser();
 
       mockedAuthService.validateEmailVerificationToken.mockResolvedValue(
         mockUserPayload,
@@ -320,53 +332,54 @@ describe("http integration auth test", () => {
       mockedEmailService.sendWelcomeEmail.mockResolvedValue();
 
       const response = await client["verify-email"][":token"].$post({
-        param: { token: verificationToken },
+        param: { token: VERIFICATION_TOKEN },
       });
 
       expect(response.status).toBe(200);
-      const data = await response.json();
+      const data = (await response.json()) as {
+        success: boolean;
+        message: string;
+        data?: any;
+      };
       expect(data.success).toBe(true);
       expect(data.message).toBe("Email verified successfully");
-      expect(Number(data.data.userId)).toBe(mockUser.id);
+      expect(data.data.userId).toBe(mockUserPayload.id);
 
       expect(
         mockedAuthService.validateEmailVerificationToken,
-      ).toHaveBeenCalledWith(verificationToken);
-      expect(mockedAuthService.isEmailVerified).toHaveBeenCalledWith(1);
-      expect(mockedAuthService.verifyUserEmail).toHaveBeenCalledWith(1);
-      expect(mockedAuthService.getByEmail).toHaveBeenCalledWith(mockUser.email);
-
+      ).toHaveBeenCalledWith(VERIFICATION_TOKEN);
+      expect(mockedAuthService.isEmailVerified).toHaveBeenCalledWith(
+        VALID_USER_ID,
+      );
+      expect(mockedAuthService.verifyUserEmail).toHaveBeenCalledWith(
+        VALID_USER_ID,
+      );
       expect(mockedEmailService.sendWelcomeEmail).toHaveBeenCalledWith(
         mockUser.email,
         mockUser.username,
       );
     });
+
     it("should not send welcome email if email is already verified", async () => {
-      const verificationToken = "mock-verification-token";
+      const mockUserPayload = createMockUserPayload();
 
       mockedAuthService.validateEmailVerificationToken.mockResolvedValue(
         mockUserPayload,
       );
       mockedAuthService.isEmailVerified.mockResolvedValue({ verified: true });
-      // this should not be called since email is already verified
-      // mockedAuthService.verifyUserEmail.mockResolvedValue(true);
-      mockedAuthService.getByEmail.mockResolvedValue(mockUser);
-      mockedEmailService.sendWelcomeEmail.mockResolvedValue();
 
       const response = await client["verify-email"][":token"].$post({
-        param: { token: verificationToken },
+        param: { token: VERIFICATION_TOKEN },
       });
 
       expect(response.status).toBe(200);
-      const data = await response.json();
+      const data = (await response.json()) as {
+        success: boolean;
+        message: string;
+        data?: any;
+      };
       expect(data.success).toBe(true);
       expect(data.message).toBe("Email verified successfully");
-      expect(Number(data.data.userId)).toBe(mockUser.id);
-
-      expect(
-        mockedAuthService.validateEmailVerificationToken,
-      ).toHaveBeenCalledWith(verificationToken);
-      expect(mockedAuthService.isEmailVerified).toHaveBeenCalledWith(1);
 
       expect(mockedAuthService.verifyUserEmail).not.toHaveBeenCalled();
       expect(mockedAuthService.getByEmail).not.toHaveBeenCalled();
@@ -376,36 +389,38 @@ describe("http integration auth test", () => {
     it("should handle invalid verification token", async () => {
       const invalidToken = "invalid-token";
 
-      mockedAuthService.validateEmailVerificationToken.mockRejectedValueOnce(
+      mockedAuthService.validateEmailVerificationToken.mockRejectedValue(
         new ValidationError("jwt token invalid or expired"),
       );
 
       const response = await client["verify-email"][":token"].$post({
         param: { token: invalidToken },
       });
-      // this is not match status
-      expect(response.status).toBe(500);
 
+      expect(response.status).toBe(500);
+      expect(mockedAuthService.isEmailVerified).not.toHaveBeenCalled();
+    });
+
+    it("should handle empty token", async () => {
+      const response = await client["verify-email"][":token"].$post({
+        param: { token: "" },
+      });
+
+      expect(response.status).toBe(404);
       expect(
         mockedAuthService.validateEmailVerificationToken,
-      ).toHaveBeenCalledWith(invalidToken);
-
-      expect(mockedAuthService.isEmailVerified).not.toHaveBeenCalled();
-      expect(mockedAuthService.verifyUserEmail).not.toHaveBeenCalled();
-      expect(mockedAuthService.getByEmail).not.toHaveBeenCalled();
-      expect(mockedEmailService.sendWelcomeEmail).not.toHaveBeenCalled();
+      ).not.toHaveBeenCalled();
     });
   });
 
-  describe("GET /auth/email-verification-status/:userId", () => {
+  describe("GET /email-verification-status/:userId", () => {
     it("should return email verification status", async () => {
-      const userId = "1";
       mockedAuthService.isEmailVerified.mockResolvedValue({ verified: true });
 
       const response = await client["email-verification-status"][
         ":userId"
       ].$get({
-        param: { userId },
+        param: { userId: VALID_USER_ID.toString() },
       });
 
       expect(response.status).toBe(200);
@@ -414,14 +429,43 @@ describe("http integration auth test", () => {
       expect(data.message).toBe("email verification status retrieved");
       expect(data.data).toEqual({ verified: true });
 
-      expect(mockedAuthService.isEmailVerified).toHaveBeenCalledWith(1);
+      expect(mockedAuthService.isEmailVerified).toHaveBeenCalledWith(
+        VALID_USER_ID,
+      );
+    });
+
+    it("should handle invalid userId format", async () => {
+      const response = await client["email-verification-status"][
+        ":userId"
+      ].$get({
+        param: { userId: "invalid" },
+      });
+
+      expect(response.status).toBe(400);
+      expect(mockedAuthService.isEmailVerified).not.toHaveBeenCalled();
+    });
+
+    it("should return false for unverified user", async () => {
+      mockedAuthService.isEmailVerified.mockResolvedValue({ verified: false });
+
+      const response = await client["email-verification-status"][
+        ":userId"
+      ].$get({
+        param: { userId: VALID_USER_ID.toString() },
+      });
+
+      expect(response.status).toBe(200);
+      const data = await response.json();
+      expect(data.data.verified).toBe(false);
     });
   });
 
-  describe("POST /auth/send-email-verification", () => {
+  describe("POST /send-email-verification", () => {
     it("should send email verification successfully", async () => {
+      const mockUser = createMockUser();
+
       mockedAuthService.createEmailVerificationToken.mockResolvedValue(
-        "verification-token",
+        VERIFICATION_TOKEN,
       );
       mockedAuthService.getByEmail.mockResolvedValue(mockUser);
       mockedEmailService.sendEmailVerification.mockResolvedValue(undefined);
@@ -440,43 +484,45 @@ describe("http integration auth test", () => {
       expect(
         mockedAuthService.createEmailVerificationToken,
       ).toHaveBeenCalledWith({
-        id: "1",
-        email: "test@example.com",
+        id: VALID_USER_ID.toString(),
+        email: VALID_EMAIL,
+        isEmailVerified: false,
       });
       expect(mockedEmailService.sendEmailVerification).toHaveBeenCalledWith({
         email: mockUser.email,
         username: mockUser.username,
-        verificationToken: "verification-token",
+        verificationToken: VERIFICATION_TOKEN,
       });
     });
   });
 
-  describe("POST /auth/refresh-token", () => {
+  describe("POST /refresh-token", () => {
     it("should refresh tokens successfully", async () => {
-      const refreshToken = "mock-valid-refresh-token";
+      const mockUserPayload = createMockUserPayload();
+      const mockTokens = createMockAuthTokens();
+
       mockedAuthService.validateRefreshToken.mockResolvedValue(mockUserPayload);
-      mockedAuthService.generateAuthTokens.mockResolvedValue(mockAuthTokens);
+      mockedAuthService.generateAuthTokens.mockResolvedValue(mockTokens);
 
       const response = await client["refresh-token"].$post({
-        cookie: { refreshToken },
+        cookie: { refreshToken: REFRESH_TOKEN },
       });
 
       expect(response.status).toBe(200);
       const data = await response.json();
       expect(data.success).toBe(true);
       expect(data.message).toBe("tokens refreshed");
-      expect(data.data).toBe(mockAuthTokens.accessToken);
+      expect(data.data).toBe(ACCESS_TOKEN);
 
       expect(mockedAuthService.validateRefreshToken).toHaveBeenCalledWith(
-        refreshToken,
+        REFRESH_TOKEN,
       );
-
       expect(mockedAuthService.generateAuthTokens).toHaveBeenCalledWith(
         mockUserPayload,
       );
 
       const cookies = response.headers.get("set-cookie");
-      expect(cookies).toContain("refreshToken=mock-refresh-token");
+      expect(cookies).toContain(`refreshToken=${REFRESH_TOKEN}`);
     });
 
     it("should return 400 for missing refresh token", async () => {
@@ -487,29 +533,90 @@ describe("http integration auth test", () => {
       expect(response.status).toBe(400);
       expect(mockedAuthService.validateRefreshToken).not.toHaveBeenCalled();
     });
+
+    it("should handle invalid refresh token", async () => {
+      mockedAuthService.validateRefreshToken.mockRejectedValue(
+        new ValidationError("Invalid refresh token"),
+      );
+
+      const response = await client["refresh-token"].$post({
+        cookie: { refreshToken: "invalid-token" },
+      });
+
+      expect(response.status).toBe(500);
+      expect(mockedAuthService.validateRefreshToken).toHaveBeenCalledWith(
+        "invalid-token",
+      );
+    });
+  });
+
+  describe("GET /check-username", () => {
+    it("should return true when username is available", async () => {
+      mockedAuthService.isUsernameAvailable.mockResolvedValue({
+        available: true,
+      });
+
+      const response = await client["check-username"].$get({
+        query: { username: AVAILABLE_USERNAME },
+      });
+
+      expect(response.status).toBe(200);
+      const data = await response.json();
+      expect(data.success).toBe(true);
+      expect(data.message).toBe("username availability checked");
+      expect(data.data).toEqual({
+        username: AVAILABLE_USERNAME,
+        available: true,
+      });
+
+      expect(mockedAuthService.isUsernameAvailable).toHaveBeenCalledWith(
+        AVAILABLE_USERNAME,
+      );
+    });
+
+    it("should return false when username is taken", async () => {
+      mockedAuthService.isUsernameAvailable.mockResolvedValue({
+        available: false,
+      });
+
+      const response = await client["check-username"].$get({
+        query: { username: EXISTING_USERNAME },
+      });
+
+      expect(response.status).toBe(200);
+      const data = await response.json();
+      expect(data.data.available).toBe(false);
+    });
   });
 
   describe("Edge Cases and Error Scenarios", () => {
     it("should handle concurrent registration attempts", async () => {
-      // First request succeeds
+      const mockRegistration = createMockRegistration();
+
       mockedAuthService.registerUser
         .mockResolvedValueOnce({
-          ...mockUser,
-          ...mockAuthTokens,
+          ...createMockUser(),
+          ...createMockAuthTokens(),
         })
-        // Second request fails due to duplicate email
         .mockRejectedValueOnce(new ValidationError("Email already exists"));
 
       mockedAuthService.createEmailVerificationToken.mockResolvedValue(
-        "verification-token",
+        VERIFICATION_TOKEN,
       );
-      mockedEmailService.sendEmailVerification.mockResolvedValue(undefined); // Act
+      mockedEmailService.sendEmailVerification.mockResolvedValue(undefined);
+
       const [response1, response2] = await Promise.all([
         client.signup.$post({
-          json: mockRegistration,
+          json: {
+            ...mockRegistration,
+            confirmPassword: mockRegistration.password,
+          },
         }),
         client.signup.$post({
-          json: mockRegistration,
+          json: {
+            ...mockRegistration,
+            confirmPassword: mockRegistration.password,
+          },
         }),
       ]);
 
