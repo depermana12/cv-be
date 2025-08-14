@@ -1,4 +1,3 @@
-// TODO: move this to auth types
 import type { ITokenService } from "./token.service";
 import type { IUserRepository } from "../repositories/user.repo";
 import type {
@@ -10,7 +9,6 @@ import type {
 import type { UserPayload } from "../lib/types";
 import { ValidationError } from "../errors/validation.error";
 import { NotFoundError } from "../errors/not-found.error";
-import { set } from "zod";
 
 export interface IAuthService {
   registerUser(
@@ -129,7 +127,7 @@ export class AuthService implements IAuthService {
   async isEmailVerified(id: number): Promise<{ verified: boolean }> {
     const user = await this.userRepository.getByIdSafe(id);
     if (!user) {
-      throw new ValidationError("User not found");
+      throw new NotFoundError("User not found");
     }
 
     return { verified: user.isEmailVerified || false };
@@ -160,7 +158,6 @@ export class AuthService implements IAuthService {
     const payload = await this.tokenService.validateEmailVerificationToken(
       token,
     );
-    await this.verifyUserEmail(Number(payload.id));
 
     return {
       ...payload,
@@ -181,15 +178,17 @@ export class AuthService implements IAuthService {
   // =============================
 
   async changeUserPassword(userId: number, newPassword: string): Promise<void> {
-    const hashedNewPassword = await Bun.password.hash(newPassword);
     const userExists = await this.userRepository.userExistsById(userId);
     if (!userExists) {
-      throw new ValidationError("User not found");
+      throw new NotFoundError("User not found");
     }
+
+    const hashedNewPassword = await this.hashPassword(newPassword);
     const updated = await this.userRepository.updateUserPassword(
       userId,
       hashedNewPassword,
     );
+
     if (!updated) {
       throw new ValidationError("Failed to update user password");
     }

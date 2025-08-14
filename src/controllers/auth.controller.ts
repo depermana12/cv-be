@@ -30,25 +30,46 @@ const COOKIE_OPTIONS = {
   sameSite: "strict" as const,
   path: "/",
   maxAge: 60 * 60 * 24 * 7, // 7 days
+} as const;
+
+const createUserPayload = (user: {
+  id: number;
+  email: string;
+  isEmailVerified?: boolean | null;
+}) => ({
+  id: user.id.toString(),
+  email: user.email,
+  isEmailVerified: user.isEmailVerified || false,
+});
+
+const handleJwtErrors = (err: unknown) => {
+  if (
+    err instanceof JwtTokenInvalid ||
+    err instanceof JwtTokenExpired ||
+    err instanceof JwtTokenNotBefore ||
+    err instanceof JwtTokenIssuedAt ||
+    err instanceof JwtTokenSignatureMismatched ||
+    err instanceof JwtAlgorithmNotImplemented
+  ) {
+    throw new ValidationError("jwt token invalid or expired");
+  }
+  throw err;
 };
 
 export const authRoutes = createHonoBindings()
   .post("/signup", zValidator("json", signupSchema), async (c) => {
     const validatedBody = c.req.valid("json");
 
-    // Transform validated input to match service interface (remove confirmPassword)
-    // confirm password only in schema level, not in service
     const { confirmPassword, ...registrationData } = validatedBody;
 
     const { accessToken, refreshToken, ...user } =
       await authService.registerUser(registrationData);
+
     setCookie(c, "refreshToken", refreshToken, COOKIE_OPTIONS);
 
-    const verificationToken = await authService.createEmailVerificationToken({
-      id: user.id.toString(),
-      email: user.email,
-      isEmailVerified: user.isEmailVerified || false,
-    });
+    const verificationToken = await authService.createEmailVerificationToken(
+      createUserPayload(user),
+    );
 
     await emailService.sendEmailVerification({
       email: user.email,
@@ -66,12 +87,14 @@ export const authRoutes = createHonoBindings()
       201,
     );
   })
+
   .post("/signin", zValidator("json", signinSchema), async (c) => {
     const validatedLogin = c.req.valid("json");
 
     const { accessToken, refreshToken, ...user } = await authService.userLogin(
       validatedLogin,
     );
+
     setCookie(c, "refreshToken", refreshToken, COOKIE_OPTIONS);
 
     return c.json(
@@ -83,12 +106,11 @@ export const authRoutes = createHonoBindings()
       200,
     );
   })
+
   .post("/logout", async (c) => {
-    // Backend clear the refresh token cookie
-    // Frontend clear local storage and session storage
     setCookie(c, "refreshToken", "", {
       ...COOKIE_OPTIONS,
-      maxAge: 0, // Immediately expire the cookie
+      maxAge: 0,
     });
 
     return c.json(
@@ -99,18 +121,17 @@ export const authRoutes = createHonoBindings()
       200,
     );
   })
+
   .post(
     "/forget-password",
     zValidator("json", forgetPasswordSchema),
     async (c) => {
-      const validatedInput = c.req.valid("json");
-      const user = await authService.getByEmail(validatedInput.email);
+      const { email } = c.req.valid("json");
+      const user = await authService.getByEmail(email);
 
-      const resetToken = await authService.createResetPasswordToken({
-        id: user.id.toString(),
-        email: user.email,
-        isEmailVerified: user.isEmailVerified || false,
-      });
+      const resetToken = await authService.createResetPasswordToken(
+        createUserPayload(user),
+      );
 
       await emailService.sendPasswordReset({
         email: user.email,
@@ -127,16 +148,17 @@ export const authRoutes = createHonoBindings()
       );
     },
   )
+
   .post(
     "/reset-password/:token",
     zValidator("param", tokenParamsSchema),
     zValidator("json", resetPasswordSchema),
     async (c) => {
       const { token } = c.req.valid("param");
-      const validatedInput = c.req.valid("json");
+      const { password } = c.req.valid("json");
 
       const user = await authService.validateDecodeResetPasswordToken(token);
-      await authService.changeUserPassword(+user.id, validatedInput.password);
+      await authService.changeUserPassword(+user.id, password);
 
       return c.json({
         success: true,
@@ -144,6 +166,7 @@ export const authRoutes = createHonoBindings()
       });
     },
   )
+
   .post(
     "/verify-email/:token",
     zValidator("param", tokenParamsSchema),
@@ -155,8 +178,9 @@ export const authRoutes = createHonoBindings()
           token,
         );
 
-        const isVerified = await authService.isEmailVerified(+userPayload.id);
-        if (!isVerified.verified) {
+        const { verified } = await authService.isEmailVerified(+userPayload.id);
+
+        if (!verified) {
           await authService.verifyUserEmail(+userPayload.id);
           const fullUser = await authService.getByEmail(userPayload.email);
           await emailService.sendWelcomeEmail(
@@ -173,21 +197,11 @@ export const authRoutes = createHonoBindings()
           },
         });
       } catch (err) {
-        if (
-          err instanceof JwtTokenInvalid ||
-          err instanceof JwtTokenExpired ||
-          err instanceof JwtTokenNotBefore ||
-          err instanceof JwtTokenIssuedAt ||
-          err instanceof JwtTokenSignatureMismatched ||
-          err instanceof JwtAlgorithmNotImplemented
-        ) {
-          console.log("jwt token error");
-          throw new ValidationError("jwt token invalid or expired");
-        }
-        throw err;
+        handleJwtErrors(err);
       }
     },
   )
+
   .get(
     "/email-verification-status/:userId",
     zValidator("param", userIdParamsSchema),
@@ -203,6 +217,7 @@ export const authRoutes = createHonoBindings()
       });
     },
   )
+
   .post("/send-email-verification", jwt(), async (c) => {
     const user = c.get("jwtPayload");
 
@@ -225,6 +240,7 @@ export const authRoutes = createHonoBindings()
       message: "Email verification sent successfully",
     });
   })
+
   .post(
     "/refresh-token",
     zValidator("cookie", refreshTokenSchema),
@@ -235,6 +251,7 @@ export const authRoutes = createHonoBindings()
       const newTokens = await authService.generateAuthTokens(userPayload);
 
       setCookie(c, "refreshToken", newTokens.refreshToken, COOKIE_OPTIONS);
+
       return c.json({
         success: true,
         message: "tokens refreshed",
@@ -242,6 +259,7 @@ export const authRoutes = createHonoBindings()
       });
     },
   )
+
   .get(
     "/check-username",
     zValidator("query", usernameQuerySchema),
