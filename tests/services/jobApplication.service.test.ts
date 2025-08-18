@@ -1,768 +1,836 @@
-import { describe, it, expect, vi, beforeEach, type Mocked } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import { JobApplicationService } from "../../src/services/jobApplication.service";
 import { NotFoundError } from "../../src/errors/not-found.error";
-import type {
-  JobApplicationInsert,
-  JobApplicationSelect,
-  JobApplicationUpdate,
-  JobApplicationQueryOptions,
-  PaginatedJobApplicationResponse,
-} from "../../src/db/types/jobApplication.type";
 import type { IJobApplication } from "../../src/repositories/jobApplication.repo";
 import type { IJobApplicationStatus } from "../../src/repositories/jobApplicationStatus.repo";
+import {
+  createMockJobApplicationRepository,
+  createMockJobApplicationStatusRepository,
+  setupJobApplicationMocks,
+  createMockJobApplicationData,
+  createMockJobApplication,
+  createMockJobApplicationUpdate,
+  createMockQueryOptions,
+  createMockPaginatedResponse,
+  createJobApplicationsArray,
+  createMinimalJobApplicationData,
+  createFullJobApplicationData,
+  createFutureDate,
+  createPastDate,
+  VALID_USER_ID,
+  INVALID_USER_ID,
+  VALID_JOB_ID,
+  INVALID_JOB_ID,
+  VALID_CV_ID,
+} from "../utils/jobApplication.test-helpers";
 
 describe("JobApplicationService", () => {
-  let jobApplicationService: JobApplicationService;
-  let mockJobApplicationRepository: Mocked<IJobApplication>;
-  let mockJobApplicationStatusRepository: Mocked<IJobApplicationStatus>;
-
-  const userId = 1;
-  const jobApplicationId = 1;
-
-  const mockJobApplicationData: Omit<JobApplicationInsert, "userId"> = {
-    companyName: "Depermana Tech USA",
-    jobTitle: "Software Engineer",
-    jobType: "Full-time",
-    position: "Mid-level",
-    location: "San Francisco, CA",
-    locationType: "On-site",
-    status: "applied",
-    jobPortal: "LinkedIn",
-    jobUrl: "https://linkedin.com/jobs/1235",
-    cvId: 1,
-    notes: "Interesting opportunity",
-    appliedAt: new Date("2025-01-15"),
-  };
-  const mockJobApplication: JobApplicationSelect = {
-    id: jobApplicationId,
-    userId,
-    companyName: "Depermana Tech Asia",
-    jobTitle: "Software Engineer",
-    jobType: "Full-time",
-    position: "Mid-level",
-    location: "Jakarta, ID",
-    locationType: "On-site",
-    status: "applied",
-    jobPortal: "LinkedIn",
-    jobUrl: "https://linkedin.com/jobs/123",
-    cvId: 1,
-    notes: "Interesting opportunity",
-    appliedAt: new Date("2025-06-15"),
-    createdAt: new Date("2025-06-15"),
-    updatedAt: new Date("2025-06-15"),
-  };
+  let service: JobApplicationService;
+  let mockJobRepo: ReturnType<typeof createMockJobApplicationRepository>;
+  let mockStatusRepo: ReturnType<
+    typeof createMockJobApplicationStatusRepository
+  >;
 
   beforeEach(() => {
-    vi.clearAllMocks();
-
-    mockJobApplicationRepository = {
-      createJobApplication: vi.fn(),
-      getJobApplicationByIdAndUserId: vi.fn(),
-      getAllJobApplicationsByUserId: vi.fn(),
-      updateJobApplicationByIdAndUserId: vi.fn(),
-      deleteJobApplicationByIdAndUserId: vi.fn(),
-    };
-
-    mockJobApplicationStatusRepository = {
-      getStatuses: vi.fn(),
-      addStatus: vi.fn(),
-      updateStatus: vi.fn(),
-      deleteStatuses: vi.fn(),
-    };
-
-    jobApplicationService = new JobApplicationService(
-      mockJobApplicationRepository,
-      mockJobApplicationStatusRepository,
-    );
+    mockJobRepo = createMockJobApplicationRepository();
+    mockStatusRepo = createMockJobApplicationStatusRepository();
+    service = new JobApplicationService(mockJobRepo, mockStatusRepo);
   });
 
   describe("createJobApplication", () => {
-    it("should create a job application", async () => {
-      mockJobApplicationRepository.createJobApplication.mockResolvedValue({
-        id: jobApplicationId,
-      });
-      mockJobApplicationRepository.getJobApplicationByIdAndUserId.mockResolvedValue(
-        mockJobApplication,
+    it("should create job application with minimal required data", async () => {
+      // Arrange
+      const jobData = createMinimalJobApplicationData();
+      const { mockJobApp } = setupJobApplicationMocks(
+        mockJobRepo,
+        mockStatusRepo,
       );
 
-      const result = await jobApplicationService.createJobApplication(
-        mockJobApplicationData,
-        userId,
-      );
+      // Act
+      const result = await service.createJobApplication(jobData, VALID_USER_ID);
 
-      expect(result).toEqual(mockJobApplication);
-      expect(
-        mockJobApplicationRepository.createJobApplication,
-      ).toHaveBeenCalledWith({
-        ...mockJobApplicationData,
-        userId,
+      // Assert
+      expect(mockJobRepo.create).toHaveBeenCalledWith({
+        ...jobData,
+        userId: VALID_USER_ID,
       });
-      expect(mockJobApplicationStatusRepository.addStatus).toHaveBeenCalledWith(
-        jobApplicationId,
-        {
-          applicationId: jobApplicationId,
-          status: mockJobApplicationData.status,
-          changedAt: mockJobApplicationData.appliedAt,
-        },
+      expect(mockStatusRepo.addStatus).toHaveBeenCalledWith(
+        mockJobApp.id,
+        expect.objectContaining({
+          applicationId: mockJobApp.id,
+          status: "applied",
+          changedAt: expect.any(Date),
+        }),
       );
-      expect(
-        mockJobApplicationRepository.getJobApplicationByIdAndUserId,
-      ).toHaveBeenCalledWith(jobApplicationId, userId);
+      expect(result).toEqual(mockJobApp);
     });
 
-    it("should create with minimal required data", async () => {
-      const minimalData = {
-        companyName: "Minimal Tech Corp",
-        jobTitle: "Backend Developer",
-      };
-      const expectedJobApp: JobApplicationSelect = {
-        ...mockJobApplication,
-        ...minimalData,
-        id: jobApplicationId,
-        userId,
-        createdAt: new Date("2025-06-15"),
-        updatedAt: new Date("2025-06-15"),
-      };
-
-      mockJobApplicationRepository.createJobApplication.mockResolvedValue({
-        id: jobApplicationId,
-      });
-      mockJobApplicationRepository.getJobApplicationByIdAndUserId.mockResolvedValue(
-        expectedJobApp,
+    it("should create job application with full data including custom status", async () => {
+      // Arrange
+      const jobData = createFullJobApplicationData();
+      const { mockJobApp } = setupJobApplicationMocks(
+        mockJobRepo,
+        mockStatusRepo,
       );
 
-      const result = await jobApplicationService.createJobApplication(
-        minimalData,
-        userId,
-      );
+      // Act
+      const result = await service.createJobApplication(jobData, VALID_USER_ID);
 
-      expect(result).toEqual(expectedJobApp);
-      expect(
-        mockJobApplicationRepository.createJobApplication,
-      ).toHaveBeenCalledWith({
-        ...minimalData,
-        userId,
+      // Assert
+      expect(mockJobRepo.create).toHaveBeenCalledWith({
+        ...jobData,
+        userId: VALID_USER_ID,
       });
+      expect(mockStatusRepo.addStatus).toHaveBeenCalledWith(
+        mockJobApp.id,
+        expect.objectContaining({
+          applicationId: mockJobApp.id,
+          status: jobData.status,
+          changedAt: jobData.appliedAt,
+        }),
+      );
+      expect(result).toEqual(mockJobApp);
     });
 
-    it("should handle date fields correctly", async () => {
-      const appliedDate = new Date("2024-06-21T10:30:00Z");
-      const dataWithDates = {
-        ...mockJobApplicationData,
-        appliedAt: appliedDate,
-      };
-      const expectedJobApp = { ...mockJobApplication, appliedAt: appliedDate };
-
-      mockJobApplicationRepository.createJobApplication.mockResolvedValue({
-        id: jobApplicationId,
-      });
-      mockJobApplicationRepository.getJobApplicationByIdAndUserId.mockResolvedValue(
-        expectedJobApp,
+    it("should create job application with default 'applied' status when not specified", async () => {
+      // Arrange
+      const jobData = createMockJobApplicationData({ status: undefined });
+      const { mockJobApp } = setupJobApplicationMocks(
+        mockJobRepo,
+        mockStatusRepo,
       );
 
-      const result = await jobApplicationService.createJobApplication(
-        dataWithDates,
-        userId,
-      );
+      // Act
+      await service.createJobApplication(jobData, VALID_USER_ID);
 
-      expect(result.appliedAt).toEqual(appliedDate);
+      // Assert
+      expect(mockStatusRepo.addStatus).toHaveBeenCalledWith(
+        mockJobApp.id,
+        expect.objectContaining({
+          status: "applied",
+        }),
+      );
     });
 
-    it("should handle concurrent operations correctly", async () => {
-      const promises = Array.from({ length: 5 }, (_, i) => {
-        const data = { ...mockJobApplicationData, companyName: `Company ${i}` };
-        const response = {
-          ...mockJobApplication,
-          id: i + 1,
-          companyName: `Company ${i}`,
-        };
+    it("should use current date for appliedAt when not provided", async () => {
+      // Arrange
+      const jobData = createMockJobApplicationData({ appliedAt: undefined });
+      const { mockJobApp } = setupJobApplicationMocks(
+        mockJobRepo,
+        mockStatusRepo,
+      );
+      const beforeCreate = new Date();
 
-        mockJobApplicationRepository.createJobApplication.mockResolvedValueOnce(
-          { id: i + 1 },
-        );
-        mockJobApplicationRepository.getJobApplicationByIdAndUserId.mockResolvedValueOnce(
-          response,
-        );
+      // Act
+      await service.createJobApplication(jobData, VALID_USER_ID);
 
-        return jobApplicationService.createJobApplication(data, userId);
-      });
-
-      const results = await Promise.all(promises);
-
-      expect(results).toHaveLength(5);
-      expect(
-        mockJobApplicationRepository.createJobApplication,
-      ).toHaveBeenCalledTimes(5);
-    });
-
-    it("should throw error if retrieval after creation fails", async () => {
-      mockJobApplicationRepository.createJobApplication.mockResolvedValue({
-        id: jobApplicationId,
-      });
-      mockJobApplicationRepository.getJobApplicationByIdAndUserId.mockResolvedValue(
-        null,
+      // Assert
+      const afterCreate = new Date();
+      expect(mockStatusRepo.addStatus).toHaveBeenCalledWith(
+        mockJobApp.id,
+        expect.objectContaining({
+          changedAt: expect.any(Date),
+        }),
       );
 
+      const statusCall = mockStatusRepo.addStatus.mock.calls[0][1];
+      expect(statusCall.changedAt.getTime()).toBeGreaterThanOrEqual(
+        beforeCreate.getTime(),
+      );
+      expect(statusCall.changedAt.getTime()).toBeLessThanOrEqual(
+        afterCreate.getTime(),
+      );
+    });
+
+    it("should handle repository errors during creation", async () => {
+      // Arrange
+      const jobData = createMockJobApplicationData();
+      const error = new Error("Database connection failed");
+      mockJobRepo.create.mockRejectedValue(error);
+
+      // Act & Assert
       await expect(
-        jobApplicationService.createJobApplication(
-          mockJobApplicationData,
-          userId,
-        ),
-      ).rejects.toThrow(
-        new NotFoundError(
-          `[Service] Job Application with ID ${jobApplicationId} not found for user ${userId}`,
-        ),
-      );
-    });
-
-    it("should handle repository errors gracefully", async () => {
-      const repositoryError = new Error("Database connection failed");
-      mockJobApplicationRepository.createJobApplication.mockRejectedValue(
-        repositoryError,
-      );
-
-      await expect(
-        jobApplicationService.createJobApplication(
-          mockJobApplicationData,
-          userId,
-        ),
+        service.createJobApplication(jobData, VALID_USER_ID),
       ).rejects.toThrow("Database connection failed");
     });
 
-    it("should handle job application with all optional fields", async () => {
-      const fullData = {
-        ...mockJobApplicationData,
-        notes: "Very detailed notes about the position and company culture",
-        appliedAt: new Date("2024-06-21"),
-      };
-      const expectedJobApp = { ...mockJobApplication, ...fullData };
-
-      mockJobApplicationRepository.createJobApplication.mockResolvedValue({
-        id: jobApplicationId,
-      });
-      mockJobApplicationRepository.getJobApplicationByIdAndUserId.mockResolvedValue(
-        expectedJobApp,
+    it("should handle status repository errors during initial status creation", async () => {
+      // Arrange
+      const jobData = createMockJobApplicationData();
+      const mockJobApp = createMockJobApplication();
+      mockJobRepo.create.mockResolvedValue(mockJobApp);
+      mockStatusRepo.addStatus.mockRejectedValue(
+        new Error("Status creation failed"),
       );
 
-      const result = await jobApplicationService.createJobApplication(
-        fullData,
-        userId,
-      );
-
-      expect(result).toEqual(expectedJobApp);
+      // Act & Assert
+      await expect(
+        service.createJobApplication(jobData, VALID_USER_ID),
+      ).rejects.toThrow("Status creation failed");
     });
   });
 
   describe("getJobApplicationById", () => {
-    it("should return job application by id", async () => {
-      mockJobApplicationRepository.getJobApplicationByIdAndUserId.mockResolvedValue(
-        mockJobApplication,
+    it("should return job application for valid ID and user", async () => {
+      // Arrange
+      const mockJobApp = createMockJobApplication();
+      mockJobRepo.getByIdAndUser.mockResolvedValue(mockJobApp);
+
+      // Act
+      const result = await service.getJobApplicationById(
+        VALID_JOB_ID,
+        VALID_USER_ID,
       );
 
-      const result = await jobApplicationService.getJobApplicationById(
-        jobApplicationId,
-        userId,
+      // Assert
+      expect(mockJobRepo.getByIdAndUser).toHaveBeenCalledWith(
+        VALID_JOB_ID,
+        VALID_USER_ID,
       );
-
-      expect(result).toEqual(mockJobApplication);
-      expect(
-        mockJobApplicationRepository.getJobApplicationByIdAndUserId,
-      ).toHaveBeenCalledWith(jobApplicationId, userId);
+      expect(result).toEqual(mockJobApp);
     });
 
-    it("should throw NotFoundError if not found", async () => {
-      const nonExistentId = 999;
-      mockJobApplicationRepository.getJobApplicationByIdAndUserId.mockResolvedValue(
-        null,
-      );
+    it("should throw NotFoundError when application does not exist", async () => {
+      // Arrange
+      mockJobRepo.getByIdAndUser.mockResolvedValue(null);
 
+      // Act & Assert
       await expect(
-        jobApplicationService.getJobApplicationById(nonExistentId, userId),
+        service.getJobApplicationById(INVALID_JOB_ID, VALID_USER_ID),
+      ).rejects.toThrow(NotFoundError);
+      await expect(
+        service.getJobApplicationById(INVALID_JOB_ID, VALID_USER_ID),
       ).rejects.toThrow(
-        new NotFoundError(
-          `[Service] Job Application with ID ${nonExistentId} not found for user ${userId}`,
-        ),
+        `Job Application with ID ${INVALID_JOB_ID} not found or not accessible for user ${VALID_USER_ID}`,
       );
     });
 
-    it("should throw NotFoundError job application not owned", async () => {
-      const otherUserId = 2;
-      mockJobApplicationRepository.getJobApplicationByIdAndUserId.mockResolvedValue(
-        null,
-      );
+    it("should throw NotFoundError when application belongs to different user", async () => {
+      // Arrange
+      mockJobRepo.getByIdAndUser.mockResolvedValue(null);
 
+      // Act & Assert
       await expect(
-        jobApplicationService.getJobApplicationById(
-          jobApplicationId,
-          otherUserId,
-        ),
-      ).rejects.toThrow(
-        new NotFoundError(
-          `[Service] Job Application with ID ${jobApplicationId} not found for user ${otherUserId}`,
-        ),
-      );
+        service.getJobApplicationById(VALID_JOB_ID, INVALID_USER_ID),
+      ).rejects.toThrow(NotFoundError);
+    });
+
+    it("should handle repository errors", async () => {
+      // Arrange
+      const error = new Error("Database query failed");
+      mockJobRepo.getByIdAndUser.mockRejectedValue(error);
+
+      // Act & Assert
+      await expect(
+        service.getJobApplicationById(VALID_JOB_ID, VALID_USER_ID),
+      ).rejects.toThrow("Database query failed");
     });
   });
 
   describe("getAllJobApplications", () => {
-    it("should return paginated job applications", async () => {
-      const mockResponse: PaginatedJobApplicationResponse = {
-        data: [mockJobApplication],
-        total: 1,
-        limit: 10,
-        offset: 0,
-      };
-      mockJobApplicationRepository.getAllJobApplicationsByUserId.mockResolvedValue(
-        mockResponse,
+    it("should return paginated job applications without query options", async () => {
+      // Arrange
+      const jobApps = createJobApplicationsArray(3);
+      const mockPaginated = createMockPaginatedResponse(jobApps);
+      mockJobRepo.getAllByUser.mockResolvedValue(mockPaginated);
+
+      // Act
+      const result = await service.getAllJobApplications(VALID_USER_ID);
+
+      // Assert
+      expect(mockJobRepo.getAllByUser).toHaveBeenCalledWith(
+        VALID_USER_ID,
+        undefined,
       );
-
-      const result = await jobApplicationService.getAllJobApplications(userId);
-
-      expect(result).toEqual(mockResponse);
-      expect(
-        mockJobApplicationRepository.getAllJobApplicationsByUserId,
-      ).toHaveBeenCalledWith(userId, undefined);
+      expect(result).toEqual(mockPaginated);
+      expect(result.data).toHaveLength(3);
     });
 
-    it("should return job applications with query options", async () => {
-      const queryOptions: JobApplicationQueryOptions = {
+    it("should return paginated job applications with query options", async () => {
+      // Arrange
+      const queryOptions = createMockQueryOptions({
         search: "engineer",
-        sortBy: "appliedAt",
-        sortOrder: "desc",
+        sortBy: "companyName",
+        sortOrder: "asc",
         limit: 5,
         offset: 10,
-      };
-      const mockResponse: PaginatedJobApplicationResponse = {
-        data: [mockJobApplication],
-        total: 1,
+      });
+      const jobApps = createJobApplicationsArray(5);
+      const mockPaginated = createMockPaginatedResponse(jobApps, {
         limit: 5,
         offset: 10,
-      };
-      mockJobApplicationRepository.getAllJobApplicationsByUserId.mockResolvedValue(
-        mockResponse,
-      );
+        total: 15,
+      });
+      mockJobRepo.getAllByUser.mockResolvedValue(mockPaginated);
 
-      const result = await jobApplicationService.getAllJobApplications(
-        userId,
+      // Act
+      const result = await service.getAllJobApplications(
+        VALID_USER_ID,
         queryOptions,
       );
 
-      expect(result).toEqual(mockResponse);
-      expect(
-        mockJobApplicationRepository.getAllJobApplicationsByUserId,
-      ).toHaveBeenCalledWith(userId, queryOptions);
+      // Assert
+      expect(mockJobRepo.getAllByUser).toHaveBeenCalledWith(
+        VALID_USER_ID,
+        queryOptions,
+      );
+      expect(result).toEqual(mockPaginated);
+      expect(result.limit).toBe(5);
+      expect(result.offset).toBe(10);
+      expect(result.total).toBe(15);
     });
 
-    it("should return empty result if no job applications", async () => {
-      const emptyResponse: PaginatedJobApplicationResponse = {
-        data: [],
-        total: 0,
-        limit: 10,
-        offset: 0,
-      };
-      mockJobApplicationRepository.getAllJobApplicationsByUserId.mockResolvedValue(
-        emptyResponse,
-      );
+    it("should return empty results when user has no job applications", async () => {
+      // Arrange
+      const emptyResponse = createMockPaginatedResponse([], { total: 0 });
+      mockJobRepo.getAllByUser.mockResolvedValue(emptyResponse);
 
-      const result = await jobApplicationService.getAllJobApplications(userId);
+      // Act
+      const result = await service.getAllJobApplications(VALID_USER_ID);
 
-      expect(result).toEqual(emptyResponse);
+      // Assert
       expect(result.data).toHaveLength(0);
+      expect(result.total).toBe(0);
     });
 
-    it("should handle search with no matches", async () => {
-      const queryOptions: JobApplicationQueryOptions = {
-        search: "cappucinnoAssasinno",
-      };
-      const emptyResponse: PaginatedJobApplicationResponse = {
-        data: [],
-        total: 0,
-        limit: 10,
-        offset: 0,
-      };
-      mockJobApplicationRepository.getAllJobApplicationsByUserId.mockResolvedValue(
-        emptyResponse,
-      );
+    it("should handle repository errors", async () => {
+      // Arrange
+      const error = new Error("Database query failed");
+      mockJobRepo.getAllByUser.mockRejectedValue(error);
 
-      const result = await jobApplicationService.getAllJobApplications(
-        userId,
-        queryOptions,
-      );
-
-      expect(result).toEqual(emptyResponse);
+      // Act & Assert
+      await expect(
+        service.getAllJobApplications(VALID_USER_ID),
+      ).rejects.toThrow("Database query failed");
     });
   });
 
   describe("updateJobApplication", () => {
-    const existingJobApplication: JobApplicationSelect = {
-      id: jobApplicationId,
-      userId,
-      companyName: "Original Corp",
-      jobTitle: "Original Title",
-      jobType: "Full-time",
-      position: "Junior",
-      location: null,
-      locationType: "On-site",
-      status: "applied",
-      jobPortal: "JobStreet",
-      jobUrl: null,
-      cvId: null,
-      notes: null,
-      appliedAt: new Date("2025-06-24"),
-      createdAt: new Date("2025-06-24"),
-      updatedAt: new Date("2025-06-24"),
-    };
+    it("should update job application without status change", async () => {
+      // Arrange
+      const currentApp = createMockJobApplication({ status: "applied" });
+      const updateData = createMockJobApplicationUpdate({
+        companyName: "Updated Company",
+        notes: "Updated notes",
+        status: undefined, // No status change
+      });
+      const updatedApp = { ...currentApp, ...updateData };
 
-    it("should update job application", async () => {
-      const updateData: JobApplicationUpdate = {
+      mockJobRepo.getByIdAndUser.mockResolvedValue(currentApp);
+      mockJobRepo.updateByIdAndUser.mockResolvedValue(updatedApp);
+      mockJobRepo.getByIdAndUser
+        .mockResolvedValueOnce(currentApp)
+        .mockResolvedValueOnce(updatedApp);
+
+      // Act
+      const result = await service.updateJobApplication(
+        VALID_JOB_ID,
+        VALID_USER_ID,
+        updateData,
+      );
+
+      // Assert
+      expect(mockJobRepo.updateByIdAndUser).toHaveBeenCalledWith(
+        VALID_JOB_ID,
+        VALID_USER_ID,
+        updateData,
+      );
+      expect(mockStatusRepo.addStatus).not.toHaveBeenCalled();
+      expect(result).toEqual(updatedApp);
+    });
+
+    it("should update job application with status change", async () => {
+      // Arrange
+      const currentApp = createMockJobApplication({ status: "applied" });
+      const updateData = createMockJobApplicationUpdate({
         status: "interview",
-        notes: "Got interview call!",
-      };
-      const updatedJobApplication: JobApplicationSelect = {
-        ...existingJobApplication,
-        ...updateData,
-        updatedAt: new Date("2025-06-24"),
-      };
+      });
+      const updatedApp = { ...currentApp, ...updateData };
+      const statusChangeAt = new Date("2025-01-20");
 
-      mockJobApplicationRepository.getJobApplicationByIdAndUserId
-        .mockResolvedValueOnce(existingJobApplication) // First call in assertJobApplicationOwnedByUser
-        .mockResolvedValueOnce(updatedJobApplication); // Second call after update
-      mockJobApplicationRepository.updateJobApplicationByIdAndUserId.mockResolvedValue(
-        true,
-      );
+      mockJobRepo.getByIdAndUser.mockResolvedValue(currentApp);
+      mockJobRepo.updateByIdAndUser.mockResolvedValue(updatedApp);
+      mockJobRepo.getByIdAndUser
+        .mockResolvedValueOnce(currentApp)
+        .mockResolvedValueOnce(updatedApp);
 
-      const result = await jobApplicationService.updateJobApplication(
-        jobApplicationId,
-        userId,
+      // Act
+      const result = await service.updateJobApplication(
+        VALID_JOB_ID,
+        VALID_USER_ID,
         updateData,
+        statusChangeAt,
       );
 
-      expect(result).toEqual(updatedJobApplication);
-      expect(
-        mockJobApplicationRepository.getJobApplicationByIdAndUserId,
-      ).toHaveBeenCalledTimes(2);
-      expect(
-        mockJobApplicationRepository.updateJobApplicationByIdAndUserId,
-      ).toHaveBeenCalledWith(jobApplicationId, userId, updateData);
-    });
-
-    it("should update only specific fields", async () => {
-      const updateData: JobApplicationUpdate = {
-        status: "offer",
-      };
-      const updatedJobApplication: JobApplicationSelect = {
-        ...existingJobApplication,
-        status: "offer",
-        updatedAt: new Date("2024-01-16"),
-      };
-
-      mockJobApplicationRepository.getJobApplicationByIdAndUserId
-        .mockResolvedValueOnce(existingJobApplication)
-        .mockResolvedValueOnce(updatedJobApplication);
-      mockJobApplicationRepository.updateJobApplicationByIdAndUserId.mockResolvedValue(
-        true,
-      );
-
-      const result = await jobApplicationService.updateJobApplication(
-        jobApplicationId,
-        userId,
-        updateData,
-      );
-
-      expect(result).toEqual(updatedJobApplication);
-    });
-
-    it("should throw NotFoundError if job application not found", async () => {
-      const updateData: JobApplicationUpdate = { status: "interview" };
-      mockJobApplicationRepository.getJobApplicationByIdAndUserId.mockResolvedValue(
-        null,
-      );
-
-      await expect(
-        jobApplicationService.updateJobApplication(
-          jobApplicationId,
-          userId,
-          updateData,
-        ),
-      ).rejects.toThrow(
-        new NotFoundError(
-          `[Service] Job Application with ID ${jobApplicationId} not found for user ${userId}`,
-        ),
-      );
-    });
-
-    it("should throw NotFoundError if update fails", async () => {
-      const updateData: JobApplicationUpdate = { status: "interview" };
-      mockJobApplicationRepository.getJobApplicationByIdAndUserId.mockResolvedValue(
-        existingJobApplication,
-      );
-      mockJobApplicationRepository.updateJobApplicationByIdAndUserId.mockResolvedValue(
-        false,
-      );
-
-      await expect(
-        jobApplicationService.updateJobApplication(
-          jobApplicationId,
-          userId,
-          updateData,
-        ),
-      ).rejects.toThrow(
-        new NotFoundError(
-          `[Service] Job Application with ID ${jobApplicationId} not found for user ${userId}`,
-        ),
-      );
-    });
-
-    it("should handle repository errors gracefully", async () => {
-      const repositoryError = new Error("Query timeout");
-      mockJobApplicationRepository.getAllJobApplicationsByUserId.mockRejectedValue(
-        repositoryError,
-      );
-
-      await expect(
-        jobApplicationService.getAllJobApplications(userId),
-      ).rejects.toThrow("Query timeout");
-    });
-
-    it("should handle empty update data", async () => {
-      const updateData: JobApplicationUpdate = {};
-      mockJobApplicationRepository.getJobApplicationByIdAndUserId
-        .mockResolvedValueOnce(existingJobApplication)
-        .mockResolvedValueOnce(existingJobApplication);
-      mockJobApplicationRepository.updateJobApplicationByIdAndUserId.mockResolvedValue(
-        true,
-      );
-
-      const result = await jobApplicationService.updateJobApplication(
-        jobApplicationId,
-        userId,
-        updateData,
-      );
-
-      expect(result).toEqual(existingJobApplication);
-    });
-
-    it("should update application status correctly", async () => {
-      const updateData: JobApplicationUpdate = {
-        status: "rejected",
-        notes: "Unfortunately not selected",
-      };
-      const updatedJobApplication: JobApplicationSelect = {
-        ...existingJobApplication,
-        ...updateData,
-        updatedAt: new Date("2024-01-16"),
-      };
-
-      mockJobApplicationRepository.getJobApplicationByIdAndUserId
-        .mockResolvedValueOnce(existingJobApplication)
-        .mockResolvedValueOnce(updatedJobApplication);
-      mockJobApplicationRepository.updateJobApplicationByIdAndUserId.mockResolvedValue(
-        true,
-      );
-
-      const result = await jobApplicationService.updateJobApplication(
-        jobApplicationId,
-        userId,
-        updateData,
-      );
-
-      expect(result).toEqual(updatedJobApplication);
-      expect(result.status).toBe("rejected");
-      expect(result.notes).toBe("Unfortunately not selected");
-    });
-
-    it("should log status change when status is updated", async () => {
-      const updateData: JobApplicationUpdate = {
-        status: "interview",
-        notes: "Scheduled for call",
-      };
-      const statusChangedAt = new Date("2025-07-10T15:00:00Z");
-
-      mockJobApplicationRepository.getJobApplicationByIdAndUserId
-        .mockResolvedValueOnce(existingJobApplication) // before update
-        .mockResolvedValueOnce({ ...existingJobApplication, ...updateData }); // after update
-
-      mockJobApplicationRepository.updateJobApplicationByIdAndUserId.mockResolvedValue(
-        true,
-      );
-
-      const result = await jobApplicationService.updateJobApplication(
-        jobApplicationId,
-        userId,
-        updateData,
-        statusChangedAt,
-      );
-
-      expect(mockJobApplicationStatusRepository.addStatus).toHaveBeenCalledWith(
-        jobApplicationId,
-        {
-          applicationId: jobApplicationId,
+      // Assert
+      expect(mockStatusRepo.addStatus).toHaveBeenCalledWith(
+        VALID_JOB_ID,
+        expect.objectContaining({
+          applicationId: VALID_JOB_ID,
           status: "interview",
-          changedAt: statusChangedAt,
-        },
+          changedAt: statusChangeAt,
+        }),
       );
+      expect(result).toEqual(updatedApp);
     });
-    it("should not log status change if status is unchanged", async () => {
-      const updateData: JobApplicationUpdate = {
-        notes: "No status change",
-      };
 
-      mockJobApplicationRepository.getJobApplicationByIdAndUserId
-        .mockResolvedValueOnce(existingJobApplication)
-        .mockResolvedValueOnce({ ...existingJobApplication, ...updateData });
+    it("should use current date for status change when not provided", async () => {
+      // Arrange
+      const currentApp = createMockJobApplication({ status: "applied" });
+      const updateData = createMockJobApplicationUpdate({
+        status: "interview",
+      });
+      const updatedApp = { ...currentApp, ...updateData };
 
-      mockJobApplicationRepository.updateJobApplicationByIdAndUserId.mockResolvedValue(
-        true,
-      );
+      mockJobRepo.getByIdAndUser.mockResolvedValue(currentApp);
+      mockJobRepo.updateByIdAndUser.mockResolvedValue(updatedApp);
+      mockJobRepo.getByIdAndUser
+        .mockResolvedValueOnce(currentApp)
+        .mockResolvedValueOnce(updatedApp);
 
-      const result = await jobApplicationService.updateJobApplication(
-        jobApplicationId,
-        userId,
+      const beforeUpdate = new Date();
+
+      // Act
+      await service.updateJobApplication(
+        VALID_JOB_ID,
+        VALID_USER_ID,
         updateData,
       );
 
-      expect(
-        mockJobApplicationStatusRepository.addStatus,
-      ).not.toHaveBeenCalled();
+      // Assert
+      const afterUpdate = new Date();
+      expect(mockStatusRepo.addStatus).toHaveBeenCalledWith(
+        VALID_JOB_ID,
+        expect.objectContaining({
+          changedAt: expect.any(Date),
+        }),
+      );
+
+      const statusCall = mockStatusRepo.addStatus.mock.calls[0][1];
+      expect(statusCall.changedAt.getTime()).toBeGreaterThanOrEqual(
+        beforeUpdate.getTime(),
+      );
+      expect(statusCall.changedAt.getTime()).toBeLessThanOrEqual(
+        afterUpdate.getTime(),
+      );
+    });
+
+    it("should not create status entry when status is same as current", async () => {
+      // Arrange
+      const currentApp = createMockJobApplication({ status: "applied" });
+      const updateData = createMockJobApplicationUpdate({
+        status: "applied", // Same status
+        notes: "Just updating notes",
+      });
+      const updatedApp = { ...currentApp, ...updateData };
+
+      mockJobRepo.getByIdAndUser.mockResolvedValue(currentApp);
+      mockJobRepo.updateByIdAndUser.mockResolvedValue(updatedApp);
+      mockJobRepo.getByIdAndUser
+        .mockResolvedValueOnce(currentApp)
+        .mockResolvedValueOnce(updatedApp);
+
+      // Act
+      await service.updateJobApplication(
+        VALID_JOB_ID,
+        VALID_USER_ID,
+        updateData,
+      );
+
+      // Assert
+      expect(mockStatusRepo.addStatus).not.toHaveBeenCalled();
+    });
+
+    it("should throw NotFoundError when application does not exist", async () => {
+      // Arrange
+      const updateData = createMockJobApplicationUpdate();
+      mockJobRepo.getByIdAndUser.mockResolvedValue(null);
+
+      // Act & Assert
+      await expect(
+        service.updateJobApplication(INVALID_JOB_ID, VALID_USER_ID, updateData),
+      ).rejects.toThrow(NotFoundError);
+    });
+
+    it("should throw NotFoundError when update fails", async () => {
+      // Arrange
+      const currentApp = createMockJobApplication();
+      const updateData = createMockJobApplicationUpdate();
+
+      mockJobRepo.getByIdAndUser.mockResolvedValue(currentApp);
+      mockJobRepo.updateByIdAndUser.mockResolvedValue(null);
+
+      // Act & Assert
+      await expect(
+        service.updateJobApplication(VALID_JOB_ID, VALID_USER_ID, updateData),
+      ).rejects.toThrow(NotFoundError);
+      await expect(
+        service.updateJobApplication(VALID_JOB_ID, VALID_USER_ID, updateData),
+      ).rejects.toThrow(
+        `Failed to update Job Application with ID ${VALID_JOB_ID} for user ${VALID_USER_ID}`,
+      );
+    });
+
+    it("should handle status repository errors during status change", async () => {
+      // Arrange
+      const currentApp = createMockJobApplication({ status: "applied" });
+      const updateData = createMockJobApplicationUpdate({
+        status: "interview",
+      });
+
+      mockJobRepo.getByIdAndUser.mockResolvedValue(currentApp);
+      mockStatusRepo.addStatus.mockRejectedValue(
+        new Error("Status update failed"),
+      );
+
+      // Act & Assert
+      await expect(
+        service.updateJobApplication(VALID_JOB_ID, VALID_USER_ID, updateData),
+      ).rejects.toThrow("Status update failed");
     });
   });
 
   describe("getStatusTimeline", () => {
-    it("should return status timeline if application belongs to user", async () => {
-      const applicationId = 1;
-      const mockTimeline = [
+    it("should return status timeline for valid application", async () => {
+      // Arrange
+      const mockApp = createMockJobApplication();
+      const mockStatuses = [
         {
-          id: 10,
-          applicationId,
-          status: "applied",
-          changedAt: new Date("2025-06-15T09:00:00Z"),
+          id: 1,
+          applicationId: VALID_JOB_ID,
+          status: "applied" as const,
+          changedAt: createPastDate(5),
         },
         {
-          id: 11,
-          applicationId,
-          status: "interview",
-          changedAt: new Date("2025-06-20T14:30:00Z"),
+          id: 2,
+          applicationId: VALID_JOB_ID,
+          status: "interview" as const,
+          changedAt: createPastDate(2),
+        },
+        {
+          id: 3,
+          applicationId: VALID_JOB_ID,
+          status: "offer" as const,
+          changedAt: new Date(),
         },
       ];
 
-      mockJobApplicationRepository.getJobApplicationByIdAndUserId.mockResolvedValue(
-        mockJobApplication,
-      );
-      mockJobApplicationStatusRepository.getStatuses.mockResolvedValue(
-        mockTimeline,
-      );
+      mockJobRepo.getByIdAndUser.mockResolvedValue(mockApp);
+      mockStatusRepo.getStatuses.mockResolvedValue(mockStatuses);
 
-      const result = await jobApplicationService.getStatusTimeline(
-        applicationId,
-        userId,
+      // Act
+      const result = await service.getStatusTimeline(
+        VALID_JOB_ID,
+        VALID_USER_ID,
       );
 
-      expect(
-        mockJobApplicationRepository.getJobApplicationByIdAndUserId,
-      ).toHaveBeenCalledWith(applicationId, userId);
-
-      expect(
-        mockJobApplicationStatusRepository.getStatuses,
-      ).toHaveBeenCalledWith(applicationId);
-
-      expect(result).toEqual(mockTimeline);
+      // Assert
+      expect(mockJobRepo.getByIdAndUser).toHaveBeenCalledWith(
+        VALID_JOB_ID,
+        VALID_USER_ID,
+      );
+      expect(mockStatusRepo.getStatuses).toHaveBeenCalledWith(VALID_JOB_ID);
+      expect(result).toEqual(mockStatuses);
+      expect(result).toHaveLength(3);
     });
 
-    it("should throw NotFoundError if application does not belong to user", async () => {
-      const applicationId = 999;
+    it("should throw NotFoundError when application does not exist", async () => {
+      // Arrange
+      mockJobRepo.getByIdAndUser.mockResolvedValue(null);
 
-      mockJobApplicationRepository.getJobApplicationByIdAndUserId.mockResolvedValue(
-        null,
-      );
-
+      // Act & Assert
       await expect(
-        jobApplicationService.getStatusTimeline(applicationId, userId),
-      ).rejects.toThrow(
-        new NotFoundError(
-          `[Service] Job Application with ID ${applicationId} not found for user ${userId}`,
-        ),
+        service.getStatusTimeline(INVALID_JOB_ID, VALID_USER_ID),
+      ).rejects.toThrow(NotFoundError);
+    });
+
+    it("should return empty array when no status history exists", async () => {
+      // Arrange
+      const mockApp = createMockJobApplication();
+      mockJobRepo.getByIdAndUser.mockResolvedValue(mockApp);
+      mockStatusRepo.getStatuses.mockResolvedValue([]);
+
+      // Act
+      const result = await service.getStatusTimeline(
+        VALID_JOB_ID,
+        VALID_USER_ID,
       );
 
-      expect(
-        mockJobApplicationStatusRepository.getStatuses,
-      ).not.toHaveBeenCalled();
+      // Assert
+      expect(result).toEqual([]);
+    });
+
+    it("should handle status repository errors", async () => {
+      // Arrange
+      const mockApp = createMockJobApplication();
+      mockJobRepo.getByIdAndUser.mockResolvedValue(mockApp);
+      mockStatusRepo.getStatuses.mockRejectedValue(
+        new Error("Status query failed"),
+      );
+
+      // Act & Assert
+      await expect(
+        service.getStatusTimeline(VALID_JOB_ID, VALID_USER_ID),
+      ).rejects.toThrow("Status query failed");
     });
   });
 
   describe("deleteJobApplication", () => {
-    it("should delete job application", async () => {
-      mockJobApplicationRepository.deleteJobApplicationByIdAndUserId.mockResolvedValue(
-        true,
+    it("should delete job application and associated statuses", async () => {
+      // Arrange
+      const mockApp = createMockJobApplication();
+      mockJobRepo.getByIdAndUser.mockResolvedValue(mockApp);
+      mockStatusRepo.deleteStatuses.mockResolvedValue(true);
+      mockJobRepo.deleteByIdAndUser.mockResolvedValue(true);
+
+      // Act
+      const result = await service.deleteJobApplication(
+        VALID_JOB_ID,
+        VALID_USER_ID,
       );
 
-      const result = await jobApplicationService.deleteJobApplication(
-        jobApplicationId,
-        userId,
+      // Assert
+      expect(mockJobRepo.getByIdAndUser).toHaveBeenCalledWith(
+        VALID_JOB_ID,
+        VALID_USER_ID,
       );
-
+      expect(mockStatusRepo.deleteStatuses).toHaveBeenCalledWith(VALID_JOB_ID);
+      expect(mockJobRepo.deleteByIdAndUser).toHaveBeenCalledWith(
+        VALID_JOB_ID,
+        VALID_USER_ID,
+      );
       expect(result).toBe(true);
-      expect(
-        mockJobApplicationRepository.deleteJobApplicationByIdAndUserId,
-      ).toHaveBeenCalledWith(jobApplicationId, userId);
     });
 
-    it("should return false if job application not owned or not found", async () => {
-      mockJobApplicationRepository.deleteJobApplicationByIdAndUserId.mockResolvedValue(
-        false,
-      );
+    it("should throw NotFoundError when application does not exist", async () => {
+      // Arrange
+      mockJobRepo.getByIdAndUser.mockResolvedValue(null);
 
-      const result = await jobApplicationService.deleteJobApplication(
-        jobApplicationId,
-        userId,
-      );
+      // Act & Assert
+      await expect(
+        service.deleteJobApplication(INVALID_JOB_ID, VALID_USER_ID),
+      ).rejects.toThrow(NotFoundError);
 
-      expect(result).toBe(false);
+      // Should not attempt to delete statuses or application
+      expect(mockStatusRepo.deleteStatuses).not.toHaveBeenCalled();
+      expect(mockJobRepo.deleteByIdAndUser).not.toHaveBeenCalled();
     });
 
-    it("should handle deletion of not exist job application gracefully", async () => {
-      const nonExistentId = 999;
-      mockJobApplicationRepository.deleteJobApplicationByIdAndUserId.mockResolvedValue(
-        false,
+    it("should handle status deletion errors", async () => {
+      // Arrange
+      const mockApp = createMockJobApplication();
+      mockJobRepo.getByIdAndUser.mockResolvedValue(mockApp);
+      mockStatusRepo.deleteStatuses.mockRejectedValue(
+        new Error("Status deletion failed"),
       );
 
-      const result = await jobApplicationService.deleteJobApplication(
-        nonExistentId,
-        userId,
+      // Act & Assert
+      await expect(
+        service.deleteJobApplication(VALID_JOB_ID, VALID_USER_ID),
+      ).rejects.toThrow("Status deletion failed");
+    });
+
+    it("should handle application deletion errors", async () => {
+      // Arrange
+      const mockApp = createMockJobApplication();
+      mockJobRepo.getByIdAndUser.mockResolvedValue(mockApp);
+      mockStatusRepo.deleteStatuses.mockResolvedValue(true);
+      mockJobRepo.deleteByIdAndUser.mockRejectedValue(
+        new Error("Application deletion failed"),
       );
 
+      // Act & Assert
+      await expect(
+        service.deleteJobApplication(VALID_JOB_ID, VALID_USER_ID),
+      ).rejects.toThrow("Application deletion failed");
+    });
+
+    it("should return false when application deletion returns false", async () => {
+      // Arrange
+      const mockApp = createMockJobApplication();
+      mockJobRepo.getByIdAndUser.mockResolvedValue(mockApp);
+      mockStatusRepo.deleteStatuses.mockResolvedValue(true);
+      mockJobRepo.deleteByIdAndUser.mockResolvedValue(false);
+
+      // Act
+      const result = await service.deleteJobApplication(
+        VALID_JOB_ID,
+        VALID_USER_ID,
+      );
+
+      // Assert
       expect(result).toBe(false);
     });
   });
 
-  describe("assertJobApplicationOwnedByUser", () => {
-    it("should validate job application ownership through public methods", async () => {
-      // Test the private method behavior through public method calls
-      const otherUserId = 2;
+  describe("Edge Cases and Boundary Conditions", () => {
+    describe("Date Validation", () => {
+      it("should handle future appliedAt dates gracefully", async () => {
+        // Arrange
+        const futureDate = createFutureDate(30);
+        const jobData = createMockJobApplicationData({ appliedAt: futureDate });
+        const { mockJobApp } = setupJobApplicationMocks(
+          mockJobRepo,
+          mockStatusRepo,
+        );
 
-      // Setup mock to simulate job application belonging to user 1
-      mockJobApplicationRepository.getJobApplicationByIdAndUserId.mockImplementation(
-        (id: number, user: number) => {
-          if (user === userId) return Promise.resolve(mockJobApplication);
-          return Promise.resolve(null);
-        },
-      );
+        // Act
+        await service.createJobApplication(jobData, VALID_USER_ID);
 
-      // User 1 can access their job application
-      await expect(
-        jobApplicationService.getJobApplicationById(jobApplicationId, userId),
-      ).resolves.toBeDefined();
+        // Assert
+        expect(mockStatusRepo.addStatus).toHaveBeenCalledWith(
+          mockJobApp.id,
+          expect.objectContaining({
+            changedAt: futureDate,
+          }),
+        );
+      });
 
-      // User 2 cannot access job application belonging to user 1
-      await expect(
-        jobApplicationService.getJobApplicationById(
-          jobApplicationId,
-          otherUserId,
-        ),
-      ).rejects.toThrow(
-        new NotFoundError(
-          `[Service] Job Application with ID ${jobApplicationId} not found for user ${otherUserId}`,
-        ),
-      );
+      it("should handle very old appliedAt dates", async () => {
+        // Arrange
+        const oldDate = new Date("2020-01-01");
+        const jobData = createMockJobApplicationData({ appliedAt: oldDate });
+        const { mockJobApp } = setupJobApplicationMocks(
+          mockJobRepo,
+          mockStatusRepo,
+        );
+
+        // Act
+        await service.createJobApplication(jobData, VALID_USER_ID);
+
+        // Assert
+        expect(mockStatusRepo.addStatus).toHaveBeenCalledWith(
+          mockJobApp.id,
+          expect.objectContaining({
+            changedAt: oldDate,
+          }),
+        );
+      });
+    });
+
+    describe("Large Data Handling", () => {
+      it("should handle applications with very long notes", async () => {
+        // Arrange
+        const longNotes = "A".repeat(10000); // 10k characters
+        const jobData = createMockJobApplicationData({ notes: longNotes });
+        const { mockJobApp } = setupJobApplicationMocks(
+          mockJobRepo,
+          mockStatusRepo,
+        );
+
+        // Act
+        const result = await service.createJobApplication(
+          jobData,
+          VALID_USER_ID,
+        );
+
+        // Assert
+        expect(mockJobRepo.create).toHaveBeenCalledWith(
+          expect.objectContaining({ notes: longNotes }),
+        );
+        expect(result).toEqual(mockJobApp);
+      });
+
+      it("should handle pagination with large offsets", async () => {
+        // Arrange
+        const largeOffset = 1000000;
+        const queryOptions = createMockQueryOptions({
+          offset: largeOffset,
+          limit: 50,
+        });
+        const mockPaginated = createMockPaginatedResponse([], {
+          offset: largeOffset,
+          total: 1000050,
+        });
+        mockJobRepo.getAllByUser.mockResolvedValue(mockPaginated);
+
+        // Act
+        const result = await service.getAllJobApplications(
+          VALID_USER_ID,
+          queryOptions,
+        );
+
+        // Assert
+        expect(result.offset).toBe(largeOffset);
+      });
+    });
+
+    describe("Concurrent Operations", () => {
+      it("should handle multiple status changes in sequence", async () => {
+        // Arrange
+        const currentApp = createMockJobApplication({ status: "applied" });
+        const updates = [
+          { status: "interview" as const },
+          { status: "offer" as const },
+          { status: "accepted" as const },
+        ];
+
+        mockJobRepo.getByIdAndUser.mockResolvedValue(currentApp);
+        mockJobRepo.updateByIdAndUser.mockResolvedValue({
+          ...currentApp,
+          status: "accepted",
+        });
+
+        // Act
+        for (const update of updates) {
+          await service.updateJobApplication(
+            VALID_JOB_ID,
+            VALID_USER_ID,
+            update,
+          );
+        }
+
+        // Assert
+        expect(mockStatusRepo.addStatus).toHaveBeenCalledTimes(3);
+        expect(mockStatusRepo.addStatus).toHaveBeenNthCalledWith(
+          1,
+          VALID_JOB_ID,
+          expect.objectContaining({ status: "interview" }),
+        );
+        expect(mockStatusRepo.addStatus).toHaveBeenNthCalledWith(
+          2,
+          VALID_JOB_ID,
+          expect.objectContaining({ status: "offer" }),
+        );
+        expect(mockStatusRepo.addStatus).toHaveBeenNthCalledWith(
+          3,
+          VALID_JOB_ID,
+          expect.objectContaining({ status: "accepted" }),
+        );
+      });
+    });
+
+    describe("Type Safety and Validation", () => {
+      it("should handle undefined/null values in optional fields", async () => {
+        // Arrange
+        const jobData = {
+          companyName: "Test Company",
+          jobTitle: "Test Role",
+          notes: undefined,
+          cvId: null,
+          appliedAt: undefined,
+        };
+        const { mockJobApp } = setupJobApplicationMocks(
+          mockJobRepo,
+          mockStatusRepo,
+        );
+
+        // Act
+        const result = await service.createJobApplication(
+          jobData as any,
+          VALID_USER_ID,
+        );
+
+        // Assert
+        expect(mockJobRepo.create).toHaveBeenCalledWith(
+          expect.objectContaining({
+            companyName: "Test Company",
+            jobTitle: "Test Role",
+            userId: VALID_USER_ID,
+          }),
+        );
+        expect(result).toEqual(mockJobApp);
+      });
     });
   });
 });

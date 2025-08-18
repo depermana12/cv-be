@@ -4,9 +4,12 @@ import {
 } from "../schema/jobApplication.db";
 
 export type JobApplicationSelect = typeof jobApplications.$inferSelect;
-export type JobApplicationInsert = typeof jobApplications.$inferInsert;
+export type JobApplicationCreate = Omit<
+  typeof jobApplications.$inferInsert,
+  "userId"
+>;
 export type JobApplicationUpdate = Partial<
-  Omit<JobApplicationInsert, "id" | "cvId" | "userId">
+  Omit<JobApplicationCreate, "id" | "cvId" | "userId">
 >;
 
 export type JobApplicationStatusSelect =
@@ -14,7 +17,7 @@ export type JobApplicationStatusSelect =
 export type JobApplicationStatusInsert =
   typeof jobApplicationStatuses.$inferInsert;
 export type JobApplicationStatusUpdate = Partial<
-  Omit<JobApplicationInsert, "id" | "applicationId">
+  Omit<JobApplicationCreate, "id" | "applicationId">
 >;
 
 export type JobApplicationQueryOptions = {

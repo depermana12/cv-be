@@ -1,7 +1,7 @@
 import { and, eq, sql, desc, asc, gte, lte } from "drizzle-orm";
 import { jobApplications } from "../db/schema/jobApplication.db";
 import type {
-  JobApplicationInsert,
+  JobApplicationCreate,
   JobApplicationSelect,
   JobApplicationUpdate,
   JobApplicationQueryOptions,
@@ -10,7 +10,7 @@ import type {
 import type { Database } from "../db/index";
 
 export interface IJobApplication {
-  create(data: JobApplicationInsert): Promise<JobApplicationSelect>;
+  create(data: JobApplicationCreate): Promise<JobApplicationSelect>;
   getByIdAndUser(
     id: number,
     userId: number,
@@ -31,7 +31,7 @@ export class JobApplicationRepository implements IJobApplication {
   private readonly table = jobApplications;
   constructor(private readonly db: Database) {}
 
-  async create(data: JobApplicationInsert) {
+  async create(data: JobApplicationCreate) {
     const [result] = await this.db.insert(this.table).values(data).returning();
     return result;
   }
