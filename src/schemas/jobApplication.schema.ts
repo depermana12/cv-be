@@ -14,7 +14,8 @@ export const createJobApplicationSchema = z.object({
   jobUrl: z
     .string()
     .max(255, { message: "Job URL must be 255 characters or fewer" })
-    .optional(),
+    .optional()
+    .nullable(),
   companyName: z
     .string()
     .min(1, { message: "Company name is required" })
@@ -51,6 +52,7 @@ export const createJobApplicationSchema = z.object({
   location: z
     .string()
     .max(255, { message: "Location must be 255 characters or fewer" })
+    .nullable()
     .optional(),
   locationType: z.enum(["Remote", "On-site", "Hybrid"], {
     message: "Please select a valid location type",
@@ -63,7 +65,7 @@ export const createJobApplicationSchema = z.object({
       },
     )
     .default("applied"),
-  notes: z.string().optional(),
+  notes: z.string().optional().nullable(),
   appliedAt: z.coerce.date({
     invalid_type_error: "Invalid applied date format",
   }),

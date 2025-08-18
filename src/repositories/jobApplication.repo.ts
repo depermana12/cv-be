@@ -10,7 +10,9 @@ import type {
 import type { Database } from "../db/index";
 
 export interface IJobApplication {
-  create(data: JobApplicationCreate): Promise<JobApplicationSelect>;
+  create(
+    data: JobApplicationCreate & { userId: number },
+  ): Promise<JobApplicationSelect>;
   getByIdAndUser(
     id: number,
     userId: number,
@@ -31,7 +33,7 @@ export class JobApplicationRepository implements IJobApplication {
   private readonly table = jobApplications;
   constructor(private readonly db: Database) {}
 
-  async create(data: JobApplicationCreate) {
+  async create(data: JobApplicationCreate & { userId: number }) {
     const [result] = await this.db.insert(this.table).values(data).returning();
     return result;
   }
