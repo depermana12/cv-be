@@ -8,9 +8,9 @@ import type { IJobApplicationService } from "../../src/services/jobApplication.s
 
 import type {
   JobApplicationCreate,
-  JobApplicationQueryResponse,
+  PaginatedJobApplicationResponse,
   JobApplicationSelect,
-} from "../../src/schemas/jobApplication.schema";
+} from "../../src/db/types/jobApplication.type";
 import { errorHandler } from "../../src/middlewares/error-handler";
 import { NotFoundError } from "../../src/errors/not-found.error";
 import type { JobApplicationStatusSelect } from "../../src/db/types/jobApplication.type";
@@ -45,7 +45,7 @@ const testApp = new Hono<Bindings>()
   .onError(errorHandler)
   .route("/", jobApplicationRoutes);
 
-describe("http integration job application test", async () => {
+describe("job application controller", async () => {
   const client = testClient(testApp);
   let mockedJobApplicationService: Mocked<IJobApplicationService>;
 
@@ -67,7 +67,7 @@ describe("http integration job application test", async () => {
     jobTitle: "Software Engineer",
     jobType: "Full-time",
     position: "Senior",
-    location: "Malaysia",
+    location: "Singapore",
     locationType: "Remote",
     status: "interview",
     notes: "great opportunity for kabur aja dulu",
@@ -80,8 +80,12 @@ describe("http integration job application test", async () => {
   const mockJobApplicationResponse = {
     ...mockJobApplication,
     appliedAt: mockJobApplication.appliedAt.toISOString(),
-    createdAt: mockJobApplication.createdAt.toISOString(),
-    updatedAt: mockJobApplication.updatedAt.toISOString(),
+    createdAt: mockJobApplication.createdAt
+      ? mockJobApplication.createdAt.toISOString()
+      : null,
+    updatedAt: mockJobApplication.updatedAt
+      ? mockJobApplication.updatedAt.toISOString()
+      : null,
   };
 
   const mockJobApplicationData: JobApplicationCreate = {
@@ -92,7 +96,7 @@ describe("http integration job application test", async () => {
     jobTitle: "Software Engineer",
     jobType: "Full-time",
     position: "Senior",
-    location: "Malaysia",
+    location: "Singapore",
     locationType: "Remote",
     status: "interview",
     notes: "great opportunity for kabur aja dulu",
@@ -110,7 +114,7 @@ describe("http integration job application test", async () => {
     },
   ];
 
-  const mockPaginatedResponse: JobApplicationQueryResponse = {
+  const mockPaginatedResponse: PaginatedJobApplicationResponse = {
     data: mockJobApplicationList,
     total: mockJobApplicationList.length,
     limit: 10,
@@ -130,12 +134,13 @@ describe("http integration job application test", async () => {
       expect(res.status).toBe(200);
       const data = await res.json();
       expect(data.success).toBe(true);
-      expect(data.message).toBe("retrieved 2 records successfully");
+      expect(data.message).toBe("Retrieved 2 job applications successfully");
       expect(data.data).toHaveLength(2);
       expect(data.pagination).toEqual({
         total: 2,
         limit: 10,
         offset: 1,
+        hasMore: false,
       });
 
       expect(
@@ -152,7 +157,7 @@ describe("http integration job application test", async () => {
         offset: "10",
       };
 
-      const customMockResponse: JobApplicationQueryResponse = {
+      const customMockResponse: PaginatedJobApplicationResponse = {
         data: [mockJobApplication],
         total: 9,
         limit: 10,
@@ -170,12 +175,13 @@ describe("http integration job application test", async () => {
       expect(res.status).toBe(200);
       const data = await res.json();
       expect(data.success).toBe(true);
-      expect(data.message).toBe("retrieved 1 records successfully");
+      expect(data.message).toBe("Retrieved 1 job application successfully");
       expect(data.data).toHaveLength(1);
       expect(data.pagination).toEqual({
         total: 9,
         limit: 10,
         offset: 10,
+        hasMore: false,
       });
       expect(
         mockedJobApplicationService.getAllJobApplications,
@@ -189,7 +195,7 @@ describe("http integration job application test", async () => {
 
     it("should handle search queries correctly", async () => {
       const searchQuery = "Software Engineer";
-      const searchResponse: JobApplicationQueryResponse = {
+      const searchResponse: PaginatedJobApplicationResponse = {
         data: [mockJobApplication],
         total: 1,
         limit: 10,
@@ -237,7 +243,9 @@ describe("http integration job application test", async () => {
       expect(res.status).toBe(201);
       const data = await res.json();
       expect(data.success).toBe(true);
-      expect(data.message).toBe("new record created");
+      expect(data.message).toBe(
+        "Job application for Depermana Tech Asia created successfully",
+      );
       expect(data.data).toEqual(mockJobApplicationResponse);
       expect(
         mockedJobApplicationService.createJobApplication,
@@ -258,9 +266,7 @@ describe("http integration job application test", async () => {
       expect(res.status).toBe(400);
       const data = await res.json();
       expect(data.success).toBe(false);
-      expect(data.message).toContain(
-        "Job title must be at least 8 charachters",
-      );
+      expect(data.message).toContain("Company name is required");
     });
 
     it("should handle service errors when creating job application", async () => {
@@ -304,7 +310,7 @@ describe("http integration job application test", async () => {
       const data = await res.json();
       expect(data.success).toBe(true);
       expect(data.message).toBe(
-        `record ID: ${jobApplicationId} retrieved successfully`,
+        `Job application #${jobApplicationId} retrieved successfully`,
       );
       expect(data.data).toEqual(mockJobApplicationResponse);
       expect(
@@ -381,7 +387,7 @@ describe("http integration job application test", async () => {
       const data = await res.json();
       expect(data.success).toBe(true);
       expect(data.message).toBe(
-        `record ID: ${jobApplicationId} updated successfully`,
+        `Job application #${jobApplicationId} updated successfully with status updated to "accepted"`,
       );
       expect(data.data).toEqual(updatedJobApplicationResponse);
       expect(
@@ -518,7 +524,7 @@ describe("http integration job application test", async () => {
       const data = await res.json();
       expect(data.success).toBe(true);
       expect(data.message).toBe(
-        `record id: ${jobApplicationId} deleted successfully`,
+        `Job application #${jobApplicationId} deleted successfully`,
       );
       expect(
         mockedJobApplicationService.deleteJobApplication,
@@ -536,7 +542,7 @@ describe("http integration job application test", async () => {
       expect(res.status).toBe(200);
       const data = await res.json();
       expect(data.success).toBe(true);
-      expect(data.data).toBe("Record not found");
+      expect(data.data).toEqual({ deleted: false, id: 999 });
     });
 
     it("should handle invalid id parameter for delete", async () => {

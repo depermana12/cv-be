@@ -24,7 +24,7 @@ import {
   VALID_CV_ID,
 } from "../utils/jobApplication.test-helpers";
 
-describe("JobApplicationService", () => {
+describe("job application service", () => {
   let service: JobApplicationService;
   let mockJobRepo: ReturnType<typeof createMockJobApplicationRepository>;
   let mockStatusRepo: ReturnType<
