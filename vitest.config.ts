@@ -5,11 +5,18 @@ export default defineConfig({
   test: {
     globals: true,
     environment: "node",
-    setupFiles: ["./tests/setup.ts"],
+    setupFiles: ["./tests/setup.ts", "./tests/setup-test-env.ts"],
     include: ["tests/**/*.test.ts", "src/**/*.test.ts"],
     exclude: ["node_modules/**", "dist/**"],
-    testTimeout: 30000, // Increase timeout for E2E tests
-    hookTimeout: 30000, // Increase hook timeout for database setup
+    testTimeout: 60000, // Increase timeout for database tests
+    hookTimeout: 60000, // Increase hook timeout for database setup
+    // Run integration tests sequentially to avoid database conflicts
+    pool: "forks",
+    poolOptions: {
+      forks: {
+        singleFork: true,
+      },
+    },
     coverage: {
       provider: "v8",
       reporter: ["text", "json", "html"],
