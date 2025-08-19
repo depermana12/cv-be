@@ -61,76 +61,127 @@ export class CvService implements ICvService {
     private readonly languageRepository: LanguageRepository,
   ) {}
 
-  private async assertCvOwnedByUser(
+  /**
+   * Validates that a CV exists and belongs to the specified user.
+   * @param cvId - CV ID
+   * @param userId - User ID
+   * @returns The CV if found and owned by user
+   * @throws NotFoundError if CV doesn't exist or doesn't belong to user
+   */
+  private async validateCvOwnership(
     cvId: number,
     userId: number,
   ): Promise<CvSelect> {
     const cv = await this.cvRepository.getCvForUser(cvId, userId);
     if (!cv) {
       throw new NotFoundError(
-        `[Service] CV with ID ${cvId} not found for user ${userId}`,
+        `CV with ID ${cvId} not found or not accessible for user ${userId}`,
       );
     }
     return cv;
   }
 
-  async createCv(cvData: Omit<CvInsert, "userId">, userId: number) {
-    const { id } = await this.cvRepository.createCv({ ...cvData, userId });
-    return this.getCvById(id, userId);
+  /**
+   * Creates a new CV for the specified user.
+   * @param cvData - CV data (without userId)
+   * @param userId - ID of the user creating the CV
+   * @returns The created CV with full details
+   */
+  async createCv(
+    cvData: Omit<CvInsert, "userId">,
+    userId: number,
+  ): Promise<CvSelect> {
+    const createdCv = await this.cvRepository.createCv({ ...cvData, userId });
+    return this.getCvById(createdCv.id, userId);
   }
 
-  async getCvById(cvId: number, userId: number) {
-    return this.assertCvOwnedByUser(cvId, userId);
+  /**
+   * Retrieves a CV by ID, ensuring user ownership.
+   * @param cvId - CV ID
+   * @param userId - User ID
+   * @returns The CV if found and accessible
+   */
+  async getCvById(cvId: number, userId: number): Promise<CvSelect> {
+    return this.validateCvOwnership(cvId, userId);
   }
 
-  async getAllCvs(userId: number, options?: CvQueryOptions) {
+  /**
+   * Retrieves all CVs for a user with optional filtering and pagination.
+   * @param userId - User ID
+   * @param options - Query options for filtering, sorting, and pagination
+   * @returns Paginated list of CVs
+   */
+  async getAllCvs(
+    userId: number,
+    options?: CvQueryOptions,
+  ): Promise<PaginatedCvResponse> {
     return this.cvRepository.getAllCvForUser(userId, options);
   }
 
-  async updateCv(cvId: number, userId: number, newCvData: CvUpdate) {
-    const cv = await this.assertCvOwnedByUser(cvId, userId);
-    const updated = await this.cvRepository.updateCvForUser(
-      cv.id,
+  /**
+   * Updates a CV and ensures user ownership.
+   * @param cvId - CV ID
+   * @param userId - User ID
+   * @param newCvData - Updated CV data
+   * @returns The updated CV
+   */
+  async updateCv(
+    cvId: number,
+    userId: number,
+    newCvData: CvUpdate,
+  ): Promise<CvSelect> {
+    await this.validateCvOwnership(cvId, userId);
+
+    const updatedCv = await this.cvRepository.updateCvForUser(
+      cvId,
       userId,
       newCvData,
     );
-    if (!updated) {
+    if (!updatedCv) {
       throw new NotFoundError(
-        `[Service] CV with ID ${cvId} not found for user ${userId}`,
+        `Failed to update CV with ID ${cvId} for user ${userId}`,
       );
     }
+
     return this.getCvById(cvId, userId);
   }
 
-  async deleteCv(cvId: number, userId: number) {
-    const cv = await this.cvRepository.getCvForUser(cvId, userId);
-    if (!cv) {
-      throw new NotFoundError(
-        `[Service] CV with ID ${cvId} not found for user ${userId}`,
-      );
-    }
+  /**
+   * Deletes a CV and ensures user ownership.
+   * @param cvId - CV ID
+   * @param userId - User ID
+   * @returns True if deletion was successful
+   */
+  async deleteCv(cvId: number, userId: number): Promise<boolean> {
+    await this.validateCvOwnership(cvId, userId);
     return this.cvRepository.deleteCvForUser(cvId, userId);
   }
 
-  async getCvByUsernameAndSlug(username: string, slug: string) {
+  /**
+   * Retrieves a public CV by username and slug with complete data.
+   * @param username - Username of CV owner
+   * @param slug - CV slug
+   * @returns Complete CV data with all sections
+   */
+  async getCvByUsernameAndSlug(
+    username: string,
+    slug: string,
+  ): Promise<CompleteCvResponse> {
     const cv = await this.cvRepository.getCvByUsernameAndSlug(username, slug);
     if (!cv) {
       throw new NotFoundError(
-        `[Service] CV with slug '${slug}' not found for user '${username}'`,
+        `CV with slug '${slug}' not found for user '${username}'`,
       );
     }
 
-    // Only allow access to public CVs
     if (!cv.isPublic) {
       throw new NotFoundError(
-        `[Service] CV with slug '${slug}' for user '${username}' is not publicly available`,
+        `CV with slug '${slug}' for user '${username}' is not publicly available`,
       );
     }
 
-    // Increment view count when CV is accessed
     await this.cvRepository.incrementViews(cv.id);
 
-    // Fetch all CV children sections
     const [
       contacts,
       educations,
@@ -151,17 +202,13 @@ export class CvService implements ICvService {
       this.languageRepository.getAll(cv.id),
     ]);
 
-    // Return complete CV with all sections
     return {
-      // Core CV info (minimal)
       id: cv.id,
       title: cv.title,
       description: cv.description,
       createdAt: cv.createdAt,
       updatedAt: cv.updatedAt,
-      views: cv.views + 1, // Include the incremented view count
-
-      // CV sections (all ordered by displayOrder ASC from backend)
+      views: cv.views + 1,
       contacts,
       educations,
       works,
@@ -173,33 +220,53 @@ export class CvService implements ICvService {
     } as CompleteCvResponse;
   }
 
-  async downloadCv(cvId: number) {
+  /**
+   * Downloads a public CV and increments download count.
+   * @param cvId - CV ID
+   * @returns CV data with updated download count
+   */
+  async downloadCv(cvId: number): Promise<CvSelect> {
     const cv = await this.cvRepository.getCvById(cvId);
     if (!cv) {
-      throw new NotFoundError(`[Service] CV with ID ${cvId} not found`);
+      throw new NotFoundError(`CV with ID ${cvId} not found`);
     }
 
-    // Only allow downloading of public CVs
     if (!cv.isPublic) {
-      throw new NotFoundError(
-        `[Service] CV with ID ${cvId} is not publicly available`,
-      );
+      throw new NotFoundError(`CV with ID ${cvId} is not publicly available`);
     }
 
     await this.cvRepository.incrementDownloads(cvId);
-
     return { ...cv, downloads: cv.downloads + 1 };
   }
 
-  async getPopularCvs(limit = 10) {
+  /**
+   * Retrieves popular CVs based on views and downloads.
+   * @param limit - Maximum number of CVs to return
+   * @returns Array of popular CVs
+   */
+  async getPopularCvs(limit = 10): Promise<CvSelect[]> {
     return this.cvRepository.getPopularCvs(limit);
   }
 
-  async getUserStats(userId: number) {
+  /**
+   * Retrieves user CV statistics.
+   * @param userId - User ID
+   * @returns User CV statistics
+   */
+  async getUserStats(userId: number): Promise<CvStats> {
     return this.cvRepository.getUserCvStats(userId);
   }
 
-  async checkSlugAvailability(slug: string, excludeCvId?: number) {
+  /**
+   * Checks if a slug is available for use.
+   * @param slug - Slug to check
+   * @param excludeCvId - CV ID to exclude from check
+   * @returns Availability status and slug
+   */
+  async checkSlugAvailability(
+    slug: string,
+    excludeCvId?: number,
+  ): Promise<{ available: boolean; slug: string }> {
     const available = await this.cvRepository.checkSlugAvailability(
       slug,
       excludeCvId,
