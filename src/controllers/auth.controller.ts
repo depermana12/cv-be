@@ -24,6 +24,10 @@ import {
   JwtTokenSignatureMismatched,
 } from "hono/utils/jwt/types";
 
+/**
+ * Cookie configuration for refresh tokens
+ * Ensures secure transmission and proper storage
+ */
 const COOKIE_OPTIONS = {
   httpOnly: true,
   secure: config.NODE_ENV === "production",
@@ -32,6 +36,11 @@ const COOKIE_OPTIONS = {
   maxAge: 60 * 60 * 24 * 7, // 7 days
 } as const;
 
+/**
+ * Creates a standardized user payload for JWT tokens
+ * @param user - User object containing ID, email, and email verification status
+ * @returns Formatted user payload for token generation
+ */
 const createUserPayload = (user: {
   id: number;
   email: string;
@@ -57,9 +66,12 @@ const handleJwtErrors = (err: unknown) => {
 };
 
 export const authRoutes = createHonoBindings()
+  /**
+   * POST /signup
+   * Registers a new user account with email verification
+   */
   .post("/signup", zValidator("json", signupSchema), async (c) => {
     const validatedBody = c.req.valid("json");
-
     const { confirmPassword, ...registrationData } = validatedBody;
 
     const { accessToken, refreshToken, ...user } =
@@ -88,6 +100,10 @@ export const authRoutes = createHonoBindings()
     );
   })
 
+  /**
+   * POST /signin
+   * Authenticates user and returns access token with refresh token cookie
+   */
   .post("/signin", zValidator("json", signinSchema), async (c) => {
     const validatedLogin = c.req.valid("json");
 
@@ -107,6 +123,10 @@ export const authRoutes = createHonoBindings()
     );
   })
 
+  /**
+   * POST /logout
+   * Logs out user by clearing refresh token cookie
+   */
   .post("/logout", async (c) => {
     setCookie(c, "refreshToken", "", {
       ...COOKIE_OPTIONS,
@@ -122,6 +142,10 @@ export const authRoutes = createHonoBindings()
     );
   })
 
+  /**
+   * POST /forget-password
+   * Initiates password reset process by sending reset email
+   */
   .post(
     "/forget-password",
     zValidator("json", forgetPasswordSchema),
@@ -149,6 +173,10 @@ export const authRoutes = createHonoBindings()
     },
   )
 
+  /**
+   * POST /reset-password/:token
+   * Resets user password using valid reset token
+   */
   .post(
     "/reset-password/:token",
     zValidator("param", tokenParamsSchema),
@@ -162,11 +190,15 @@ export const authRoutes = createHonoBindings()
 
       return c.json({
         success: true,
-        message: "password reset successfully",
+        message: "Password reset successfully",
       });
     },
   )
 
+  /**
+   * POST /verify-email/:token
+   * Verifies user email using verification token and sends welcome email
+   */
   .post(
     "/verify-email/:token",
     zValidator("param", tokenParamsSchema),
@@ -202,6 +234,10 @@ export const authRoutes = createHonoBindings()
     },
   )
 
+  /**
+   * GET /email-verification-status/:userId
+   * Retrieves email verification status for a user
+   */
   .get(
     "/email-verification-status/:userId",
     zValidator("param", userIdParamsSchema),
@@ -218,6 +254,10 @@ export const authRoutes = createHonoBindings()
     },
   )
 
+  /**
+   * POST /send-email-verification
+   * Sends email verification to authenticated user
+   */
   .post("/send-email-verification", jwt(), async (c) => {
     const user = c.get("jwtPayload");
 
@@ -241,6 +281,10 @@ export const authRoutes = createHonoBindings()
     });
   })
 
+  /**
+   * POST /refresh-token
+   * Generates new access token using refresh token from cookie
+   */
   .post(
     "/refresh-token",
     zValidator("cookie", refreshTokenSchema),
@@ -260,6 +304,10 @@ export const authRoutes = createHonoBindings()
     },
   )
 
+  /**
+   * GET /check-username
+   * Checks if username is available for registration
+   */
   .get(
     "/check-username",
     zValidator("query", usernameQuerySchema),

@@ -32,15 +32,12 @@ export const optimizationRequests = pgTable("optimization_requests", {
   userId: integer("user_id")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
-
   type: optimizationTypeEnum("type").notNull(),
-  status: optimizationStatusEnum("status").default("pending").notNull(),
-
   targetRole: varchar("target_role", { length: 255 }),
   industry: varchar("industry", { length: 255 }),
+  status: optimizationStatusEnum("status").default("pending").notNull(),
   promptVersion: varchar("prompt_version", { length: 20 }),
   errorMessage: text("error_message"),
-
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
