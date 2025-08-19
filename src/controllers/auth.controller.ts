@@ -190,7 +190,7 @@ export const authRoutes = createHonoBindings()
 
       return c.json({
         success: true,
-        message: "Password reset successfully",
+        message: "password reset successfully",
       });
     },
   )
