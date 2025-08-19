@@ -75,7 +75,7 @@ export const createUpdateProfileData = (
   overrides: Partial<UpdateUserProfileSafe> = {},
 ): UpdateUserProfileSafe => ({
   firstName: "Jane",
-  lastName: "Smith",
+  lastName: "Da",
   ...overrides,
 });
 
