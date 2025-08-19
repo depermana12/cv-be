@@ -2,39 +2,40 @@ import { beforeAll, afterAll, beforeEach, vi } from "vitest";
 import { config } from "../src/config/index.js";
 
 // Check if this is an E2E test
-const isE2eTest = process.env.NODE_ENV === "test" && config.isTest;
-if (isE2eTest) {
-  const { testDb } = await import("./utils/test-db.js");
+// const isE2eTest = process.env.NODE_ENV === "test" && config.isTest;
+// console.log(isE2eTest ? "Running E2E tests" : "Running unit tests");
+// if (isE2eTest) {
+//   const { testDb } = await import("./utils/test-db.js");
 
-  beforeEach(async () => {
-    await testDb.cleanup();
-  });
+//   beforeEach(async () => {
+//     await testDb.cleanup();
+//   });
 
-  afterAll(async () => {
-    console.log("clean up e2e test environment...");
-    await testDb.cleanup();
-    await testDb.close();
-  });
-}
+//   afterAll(async () => {
+//     console.log("clean up e2e test environment...");
+//     await testDb.cleanup();
+//     await testDb.close();
+//   });
+// }
 
 // Mock console to reduce noise in tests (for unit tests)
-if (!isE2eTest) {
-  const originalConsole = console;
-  beforeAll(() => {
-    global.console = {
-      ...originalConsole,
-      log: vi.fn(),
-      info: vi.fn(),
-      warn: vi.fn(),
-      // Keep error for debugging
-      error: originalConsole.error,
-    };
-  });
+// if (!isE2eTest) {
+//   const originalConsole = console;
+//   beforeAll(() => {
+//     global.console = {
+//       ...originalConsole,
+//       log: vi.fn(),
+//       info: vi.fn(),
+//       warn: vi.fn(),
+//       // Keep error for debugging
+//       error: originalConsole.error,
+//     };
+//   });
 
-  afterAll(() => {
-    global.console = originalConsole;
-  });
-}
+//   afterAll(() => {
+//     global.console = originalConsole;
+//   });
+// }
 
 export const createTestUser = () => ({
   email: `test-${Date.now()}@example.com`,
