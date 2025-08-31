@@ -12,7 +12,7 @@ export const createCvSchema = z.object({
   theme: z
     .string()
     .max(100, { message: "Theme must be 100 characters or fewer" })
-    .default("default"),
+    .default("modern"),
   isPublic: z.boolean().default(false),
   slug: z
     .string()
@@ -30,7 +30,30 @@ export const createCvSchema = z.object({
 });
 
 // update validation schema
-export const updateCvSchema = createCvSchema.partial();
+export const updateCvSchema = createCvSchema.extend({
+  sections: z
+    .object({
+      order: z.array(z.string()),
+    })
+    .optional(),
+  themes: z
+    .object({
+      modern: z.object({
+        fontFamily: z.string(),
+        lineHeight: z.number(),
+        headerColor: z.string(),
+        sectionDivider: z.boolean(),
+      }),
+      minimal: z.object({
+        fontFamily: z.string(),
+        fontSize: z.number(),
+        lineHeight: z.number(),
+        headerColor: z.string(),
+        sectionDivider: z.boolean(),
+      }),
+    })
+    .optional(),
+});
 
 // query parameters schema
 export const cvQuerySchema = z.object({
