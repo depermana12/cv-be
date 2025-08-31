@@ -8,6 +8,8 @@ import type {
   CvMinimalSelect,
   PaginatedCvResponse,
   CompleteCvResponse,
+  ThemeUpdate,
+  ThemeStyle,
 } from "../db/types/cv.type";
 import { NotFoundError } from "../errors/not-found.error";
 
@@ -47,10 +49,20 @@ export interface ICvService {
     excludeCvId?: number,
   ): Promise<{ available: boolean; slug: string }>;
   getCvData(cvId: number, userId: number): Promise<CompleteCvResponse>;
+  getCvStyles(
+    cvId: number,
+    userId: number,
+    style: "modern" | "minimal",
+  ): Promise<ThemeStyle>;
   updateSectionOrder(
     cvId: number,
     userId: number,
     sections: string[],
+  ): Promise<void>;
+  updateCvTheme(
+    cvId: number,
+    userId: number,
+    updateTheme: ThemeUpdate,
   ): Promise<void>;
 }
 
@@ -289,12 +301,25 @@ export class CvService implements ICvService {
     await this.cvRepository.updateSectionOrder(cvId, userId, sections);
   }
 
+  async updateCvTheme(cvId: number, userId: number, updateTheme: ThemeUpdate) {
+    await this.validateCvOwnership(cvId, userId);
+    await this.cvRepository.updateCvTheme(cvId, userId, updateTheme);
+  }
+
   async getSectionOrder(cvId: number, userId: number) {
     const cv = await this.getCvById(cvId, userId);
     if (!cv) {
       throw new NotFoundError(`CV with ID ${cvId} not found`);
     }
     return cv.sections.order;
+  }
+
+  async getCvStyles(cvId: number, userId: number, style: "modern" | "minimal") {
+    const cv = await this.getCvById(cvId, userId);
+    if (!cv) {
+      throw new NotFoundError(`CV with ID ${cvId} not found`);
+    }
+    return cv.themes[style];
   }
 
   async getCvData(cvId: number, userId: number) {

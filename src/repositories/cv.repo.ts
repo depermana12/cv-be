@@ -21,6 +21,7 @@ import type {
   CvUpdate,
   CvMinimalSelect,
   PaginatedCvResponse,
+  ThemeUpdate,
 } from "../db/types/cv.type";
 import type { Database } from "../db/index";
 
@@ -52,6 +53,11 @@ export interface ICvRepository {
     cvId: number,
     userId: number,
     sections: string[],
+  ): Promise<void>;
+  updateCvTheme( // TODO: tidy up into export type
+    cvId: number,
+    userId: number,
+    updateTheme: ThemeUpdate,
   ): Promise<void>;
 }
 
@@ -250,6 +256,29 @@ export class CvRepository
       .update(cv)
       .set({
         sections: sql`${JSON.stringify({ order: sections })}::jsonb`,
+      })
+      .where(and(eq(cv.id, cvId), eq(cv.userId, userId)));
+  }
+  async updateCvTheme(cvId: number, userId: number, updateTheme: ThemeUpdate) {
+    const record = await this.db
+      .select({ themes: cv.themes })
+      .from(cv)
+      .where(and(eq(cv.id, cvId), eq(cv.userId, userId)))
+      .limit(1);
+    const currentThemes = record[0]?.themes ?? {};
+
+    // Merge/partial the update
+    const updatedThemes = {
+      ...currentThemes,
+      [updateTheme.themeKey]: {
+        ...currentThemes[updateTheme.themeKey],
+        ...updateTheme.themeValue,
+      },
+    };
+    await this.db
+      .update(cv)
+      .set({
+        themes: sql`${JSON.stringify(updatedThemes)}::jsonb`,
       })
       .where(and(eq(cv.id, cvId), eq(cv.userId, userId)));
   }

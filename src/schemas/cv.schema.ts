@@ -30,31 +30,33 @@ export const createCvSchema = z.object({
 });
 
 // update validation schema
-export const updateCvSchema = createCvSchema.extend({
-  sections: z
-    .object({
-      order: z.array(z.string()),
-    })
-    .optional(),
-  themes: z
-    .object({
-      modern: z.object({
-        fontFamily: z.string(),
-        lineHeight: z.number(),
-        headerColor: z.string(),
-        sectionDivider: z.boolean(),
-        margin: z.number(),
-      }),
-      minimal: z.object({
-        fontFamily: z.string(),
-        fontSize: z.number(),
-        lineHeight: z.number(),
-        headerColor: z.string(),
-        sectionDivider: z.boolean(),
-        margin: z.number(),
-      }),
-    })
-    .optional(),
+export const updateCvSchema = createCvSchema.partial();
+
+// Separate schemas for updating sections and themes
+export const updateCvSectionsSchema = z.object({
+  sections: z.object({
+    order: z.array(z.string()),
+  }),
+});
+
+export const updateCvThemesSchema = z.object({
+  themes: z.object({
+    modern: z.object({
+      fontFamily: z.string(),
+      lineHeight: z.number(),
+      headerColor: z.string(),
+      sectionDivider: z.boolean(),
+      margin: z.number(),
+    }),
+    minimal: z.object({
+      fontFamily: z.string(),
+      fontSize: z.number(),
+      lineHeight: z.number(),
+      headerColor: z.string(),
+      sectionDivider: z.boolean(),
+      margin: z.number(),
+    }),
+  }),
 });
 
 // query parameters schema

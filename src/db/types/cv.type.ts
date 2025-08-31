@@ -1,3 +1,48 @@
+// Theme style types for getCvStyles return
+export type ModernThemeStyle = {
+  fontFamily: string;
+  lineHeight: number;
+  headerColor: string;
+  sectionDivider: boolean;
+  margin?: number;
+};
+
+export type MinimalThemeStyle = {
+  fontFamily: string;
+  fontSize: number;
+  lineHeight: number;
+  headerColor: string;
+  sectionDivider: boolean;
+  margin?: number;
+};
+
+export type ThemeStyle = ModernThemeStyle | MinimalThemeStyle;
+// Theme update types
+export type ModernThemeUpdate = {
+  themeKey: "modern";
+  themeValue: {
+    fontFamily?: string;
+    lineHeight?: number;
+    headerColor?: string;
+    sectionDivider?: boolean;
+    margin?: number;
+  };
+};
+
+export type MinimalThemeUpdate = {
+  themeKey: "minimal";
+  themeValue: {
+    fontFamily?: string;
+    fontSize?: number;
+    lineHeight?: number;
+    headerColor?: string;
+    sectionDivider?: boolean;
+    margin?: number;
+  };
+};
+
+export type ThemeUpdate = ModernThemeUpdate | MinimalThemeUpdate;
+
 import { cv } from "../schema/cv.db";
 import type { ContactSelect } from "./contact.type";
 import type { EducationSelect } from "./education.type";
