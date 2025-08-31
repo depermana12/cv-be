@@ -47,17 +47,8 @@ export type CvMinimalSelect = {
   updatedAt: Date;
 };
 
-// Complete CV with all child sections for public access
-export type CompleteCvResponse = {
-  // Core CV metadata (minimal for performance)
-  id: number;
-  title: string;
-  description: string;
-  views: number;
-  createdAt: Date;
-  updatedAt: Date;
-
-  // All CV child sections (ordered by displayOrder)
+export type CvData = {
+  // All CV child sections
   contacts: ContactSelect[];
   educations: EducationSelect[];
   works: WorkSelect[];
@@ -66,4 +57,15 @@ export type CompleteCvResponse = {
   courses: CourseSelect[];
   skills: SkillSelect[];
   languages: LanguageSelect[];
+};
+
+// Complete CV with all child sections for public access
+export type CompleteCvResponse = CvData & {
+  // Core CV metadata (minimal for performance)
+  id: number;
+  title: string;
+  description: string;
+  views: number;
+  createdAt: Date;
+  updatedAt: Date;
 };

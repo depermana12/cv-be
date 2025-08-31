@@ -46,6 +46,12 @@ export interface ICvService {
     slug: string,
     excludeCvId?: number,
   ): Promise<{ available: boolean; slug: string }>;
+  getCvData(cvId: number, userId: number): Promise<CompleteCvResponse>;
+  updateSectionOrder(
+    cvId: number,
+    userId: number,
+    sections: string[],
+  ): Promise<void>;
 }
 
 export class CvService implements ICvService {
@@ -276,5 +282,79 @@ export class CvService implements ICvService {
       available,
       slug,
     };
+  }
+
+  async updateSectionOrder(cvId: number, userId: number, sections: string[]) {
+    await this.validateCvOwnership(cvId, userId);
+    await this.cvRepository.updateSectionOrder(cvId, userId, sections);
+  }
+
+  async getSectionOrder(cvId: number, userId: number) {
+    const cv = await this.getCvById(cvId, userId);
+    if (!cv) {
+      throw new NotFoundError(`CV with ID ${cvId} not found`);
+    }
+    return cv.sections.order;
+  }
+
+  async getCvData(cvId: number, userId: number) {
+    const cv = await this.getCvById(cvId, userId);
+    if (!cv) {
+      throw new NotFoundError(`CV with ID ${cvId} not found`);
+    }
+
+    const [
+      contacts,
+      educations,
+      works,
+      projects,
+      organizations,
+      courses,
+      skills,
+      languages,
+    ] = await Promise.all([
+      this.contactRepository.getAll(cv.id),
+      this.educationRepository.getAll(cv.id),
+      this.workRepository.getAll(cv.id),
+      this.projectRepository.getAll(cv.id),
+      this.organizationRepository.getAll(cv.id),
+      this.courseRepository.getAll(cv.id),
+      this.skillRepository.getAll(cv.id),
+      this.languageRepository.getAll(cv.id),
+    ]);
+
+    return {
+      contacts,
+      educations,
+      works,
+      projects,
+      organizations,
+      courses,
+      skills,
+      languages,
+    } as CompleteCvResponse;
+  }
+
+  async getCvDataOrdered(cvId: number, userId: number) {
+    const sectionOrder = await this.getSectionOrder(cvId, userId);
+    const cvDataSections = await this.getCvData(cvId, userId);
+
+    const sectionMap: Record<string, any> = {
+      contact: cvDataSections.contacts,
+      education: cvDataSections.educations,
+      work: cvDataSections.works,
+      project: cvDataSections.projects,
+      organization: cvDataSections.organizations,
+      course: cvDataSections.courses,
+      skill: cvDataSections.skills,
+      language: cvDataSections.languages,
+    };
+
+    const orderedSections = sectionOrder.map((section: string) => ({
+      section,
+      data: sectionMap[section] ?? [],
+    }));
+
+    return orderedSections;
   }
 }

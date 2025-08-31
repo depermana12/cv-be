@@ -48,6 +48,11 @@ export interface ICvRepository {
   checkSlugAvailability(slug: string, excludeCvId?: number): Promise<boolean>;
   getPopularCvs(limit?: number): Promise<CvSelect[]>;
   getUserCvStats(userId: number): Promise<CvStats>;
+  updateSectionOrder(
+    cvId: number,
+    userId: number,
+    sections: string[],
+  ): Promise<void>;
 }
 
 export class CvRepository
@@ -238,5 +243,14 @@ export class CvRepository
       totalDownloads: stats?.totalDownloads ?? 0,
       totalCvs: stats?.totalCvs ?? 0,
     };
+  }
+
+  async updateSectionOrder(cvId: number, userId: number, sections: string[]) {
+    await this.db
+      .update(cv)
+      .set({
+        sections: sql`${JSON.stringify({ order: sections })}::jsonb`,
+      })
+      .where(and(eq(cv.id, cvId), eq(cv.userId, userId)));
   }
 }
