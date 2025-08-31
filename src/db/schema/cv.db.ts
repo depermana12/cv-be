@@ -28,6 +28,7 @@ export const cv = pgTable("cvs", {
   title: varchar("title", { length: 255 }).notNull(),
   description: text("description").notNull(),
   sections: jsonb("sections")
+    .$type<{ order: string[] }>()
     .notNull()
     .default({
       order: [
@@ -42,6 +43,23 @@ export const cv = pgTable("cvs", {
       ],
     }),
   themes: jsonb("themes")
+    .$type<{
+      modern: {
+        fontFamily: string;
+        lineHeight: number;
+        headerColor: string;
+        sectionDivider: boolean;
+        margin?: number;
+      };
+      minimal: {
+        fontFamily: string;
+        fontSize: number;
+        lineHeight: number;
+        headerColor: string;
+        sectionDivider: boolean;
+        margin?: number;
+      };
+    }>()
     .notNull()
     .default({
       modern: {
@@ -49,6 +67,7 @@ export const cv = pgTable("cvs", {
         lineHeight: 1.5,
         headerColor: "#1e40af",
         sectionDivider: true,
+        margin: 0.55,
       },
       minimal: {
         fontFamily: "Poppins, sans-serif",
@@ -56,6 +75,7 @@ export const cv = pgTable("cvs", {
         lineHeight: 1.5,
         headerColor: "#000000",
         sectionDivider: false,
+        margin: 0.55,
       },
     }),
   theme: varchar("theme", { length: 100 }).notNull().default("modern"),

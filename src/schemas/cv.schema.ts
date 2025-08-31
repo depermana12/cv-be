@@ -43,6 +43,7 @@ export const updateCvSchema = createCvSchema.extend({
         lineHeight: z.number(),
         headerColor: z.string(),
         sectionDivider: z.boolean(),
+        margin: z.number(),
       }),
       minimal: z.object({
         fontFamily: z.string(),
@@ -50,6 +51,7 @@ export const updateCvSchema = createCvSchema.extend({
         lineHeight: z.number(),
         headerColor: z.string(),
         sectionDivider: z.boolean(),
+        margin: z.number(),
       }),
     })
     .optional(),
