@@ -64,6 +64,14 @@ export interface ICvService {
     userId: number,
     updateTheme: ThemeUpdate,
   ): Promise<void>;
+  constructCv(
+    cvId: number,
+    userId: number,
+    style: "modern" | "minimal",
+  ): Promise<{
+    sections: Array<{ section: string; data: any[] }>;
+    styles: ThemeStyle;
+  }>
 }
 
 export class CvService implements ICvService {
@@ -381,5 +389,48 @@ export class CvService implements ICvService {
     }));
 
     return orderedSections;
+  }
+
+  /**
+   * Constructs a complete CV with ordered sections and specified styles.
+   * @param cvId - CV ID
+   * @param userId - User ID
+   * @param style - Theme style ("modern" or "minimal")
+   * @returns Object containing ordered sections and styles
+   */
+  async constructCv(
+    cvId: number,
+    userId: number,
+    style: "modern" | "minimal",
+  ): Promise<{
+    sections: Array<{ section: string; data: any[] }>;
+    styles: ThemeStyle;
+  }> {
+    const [sectionOrder, cvDataSections, styles] = await Promise.all([
+      this.getSectionOrder(cvId, userId),
+      this.getCvData(cvId, userId),
+      this.getCvStyles(cvId, userId, style),
+    ]);
+
+    const sectionMap: Record<string, any> = {
+      contact: cvDataSections.contacts,
+      education: cvDataSections.educations,
+      work: cvDataSections.works,
+      project: cvDataSections.projects,
+      organization: cvDataSections.organizations,
+      course: cvDataSections.courses,
+      skill: cvDataSections.skills,
+      language: cvDataSections.languages,
+    };
+
+    const orderedSections = sectionOrder.map((section: string) => ({
+      section,
+      data: sectionMap[section] ?? [],
+    }));
+
+    return {
+      sections: orderedSections,
+      styles,
+    };
   }
 }
