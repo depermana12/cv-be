@@ -93,6 +93,24 @@ export const cvRoutes = createHonoBindings()
       200,
     );
   })
+  .get(
+    "/:id/construct",
+    zValidator("param", cvParamsSchema),
+    zValidator("query", constructCvQuerySchema),
+    async (c) => {
+      const { id: userId } = c.get("jwtPayload");
+      const { id: cvId } = c.req.valid("param");
+      const { style } = c.req.valid("query");
+
+      const constructedCv = await cvService.constructCv(cvId, +userId, style);
+
+      return c.json({
+        success: true,
+        message: `CV with ID ${cvId} constructed successfully`,
+        data: constructedCv,
+      });
+    },
+  )
   .patch(
     "/:id",
     zValidator("param", cvParamsSchema),
