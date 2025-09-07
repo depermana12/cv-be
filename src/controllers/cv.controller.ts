@@ -10,6 +10,7 @@ import {
   cvSlugParamsSchema,
   popularCvQuerySchema,
   slugAvailabilityQuerySchema,
+  constructCvQuerySchema,
 } from "../schemas/cv.schema";
 import { cvService } from "../lib/container";
 

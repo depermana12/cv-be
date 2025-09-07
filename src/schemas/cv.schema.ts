@@ -117,3 +117,13 @@ export const slugAvailabilityQuerySchema = z.object({
     .positive({ message: "CV ID must be a positive integer" })
     .optional(),
 });
+
+// query schema for constructing CV with style
+export const constructCvQuerySchema = z.object({
+  style: z
+    .enum(["modern", "minimal"], {
+      required_error: "Style is required",
+      invalid_type_error: "Style must be either 'modern' or 'minimal'",
+    })
+    .default("modern"),
+});
