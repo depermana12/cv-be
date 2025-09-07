@@ -35,6 +35,45 @@ export const createMockCv = (overrides: Partial<CvSelect> = {}): CvSelect => ({
   userId: VALID_USER_ID,
   title: "Software Engineer CV",
   description: "Comprehensive CV for software engineering position",
+  sections: {
+    order: [
+      "contact",
+      "education",
+      "work",
+      "skill",
+      "project",
+      "organization",
+      "course",
+      "language",
+    ],
+    titles: {
+      contact: "",
+      education: "Education",
+      work: "Work Experience",
+      skill: "Skills",
+      project: "Projects",
+      organization: "Organizations",
+      course: "Courses",
+      language: "Languages",
+    },
+  },
+  themes: {
+    modern: {
+      fontFamily: "Poppins, sans-serif",
+      lineHeight: 1.5,
+      headerColor: "#1e40af",
+      sectionDivider: true,
+      margin: 0.55,
+    },
+    minimal: {
+      fontFamily: "Poppins, sans-serif",
+      fontSize: 13,
+      lineHeight: 1.5,
+      headerColor: "#000000",
+      sectionDivider: false,
+      margin: 0.55,
+    },
+  },
   isPublic: false,
   language: "en",
   theme: "default",
@@ -176,6 +215,10 @@ export const createMockCvRepository = (): Mocked<ICvRepository> => ({
   checkSlugAvailability: vi.fn(),
   getPopularCvs: vi.fn(),
   getUserCvStats: vi.fn(),
+  updateSectionOrder: vi.fn(),
+  updateSectionTitles: vi.fn(),
+  updateSections: vi.fn(),
+  updateCvTheme: vi.fn(),
 });
 
 export const createMockContactRepository = (): Mocked<ContactRepository> =>

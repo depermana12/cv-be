@@ -11,6 +11,9 @@ import {
   popularCvQuerySchema,
   slugAvailabilityQuerySchema,
   constructCvQuerySchema,
+  updateSectionOrderSchema,
+  updateSectionTitlesSchema,
+  updateSectionsSchema,
 } from "../schemas/cv.schema";
 import { cvService } from "../lib/container";
 
@@ -143,6 +146,72 @@ export const cvRoutes = createHonoBindings()
       success: true,
       message: `CV with ID ${cvId} deleted successfully`,
       data: deleted,
+    });
+  })
+  .patch(
+    "/:id/sections/order",
+    zValidator("param", cvParamsSchema),
+    zValidator("json", updateSectionOrderSchema),
+    async (c) => {
+      const { id: userId } = c.get("jwtPayload");
+      const { id: cvId } = c.req.valid("param");
+      const { order } = c.req.valid("json");
+
+      await cvService.updateSectionOrder(cvId, +userId, order);
+
+      return c.json({
+        success: true,
+        message: `Section order updated successfully for CV ${cvId}`,
+      });
+    },
+  )
+  .patch(
+    "/:id/sections/titles",
+    zValidator("param", cvParamsSchema),
+    zValidator("json", updateSectionTitlesSchema),
+    async (c) => {
+      const { id: userId } = c.get("jwtPayload");
+      const { id: cvId } = c.req.valid("param");
+      const { titles } = c.req.valid("json");
+
+      await cvService.updateSectionTitles(cvId, +userId, titles);
+
+      return c.json({
+        success: true,
+        message: `Section titles updated successfully for CV ${cvId}`,
+      });
+    },
+  )
+  .patch(
+    "/:id/sections",
+    zValidator("param", cvParamsSchema),
+    zValidator("json", updateSectionsSchema),
+    async (c) => {
+      const { id: userId } = c.get("jwtPayload");
+      const { id: cvId } = c.req.valid("param");
+      const sectionUpdate = c.req.valid("json");
+
+      await cvService.updateSections(cvId, +userId, sectionUpdate);
+
+      return c.json({
+        success: true,
+        message: `Sections updated successfully for CV ${cvId}`,
+      });
+    },
+  )
+  .get("/:id/sections", zValidator("param", cvParamsSchema), async (c) => {
+    const { id: userId } = c.get("jwtPayload");
+    const { id: cvId } = c.req.valid("param");
+
+    const [order, titles] = await Promise.all([
+      cvService.getSectionOrder(cvId, +userId),
+      cvService.getSectionTitles(cvId, +userId),
+    ]);
+
+    return c.json({
+      success: true,
+      message: `Sections retrieved successfully for CV ${cvId}`,
+      data: { order, titles },
     });
   });
 

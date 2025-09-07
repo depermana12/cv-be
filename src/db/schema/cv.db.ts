@@ -28,7 +28,19 @@ export const cv = pgTable("cvs", {
   title: varchar("title", { length: 255 }).notNull(),
   description: text("description").notNull(),
   sections: jsonb("sections")
-    .$type<{ order: string[] }>()
+    .$type<{
+      order: string[];
+      titles: {
+        contact: string;
+        education: string;
+        work: string;
+        skill: string;
+        project: string;
+        organization: string;
+        course: string;
+        language: string;
+      };
+    }>()
     .notNull()
     .default({
       order: [
@@ -41,6 +53,16 @@ export const cv = pgTable("cvs", {
         "course",
         "language",
       ],
+      titles: {
+        contact: "",
+        education: "Education",
+        work: "Work Experience",
+        skill: "Skills",
+        project: "Projects",
+        organization: "Organizations",
+        course: "Courses",
+        language: "Languages",
+      },
     }),
   themes: jsonb("themes")
     .$type<{

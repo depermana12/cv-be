@@ -10,6 +10,8 @@ import type {
   CompleteCvResponse,
   ThemeUpdate,
   ThemeStyle,
+  SectionUpdate,
+  SectionTitles,
 } from "../db/types/cv.type";
 import { NotFoundError } from "../errors/not-found.error";
 
@@ -59,6 +61,16 @@ export interface ICvService {
     userId: number,
     sections: string[],
   ): Promise<void>;
+  updateSectionTitles(
+    cvId: number,
+    userId: number,
+    titles: Partial<SectionTitles>,
+  ): Promise<void>;
+  updateSections(
+    cvId: number,
+    userId: number,
+    sectionUpdate: SectionUpdate,
+  ): Promise<void>;
   updateCvTheme(
     cvId: number,
     userId: number,
@@ -71,7 +83,7 @@ export interface ICvService {
   ): Promise<{
     sections: Array<{ section: string; data: any[] }>;
     styles: ThemeStyle;
-  }>
+  }>;
 }
 
 export class CvService implements ICvService {
@@ -309,6 +321,24 @@ export class CvService implements ICvService {
     await this.cvRepository.updateSectionOrder(cvId, userId, sections);
   }
 
+  async updateSectionTitles(
+    cvId: number,
+    userId: number,
+    titles: Partial<SectionTitles>,
+  ) {
+    await this.validateCvOwnership(cvId, userId);
+    await this.cvRepository.updateSectionTitles(cvId, userId, titles);
+  }
+
+  async updateSections(
+    cvId: number,
+    userId: number,
+    sectionUpdate: SectionUpdate,
+  ) {
+    await this.validateCvOwnership(cvId, userId);
+    await this.cvRepository.updateSections(cvId, userId, sectionUpdate);
+  }
+
   async updateCvTheme(cvId: number, userId: number, updateTheme: ThemeUpdate) {
     await this.validateCvOwnership(cvId, userId);
     await this.cvRepository.updateCvTheme(cvId, userId, updateTheme);
@@ -320,6 +350,14 @@ export class CvService implements ICvService {
       throw new NotFoundError(`CV with ID ${cvId} not found`);
     }
     return cv.sections.order;
+  }
+
+  async getSectionTitles(cvId: number, userId: number) {
+    const cv = await this.getCvById(cvId, userId);
+    if (!cv) {
+      throw new NotFoundError(`CV with ID ${cvId} not found`);
+    }
+    return cv.sections.titles;
   }
 
   async getCvStyles(cvId: number, userId: number, style: "modern" | "minimal") {
@@ -396,21 +434,23 @@ export class CvService implements ICvService {
    * @param cvId - CV ID
    * @param userId - User ID
    * @param style - Theme style ("modern" or "minimal")
-   * @returns Object containing ordered sections and styles
+   * @returns Object containing ordered sections with titles and styles
    */
   async constructCv(
     cvId: number,
     userId: number,
     style: "modern" | "minimal",
   ): Promise<{
-    sections: Array<{ section: string; data: any[] }>;
+    sections: Array<{ section: string; title: string; data: any[] }>;
     styles: ThemeStyle;
   }> {
-    const [sectionOrder, cvDataSections, styles] = await Promise.all([
-      this.getSectionOrder(cvId, userId),
-      this.getCvData(cvId, userId),
-      this.getCvStyles(cvId, userId, style),
-    ]);
+    const [sectionOrder, sectionTitles, cvDataSections, styles] =
+      await Promise.all([
+        this.getSectionOrder(cvId, userId),
+        this.getSectionTitles(cvId, userId),
+        this.getCvData(cvId, userId),
+        this.getCvStyles(cvId, userId, style),
+      ]);
 
     const sectionMap: Record<string, any> = {
       contact: cvDataSections.contacts,
@@ -425,6 +465,7 @@ export class CvService implements ICvService {
 
     const orderedSections = sectionOrder.map((section: string) => ({
       section,
+      title: sectionTitles[section as keyof typeof sectionTitles] || "",
       data: sectionMap[section] ?? [],
     }));
 

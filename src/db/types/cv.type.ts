@@ -43,6 +43,23 @@ export type MinimalThemeUpdate = {
 
 export type ThemeUpdate = ModernThemeUpdate | MinimalThemeUpdate;
 
+// Section configuration types
+export type SectionTitles = {
+  contact: string;
+  education: string;
+  work: string;
+  skill: string;
+  project: string;
+  organization: string;
+  course: string;
+  language: string;
+};
+
+export type SectionUpdate = {
+  order?: string[];
+  titles?: Partial<SectionTitles>;
+};
+
 import { cv } from "../schema/cv.db";
 import type { ContactSelect } from "./contact.type";
 import type { EducationSelect } from "./education.type";

@@ -22,6 +22,8 @@ import type {
   CvMinimalSelect,
   PaginatedCvResponse,
   ThemeUpdate,
+  SectionUpdate,
+  SectionTitles,
 } from "../db/types/cv.type";
 import type { Database } from "../db/index";
 
@@ -53,6 +55,16 @@ export interface ICvRepository {
     cvId: number,
     userId: number,
     sections: string[],
+  ): Promise<void>;
+  updateSectionTitles(
+    cvId: number,
+    userId: number,
+    titles: Partial<SectionTitles>,
+  ): Promise<void>;
+  updateSections(
+    cvId: number,
+    userId: number,
+    sectionUpdate: SectionUpdate,
   ): Promise<void>;
   updateCvTheme( // TODO: tidy up into export type
     cvId: number,
@@ -252,10 +264,73 @@ export class CvRepository
   }
 
   async updateSectionOrder(cvId: number, userId: number, sections: string[]) {
+    const record = await this.db
+      .select({ sections: cv.sections })
+      .from(cv)
+      .where(and(eq(cv.id, cvId), eq(cv.userId, userId)))
+      .limit(1);
+
+    const currentSections = record[0]?.sections ?? { order: [], titles: {} };
+
     await this.db
       .update(cv)
       .set({
-        sections: sql`${JSON.stringify({ order: sections })}::jsonb`,
+        sections: sql`${JSON.stringify({
+          ...currentSections,
+          order: sections,
+        })}::jsonb`,
+      })
+      .where(and(eq(cv.id, cvId), eq(cv.userId, userId)));
+  }
+
+  async updateSectionTitles(
+    cvId: number,
+    userId: number,
+    titles: Partial<SectionTitles>,
+  ) {
+    const record = await this.db
+      .select({ sections: cv.sections })
+      .from(cv)
+      .where(and(eq(cv.id, cvId), eq(cv.userId, userId)))
+      .limit(1);
+
+    const currentSections = record[0]?.sections ?? { order: [], titles: {} };
+
+    await this.db
+      .update(cv)
+      .set({
+        sections: sql`${JSON.stringify({
+          ...currentSections,
+          titles: { ...currentSections.titles, ...titles },
+        })}::jsonb`,
+      })
+      .where(and(eq(cv.id, cvId), eq(cv.userId, userId)));
+  }
+
+  async updateSections(
+    cvId: number,
+    userId: number,
+    sectionUpdate: SectionUpdate,
+  ) {
+    const record = await this.db
+      .select({ sections: cv.sections })
+      .from(cv)
+      .where(and(eq(cv.id, cvId), eq(cv.userId, userId)))
+      .limit(1);
+
+    const currentSections = record[0]?.sections ?? { order: [], titles: {} };
+
+    const updatedSections = {
+      order: sectionUpdate.order ?? currentSections.order,
+      titles: sectionUpdate.titles
+        ? { ...currentSections.titles, ...sectionUpdate.titles }
+        : currentSections.titles,
+    };
+
+    await this.db
+      .update(cv)
+      .set({
+        sections: sql`${JSON.stringify(updatedSections)}::jsonb`,
       })
       .where(and(eq(cv.id, cvId), eq(cv.userId, userId)));
   }

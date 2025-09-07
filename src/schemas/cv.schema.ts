@@ -33,6 +33,39 @@ export const createCvSchema = z.object({
 export const updateCvSchema = createCvSchema.partial();
 
 // Separate schemas for updating sections and themes
+export const updateSectionOrderSchema = z.object({
+  order: z.array(z.string()),
+});
+
+export const updateSectionTitlesSchema = z.object({
+  titles: z.object({
+    contact: z.string().optional(),
+    education: z.string().optional(),
+    work: z.string().optional(),
+    skill: z.string().optional(),
+    project: z.string().optional(),
+    organization: z.string().optional(),
+    course: z.string().optional(),
+    language: z.string().optional(),
+  }),
+});
+
+export const updateSectionsSchema = z.object({
+  order: z.array(z.string()).optional(),
+  titles: z
+    .object({
+      contact: z.string().optional(),
+      education: z.string().optional(),
+      work: z.string().optional(),
+      skill: z.string().optional(),
+      project: z.string().optional(),
+      organization: z.string().optional(),
+      course: z.string().optional(),
+      language: z.string().optional(),
+    })
+    .optional(),
+});
+
 export const updateCvSectionsSchema = z.object({
   sections: z.object({
     order: z.array(z.string()),
