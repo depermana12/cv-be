@@ -14,8 +14,9 @@ import {
   updateSectionOrderSchema,
   updateSectionTitlesSchema,
   updateSectionsSchema,
+  pdfGenerationQuerySchema,
 } from "../schemas/cv.schema";
-import { cvService } from "../lib/container";
+import { cvService, pdfService } from "../lib/container";
 
 export const cvRoutes = createHonoBindings()
   // Protected routes (require authentication and email verification)
@@ -260,5 +261,41 @@ export const publicCvRoutes = createHonoBindings()
         message: `Retrieved ${popularCvs.length} popular CVs`,
         data: popularCvs,
       });
+    },
+  )
+  .get(
+    "/:id/pdf",
+    zValidator("param", cvParamsSchema),
+    zValidator("query", pdfGenerationQuerySchema),
+    async (c) => {
+      const { id: cvId } = c.req.valid("param");
+      const { style, scale } = c.req.valid("query");
+      const { id: userId } = c.get("jwtPayload");
+
+      const pdfBuffer = await pdfService.generateCVPDF(cvId, +userId, style, {
+        scale,
+      });
+
+      // Set appropriate headers for PDF download
+      c.header("Content-Type", "application/pdf");
+      c.header("Content-Disposition", `attachment; filename="cv-${cvId}.pdf"`);
+
+      return c.body(pdfBuffer);
+    },
+  )
+  .get(
+    "/:id/pdf/preview",
+    zValidator("param", cvParamsSchema),
+    zValidator("query", pdfGenerationQuerySchema),
+    async (c) => {
+      const { id: cvId } = c.req.valid("param");
+      const { style } = c.req.valid("query");
+      const { id: userId } = c.get("jwtPayload");
+
+      const html = await pdfService.generateCVHTML(cvId, +userId, style);
+
+      c.header("Content-Type", "text/html");
+
+      return c.html(html);
     },
   );

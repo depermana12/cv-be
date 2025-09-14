@@ -28,6 +28,7 @@ import { CoverLetterService } from "../services/coverLetter.service";
 import { JobApplicationRepository } from "../repositories/jobApplication.repo";
 import { JobApplicationService } from "../services/jobApplication.service";
 import { EmailService } from "../services/email.service";
+import { PDFService } from "../services/pdf";
 import { JobApplicationStatusRepository } from "../repositories/jobApplicationStatus.repo.js";
 import { ContactRepository } from "../repositories/cvChildren/contact.repo.js";
 import { ContactService } from "../services/cvChildren/contact.service.js";
@@ -114,6 +115,9 @@ export const userService = new UserService(
 
 // Other Services
 export const emailService = new EmailService();
+
+// PDF Service
+export const pdfService = new PDFService(cvService);
 
 // Analytics Service
 export const analyticsService = new AnalyticsService(

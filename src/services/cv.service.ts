@@ -81,7 +81,7 @@ export interface ICvService {
     userId: number,
     style: "modern" | "minimal",
   ): Promise<{
-    sections: Array<{ section: string; data: any[] }>;
+    sections: Array<{ section: string; title: string; data: any[] }>;
     styles: ThemeStyle;
   }>;
 }

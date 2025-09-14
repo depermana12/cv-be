@@ -160,3 +160,18 @@ export const constructCvQuerySchema = z.object({
     })
     .default("modern"),
 });
+
+// query schema for PDF generation options
+export const pdfGenerationQuerySchema = z.object({
+  style: z
+    .enum(["modern", "minimal"], {
+      required_error: "Style is required",
+      invalid_type_error: "Style must be either 'modern' or 'minimal'",
+    })
+    .default("modern"),
+  scale: z
+    .number()
+    .min(0.1, { message: "Scale must be at least 0.1" })
+    .max(2.0, { message: "Scale must be at most 2.0" })
+    .optional(),
+});
