@@ -150,6 +150,23 @@ export const cvRoutes = createHonoBindings()
     });
   })
   .patch(
+    "/:id/theme",
+    zValidator("param", cvParamsSchema),
+    zValidator("json", updateCvThemeSchema),
+    async (c) => {
+      const { id: userId } = c.get("jwtPayload");
+      const { id: cvId } = c.req.valid("param");
+      const themeUpdate = c.req.valid("json");
+
+      await cvService.updateCvTheme(cvId, +userId, themeUpdate);
+
+      return c.json({
+        success: true,
+        message: `Theme updated successfully for CV ${cvId}`,
+      });
+    },
+  )
+  .patch(
     "/:id/sections/order",
     zValidator("param", cvParamsSchema),
     zValidator("json", updateSectionOrderSchema),
