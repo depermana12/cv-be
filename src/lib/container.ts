@@ -28,7 +28,7 @@ import { CoverLetterService } from "../services/coverLetter.service";
 import { JobApplicationRepository } from "../repositories/jobApplication.repo";
 import { JobApplicationService } from "../services/jobApplication.service";
 import { EmailService } from "../services/email.service";
-import { PDFService } from "../services/pdf";
+import { PDFService } from "../services/pdf/pdf.service";
 import { JobApplicationStatusRepository } from "../repositories/jobApplicationStatus.repo.js";
 import { ContactRepository } from "../repositories/cvChildren/contact.repo.js";
 import { ContactService } from "../services/cvChildren/contact.service.js";
