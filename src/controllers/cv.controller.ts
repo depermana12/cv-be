@@ -15,6 +15,7 @@ import {
   updateSectionTitlesSchema,
   updateSectionsSchema,
   pdfGenerationQuerySchema,
+  updateCvThemesSchema,
 } from "../schemas/cv.schema";
 import { cvService, pdfService } from "../lib/container";
 
@@ -152,7 +153,7 @@ export const cvRoutes = createHonoBindings()
   .patch(
     "/:id/theme",
     zValidator("param", cvParamsSchema),
-    zValidator("json", updateCvThemeSchema),
+    zValidator("json", updateCvThemesSchema),
     async (c) => {
       const { id: userId } = c.get("jwtPayload");
       const { id: cvId } = c.req.valid("param");

@@ -73,22 +73,14 @@ export const updateCvSectionsSchema = z.object({
 });
 
 export const updateCvThemesSchema = z.object({
-  themes: z.object({
-    modern: z.object({
-      fontFamily: z.string(),
-      lineHeight: z.number(),
-      headerColor: z.string(),
-      sectionDivider: z.boolean(),
-      margin: z.number(),
-    }),
-    minimal: z.object({
-      fontFamily: z.string(),
-      fontSize: z.number(),
-      lineHeight: z.number(),
-      headerColor: z.string(),
-      sectionDivider: z.boolean(),
-      margin: z.number(),
-    }),
+  themeKey: z.enum(["modern", "minimal"]),
+  themeValue: z.object({
+    fontFamily: z.string().optional(),
+    fontSize: z.number().optional(),
+    lineHeight: z.number().optional(),
+    headerColor: z.string().optional(),
+    sectionDivider: z.boolean().optional(),
+    margin: z.number().optional(),
   }),
 });
 
