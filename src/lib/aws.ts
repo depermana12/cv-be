@@ -10,7 +10,7 @@ if (!aws.accessKeyId || !aws.secretAccessKey || !aws.s3Bucket) {
 export const s3Client = new S3Client({
   region: aws.region,
   credentials: {
-    accessKeyId: aws.secretAccessKey,
+    accessKeyId: aws.accessKeyId,
     secretAccessKey: aws.secretAccessKey,
   },
 });

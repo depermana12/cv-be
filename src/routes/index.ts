@@ -11,8 +11,12 @@ import { jobApplicationRoutes } from "../controllers/jobApplication.controller";
 import { analyticsRoutes } from "../controllers/analytics.controller";
 import { coverLetterRoutes } from "../controllers/coverLetter.controller";
 import { aiOptimizationRoutes } from "../controllers/aiOptimization.controller";
+import { healthRoutes } from "../controllers/health.controller";
 
 const router = new Hono();
+
+// health check endpoint (no auth required)
+router.route("/health", healthRoutes);
 
 // public routes (no auth required)
 router.route("/auth", authRoutes);
